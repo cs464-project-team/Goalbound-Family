@@ -1,0 +1,3 @@
+# Service layer handles Business Logic
+# Use Service Interfaces over Service implementation 
+# Example: IUserService.cs + UserService.cs, IGoalService + GoalService, etc.
