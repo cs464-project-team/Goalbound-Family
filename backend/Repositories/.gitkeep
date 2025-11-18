@@ -1,0 +1,3 @@
+# Repositories manage Data Access
+# Repository interfaces and classes go here (EF Core layer)
+# Example: IUserRepository + UserRepository.cs, IGoalRepository + GoalRepository, etc.

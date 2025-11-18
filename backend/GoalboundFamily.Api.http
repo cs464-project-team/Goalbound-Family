@@ -1,0 +1,6 @@
+@GoalboundFamily.Api_HostAddress = http://localhost:5073
+
+GET {{GoalboundFamily.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
