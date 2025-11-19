@@ -8,7 +8,7 @@ namespace GoalboundFamily.Api.Models;
 public class User
 {
     [Key]
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; }
 
     [Required]
     [MaxLength(100)]
