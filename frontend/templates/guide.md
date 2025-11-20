@@ -149,3 +149,24 @@ function App() {
 3. For public pages, just add the route normally.  
 4. The Navbar is shown automatically on protected pages.  
 5. Use `useAuthContext()` for session info or logout in your components.
+
+
+
+AuthProvider (wraps the entire app)
+    │
+    ├── Navbar (global, shows Logout & user email)
+    │      └─ Hidden on /auth and when session is null
+    │
+    └── AppRoutes
+            ├── /auth → Auth.tsx
+            │       ├─ Sign Up (uses signUp from useAuthContext)
+            │       └─ Login (uses signIn from useAuthContext)
+            │
+            ├── /dashboard → RequireAuth → Dashboard.tsx
+            │       └─ Can optionally receive onLogout prop
+            │
+            ├── /module-template → RequireAuth → ModuleTemplate.tsx
+            │       └─ Uses session from useAuthContext
+            │
+            └── /public-module → PublicModuleTemplate.tsx
+                    └─ Accessible by everyone, no auth required

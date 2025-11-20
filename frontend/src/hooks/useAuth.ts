@@ -27,6 +27,7 @@ export function useAuth() {
         body: JSON.stringify({ id: data.user.id, firstName, lastName, email })
       })
       if (!response.ok) {
+        await supabase.auth.admin.deleteUser(data.user.id) // use Supabase Admin SDK
         const errorData = await response.json()
         setSignupError(errorData.message || 'Failed to create user profile.')
         return false
