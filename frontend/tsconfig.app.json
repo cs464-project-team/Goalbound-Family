@@ -5,7 +5,10 @@
     "useDefineForClassFields": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "types": ["vite/client"],
+
+    // ⬇️ Added "vitest" here so TS knows about vitest types/globals (if you use them)
+    "types": ["vite/client", "vitest"],
+
     "skipLibCheck": true,
 
     /* Bundler mode */
@@ -24,5 +27,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+
+  "include": ["src", "tests"]
 }
