@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useAuth } from '../hooks/useAuth'
-import Dashboard from './Dashboard'
+import { useAuthContext } from '../context/AuthProvider'
 import '../styles/Auth.css' 
+import { Navigate, useNavigate } from 'react-router-dom'
 
 function Auth() {
   // form state
@@ -20,20 +20,31 @@ function Auth() {
     signUp,
     signIn,
     signOut,
-  } = useAuth()
+  } = useAuthContext()
+
+  const navigate = useNavigate();
+
+  if (session) {
+  return <Navigate to="/dashboard" replace />
+    }
+
+  
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    await signUp(signupEmail, signupPassword, firstName, lastName)
+    const success = await signUp(signupEmail, signupPassword, firstName, lastName)
+    if (success) {
+      navigate('/dashboard');
+    }
   }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    await signIn(loginEmail, loginPassword)
+    const success = await signIn(loginEmail, loginPassword)
+    if (success) {
+      navigate('/dashboard');
+    }
   }
-
-  // Show dashboard if logged in
-  if (session) return <Dashboard onLogout={signOut} />
 
   return (
     <div className="auth-columns">
