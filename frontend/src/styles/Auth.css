@@ -1,0 +1,35 @@
+.auth-columns {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.auth-column {
+  background: #f9f9f9;
+  padding: 2rem;
+  border-radius: 8px;
+  min-width: 300px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.auth-column h2 {
+  margin-bottom: 1rem;
+}
+
+.auth-column form input {
+  display: block;
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+}
+
+.auth-column form button {
+  width: 100%;
+  padding: 0.5rem;
+}
+
+.auth-column h2 {
+  margin-bottom: 1rem;
+  color: #000; /* Make H2 text black */
+}
