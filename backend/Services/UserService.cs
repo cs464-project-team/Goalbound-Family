@@ -46,6 +46,7 @@ public class UserService : IUserService
 
         var user = new User
         {
+            Id = request.Id, // Use Supabase Auth UUID
             FirstName = request.FirstName,
             LastName = request.LastName,
             Email = request.Email,
@@ -123,7 +124,6 @@ public class UserService : IUserService
             FirstName = user.FirstName,
             LastName = user.LastName,
             Email = user.Email,
-            CreatedAt = user.CreatedAt
         };
     }
 }

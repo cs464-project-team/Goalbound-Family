@@ -9,7 +9,7 @@ public class UserDto
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
+    
 }
 
 /// <summary>
@@ -17,6 +17,7 @@ public class UserDto
 /// </summary>
 public class CreateUserRequest
 {
+    public Guid Id { get; set; } // Supabase Auth UUID
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;

@@ -1,0 +1,62 @@
+.navbar {
+  background-color: #282c34;
+  color: #ffffff;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.navbar__container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.navbar__welcome {
+  font-size: 1rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar__button {
+  background-color: #61dafb;
+  color: #000;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 120ms ease, transform 120ms ease;
+}
+
+.navbar__button:hover {
+  background-color: #52c7e8;
+  transform: translateY(-1px);
+}
+
+.navbar__button:active {
+  transform: translateY(0);
+}
+
+.navbar__button:focus {
+  outline: 3px solid rgba(97,218,251,0.25);
+  outline-offset: 2px;
+}
+
+/* Responsive: tighten padding on smaller screens */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0.75rem;
+  }
+  .navbar__welcome {
+    font-size: 0.95rem;
+  }
+  .navbar__button {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.95rem;
+  }
+}

@@ -25,11 +25,4 @@ public class UserRepository : Repository<User>, IUserRepository
         return await _dbSet.AnyAsync(u => u.Email == email);
     }
 
-    public async Task<IEnumerable<User>> GetRecentUsersAsync(int count)
-    {
-        return await _dbSet
-            .OrderByDescending(u => u.CreatedAt)
-            .Take(count)
-            .ToListAsync();
-    }
 }
