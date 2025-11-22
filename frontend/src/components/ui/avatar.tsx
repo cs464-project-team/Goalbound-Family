@@ -2,8 +2,16 @@
 
 import * as React from "react"
 import * as AvatarPrimitive from "@radix-ui/react-avatar"
-
 import { cn } from "@/lib/utils"
+
+// Helper to get initials from a full name
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+}
 
 function Avatar({
   className,
@@ -34,10 +42,12 @@ function AvatarImage({
   )
 }
 
-function AvatarFallback({
-  className,
-  ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
+interface AvatarFallbackProps
+  extends React.ComponentProps<typeof AvatarPrimitive.Fallback> {
+  name: string
+}
+
+function AvatarFallback({ className, name, ...props }: AvatarFallbackProps) {
   return (
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
@@ -46,7 +56,9 @@ function AvatarFallback({
         className
       )}
       {...props}
-    />
+    >
+      {getInitials(name)}
+    </AvatarPrimitive.Fallback>
   )
 }
 
