@@ -1,14 +1,16 @@
-import { AuthProvider } from './context/AuthProvider'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import './App.css'
-import Auth from './pages/Auth'
-import Dashboard from './pages/Dashboard'
-import RequireAuth from './routes/RequireAuth'
-import { useAuthContext } from './context/AuthProvider'
-import Navbar from './components/Navbar'
+import { AuthProvider } from "./context/AuthProvider";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import "./App.css";
+import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
+import Leaderboard from "./pages/Leaderboard";
+import { Layout } from "./components/layout";
+import RequireAuth from "./routes/RequireAuth";
+import { useAuthContext } from "./context/AuthProvider";
+import Navbar from "./components/Navbar";
 
 function AppRoutes() {
-  const { signOut } = useAuthContext()
+  const { signOut } = useAuthContext();
 
   return (
     <Routes>
@@ -25,8 +27,24 @@ function AppRoutes() {
         }
       />
 
+      {/* <Route
+        path="/leaderboard"
+        element={
+          <RequireAuth>
+            <Leaderboard />
+          </RequireAuth>
+        }
+      /> */}
+      <Route
+        path="/leaderboard"
+        element={
+          <Layout>
+            <Leaderboard />
+          </Layout>
+        }
+      />
     </Routes>
-  )
+  );
 }
 
 function App() {
@@ -37,7 +55,7 @@ function App() {
         <AppRoutes />
       </BrowserRouter>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;
