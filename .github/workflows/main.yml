@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: CI
 
 on:
   push:
@@ -16,11 +16,15 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "9.0.x"  
+          dotnet-version: "9.0.x"
 
       - name: Restore backend
         working-directory: backend
         run: dotnet restore
+
+      - name: Backend lint (dotnet format)
+        working-directory: backend
+        run: dotnet format --verify-no-changes
 
       - name: Run backend tests
         working-directory: backend
@@ -43,6 +47,10 @@ jobs:
       - name: Install frontend deps
         working-directory: frontend
         run: npm ci
+
+      - name: Frontend lint (ESLint)
+        working-directory: frontend
+        run: npm run lint
 
       - name: Run frontend tests
         working-directory: frontend
