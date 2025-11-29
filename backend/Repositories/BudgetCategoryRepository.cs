@@ -17,9 +17,9 @@ public class BudgetCategoryRepository : Repository<BudgetCategory>, IBudgetCateg
 
     public async Task<IEnumerable<BudgetCategory>> GetByIdsAsync(IEnumerable<Guid> ids)
     {
-    return await _dbSet
-        .Where(c => ids.Contains(c.Id))
-        .ToListAsync();
+        return await _dbSet
+            .Where(c => ids.Contains(c.Id))
+            .ToListAsync();
     }
 }
 

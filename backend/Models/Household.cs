@@ -16,6 +16,6 @@ public class Household
     public User? Parent { get; set; }
 
     // Members
-    public ICollection<HouseholdMember> Members { get; set; } 
+    public ICollection<HouseholdMember> Members { get; set; }
         = new List<HouseholdMember>();
 }

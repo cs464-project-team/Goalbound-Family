@@ -13,7 +13,7 @@ public class HouseholdMember
     public User? User { get; set; }
 
     [Required]
-    public string Role { get; set; } = "Member"; 
+    public string Role { get; set; } = "Member";
     // Roles: "Parent" or "Member"
 
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
