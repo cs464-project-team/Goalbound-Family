@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GoalboundFamily.Api.Repositories;
 
-public class InvitationRepository 
+public class InvitationRepository
     : Repository<Invitation>, IInvitationRepository
 {
-    public InvitationRepository(ApplicationDbContext context) : base(context) {}
+    public InvitationRepository(ApplicationDbContext context) : base(context) { }
 
     public async Task<Invitation?> GetByTokenAsync(string token)
     {

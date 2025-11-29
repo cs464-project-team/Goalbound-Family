@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GoalboundFamily.Api.Repositories;
 
-public class HouseholdMemberRepository 
+public class HouseholdMemberRepository
     : Repository<HouseholdMember>, IHouseholdMemberRepository
 {
-    public HouseholdMemberRepository(ApplicationDbContext context) : base(context) {}
+    public HouseholdMemberRepository(ApplicationDbContext context) : base(context) { }
 
     public async Task<bool> IsUserInHouseholdAsync(Guid userId, Guid householdId)
     {

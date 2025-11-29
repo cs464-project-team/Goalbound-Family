@@ -17,11 +17,11 @@ public class Invitation
     [Required]
     public Guid InvitedByUserId { get; set; }
     public User? InvitedByUser { get; set; }
-    
+
     [Required]
     public string Token { get; set; } = string.Empty;
 
-    public DateTime ExpiresAt { get; set; } 
+    public DateTime ExpiresAt { get; set; }
         = DateTime.UtcNow.AddDays(7);
 
     public bool IsAccepted { get; set; } = false;

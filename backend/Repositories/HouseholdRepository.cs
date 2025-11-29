@@ -7,7 +7,7 @@ namespace GoalboundFamily.Api.Repositories;
 
 public class HouseholdRepository : Repository<Household>, IHouseholdRepository
 {
-    public HouseholdRepository(ApplicationDbContext context) : base(context) {}
+    public HouseholdRepository(ApplicationDbContext context) : base(context) { }
 
     public async Task<Household?> GetWithMembersAsync(Guid id)
     {

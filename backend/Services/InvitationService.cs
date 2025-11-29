@@ -49,7 +49,7 @@ public class InvitationService : IInvitationService
         var invite = await _inviteRepo.GetByIdAsync(id);
         if (invite == null) return null;
 
-        return new InvitationDto 
+        return new InvitationDto
         {
             Id = invite.Id,
             Email = invite.Email,

@@ -48,7 +48,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<HouseholdMember>(entity =>
         {
             entity.HasIndex(hm => new { hm.HouseholdId, hm.UserId })
-                .IsUnique(); 
+                .IsUnique();
 
             // User relationship
             entity.HasOne(hm => hm.User)
