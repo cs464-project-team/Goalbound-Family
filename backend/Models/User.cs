@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-
 namespace GoalboundFamily.Api.Models;
 
 /// <summary>
@@ -29,4 +28,7 @@ public class User
 
     // Navigation properties for relationships
     // Example: public ICollection<Goal> Goals { get; set; } = new List<Goal>();
+
+    // Relationships
+    public ICollection<HouseholdMember> HouseholdMemberships { get; set; } = new List<HouseholdMember>();
 }

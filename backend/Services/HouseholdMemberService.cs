@@ -1,0 +1,61 @@
+using GoalboundFamily.Api.DTOs;
+using GoalboundFamily.Api.Models;
+using GoalboundFamily.Api.Repositories.Interfaces;
+using GoalboundFamily.Api.Services.Interfaces;
+
+namespace GoalboundFamily.Api.Services;
+
+public class HouseholdMemberService : IHouseholdMemberService
+{
+    private readonly IHouseholdMemberRepository _memberRepo;
+
+    public HouseholdMemberService(IHouseholdMemberRepository memberRepo)
+    {
+        _memberRepo = memberRepo;
+    }
+
+    public async Task<IEnumerable<HouseholdMemberDto>> GetMembersAsync(Guid householdId)
+    {
+        var members = await _memberRepo.FindAsync(m => m.HouseholdId == householdId);
+
+        return members.Select(m => new HouseholdMemberDto
+        {
+            Id = m.Id,
+            UserId = m.UserId,
+            FirstName = m.User?.FirstName ?? "",
+            LastName = m.User?.LastName ?? "",
+            Email = m.User?.Email ?? "",
+            Role = m.Role,
+            JoinedAt = m.JoinedAt
+        });
+    }
+
+    public async Task<bool> AddMemberAsync(Guid householdId, Guid userId, string role)
+    {
+        if (await _memberRepo.IsUserInHouseholdAsync(userId, householdId))
+            return false;
+
+        var member = new HouseholdMember
+        {
+            HouseholdId = householdId,
+            UserId = userId,
+            Role = role
+        };
+
+        await _memberRepo.AddAsync(member);
+        await _memberRepo.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<bool> RemoveMemberAsync(Guid memberId)
+    {
+        var member = await _memberRepo.GetByIdAsync(memberId);
+        if (member == null) return false;
+
+        await _memberRepo.DeleteAsync(member);
+        await _memberRepo.SaveChangesAsync();
+
+        return true;
+    }
+}
