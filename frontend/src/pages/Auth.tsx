@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuthContext } from '../context/AuthProvider'
-import '../styles/Auth.css' 
-import { Navigate, useNavigate } from 'react-router-dom'
+import '../styles/Auth.css'
+import { Navigate, useNavigate, useLocation } from 'react-router-dom'
 
 function Auth() {
   // form state
@@ -23,10 +23,12 @@ function Auth() {
   } = useAuthContext()
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as any)?.from?.pathname || '/dashboard';
 
   if (session) {
-  return <Navigate to="/dashboard" replace />
-    }
+    return <Navigate to={from} replace />
+  }
 
   
 
@@ -34,7 +36,7 @@ function Auth() {
     e.preventDefault()
     const success = await signUp(signupEmail, signupPassword, firstName, lastName)
     if (success) {
-      navigate('/dashboard');
+      navigate(from);
     }
   }
 
@@ -42,7 +44,7 @@ function Auth() {
     e.preventDefault()
     const success = await signIn(loginEmail, loginPassword)
     if (success) {
-      navigate('/dashboard');
+      navigate(from);
     }
   }
 
