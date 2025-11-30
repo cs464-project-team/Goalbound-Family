@@ -61,14 +61,38 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Configure HttpClient for Python OCR service
+builder.Services.AddHttpClient();
+
 // Register Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-// Add more repositories here as you create them
+builder.Services.AddScoped<IReceiptRepository, ReceiptRepository>();
 
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
-// Add more services here as you create them
+builder.Services.AddScoped<IImagePreprocessingService, ImagePreprocessingService>();
+builder.Services.AddScoped<IOcrService, AzureOcrService>(); // Azure Computer Vision (95-99% accuracy)
+builder.Services.AddScoped<IReceiptParserService, ReceiptParserService>();
+builder.Services.AddScoped<IReceiptService, ReceiptService>();
+
+// Configure Supabase Client for Storage
+var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL")
+    ?? throw new InvalidOperationException("SUPABASE_URL not configured in .env file");
+var supabaseKey = Environment.GetEnvironmentVariable("SUPABASE_SERVICE_KEY")
+    ?? throw new InvalidOperationException("SUPABASE_SERVICE_KEY not configured in .env file");
+
+builder.Services.AddScoped(_ =>
+{
+    var options = new Supabase.SupabaseOptions
+    {
+        AutoConnectRealtime = false  // We don't need realtime for storage
+    };
+    return new Supabase.Client(supabaseUrl, supabaseKey, options);
+});
+
+// Register Supabase Storage Service
+builder.Services.AddScoped<ISupabaseStorageService, SupabaseStorageService>();
 
 var app = builder.Build();
 
