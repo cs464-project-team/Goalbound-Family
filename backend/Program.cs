@@ -15,7 +15,18 @@ var contentRoot = builder.Environment.ContentRootPath;
 // Load environment variables from .env file
 if (environment == "Development")
 {
-    Env.Load(Path.Combine(contentRoot, ".env.development"));
+    var devEnvFile = Path.Combine(contentRoot, ".env.development");
+    var defaultEnvFile = Path.Combine(contentRoot, ".env");
+
+    // Try .env.development first, fallback to .env
+    if (File.Exists(devEnvFile))
+    {
+        Env.Load(devEnvFile);
+    }
+    else if (File.Exists(defaultEnvFile))
+    {
+        Env.Load(defaultEnvFile);
+    }
 }
 else if (environment == "Testing")
 {
