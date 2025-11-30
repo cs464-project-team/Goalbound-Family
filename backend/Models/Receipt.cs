@@ -18,6 +18,11 @@ public class Receipt
     public Guid UserId { get; set; }
 
     /// <summary>
+    /// Household this receipt belongs to (nullable for backwards compatibility)
+    /// </summary>
+    public Guid? HouseholdId { get; set; }
+
+    /// <summary>
     /// Path to the stored receipt image
     /// </summary>
     [Required]
@@ -87,6 +92,12 @@ public class Receipt
     /// </summary>
     [ForeignKey(nameof(UserId))]
     public User User { get; set; } = null!;
+
+    /// <summary>
+    /// Household this receipt belongs to
+    /// </summary>
+    [ForeignKey(nameof(HouseholdId))]
+    public Household? Household { get; set; }
 
     /// <summary>
     /// Line items extracted from the receipt

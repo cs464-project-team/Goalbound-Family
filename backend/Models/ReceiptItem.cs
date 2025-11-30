@@ -71,4 +71,9 @@ public class ReceiptItem
     /// </summary>
     [ForeignKey(nameof(ReceiptId))]
     public Receipt Receipt { get; set; } = null!;
+
+    /// <summary>
+    /// Assignments of this item to household members
+    /// </summary>
+    public ICollection<ReceiptItemAssignment> Assignments { get; set; } = new List<ReceiptItemAssignment>();
 }
