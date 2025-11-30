@@ -70,5 +70,14 @@ artifacts/
 .DS_Store
 Thumbs.db
 
+# Application logs
+logs/*.log
+
+# Python OCR Service
+python-ocr/venv/
+python-ocr/__pycache__/
+python-ocr/*.pyc
+python-ocr/.pytest_cache/
+
 #Claude
 .claude
