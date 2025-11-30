@@ -4,6 +4,7 @@ import "./App.css";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Leaderboard from "./pages/Leaderboard";
+import ReceiptScanner from "./pages/ReceiptScanner";
 import { Layout } from "./components/layout";
 import RequireAuth from "./routes/RequireAuth";
 import { useAuthContext } from "./context/AuthProvider";
@@ -41,6 +42,15 @@ function AppRoutes() {
           <Layout>
             <Leaderboard />
           </Layout>
+        }
+      />
+
+      <Route
+        path="/receipt-scanner"
+        element={
+          <RequireAuth>
+            <ReceiptScanner />
+          </RequireAuth>
         }
       />
     </Routes>
