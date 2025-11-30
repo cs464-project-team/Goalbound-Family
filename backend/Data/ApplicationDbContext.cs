@@ -14,6 +14,12 @@ public class ApplicationDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Receipt> Receipts { get; set; }
     public DbSet<ReceiptItem> ReceiptItems { get; set; }
+    public DbSet<Household> Households { get; set; }
+    public DbSet<HouseholdMember> HouseholdMembers { get; set; }
+    public DbSet<Invitation> Invitations { get; set; }
+    public DbSet<BudgetCategory> BudgetCategories { get; set; }
+    public DbSet<HouseholdBudget> HouseholdBudgets { get; set; }
+    public DbSet<Expense> Expenses { get; set; }
 
     // Add more DbSets as needed
     // Example: public DbSet<Family> Families { get; set; }
@@ -65,5 +71,37 @@ public class ApplicationDbContext : DbContext
         });
 
         // Add more entity configurations as needed
+        // Configure Household entity
+        modelBuilder.Entity<Household>(entity =>
+        {
+            entity.Property(h => h.CreatedAt)
+                .HasDefaultValueSql("NOW()");
+        });
+
+        // Configure HouseholdMember entity
+        modelBuilder.Entity<HouseholdMember>(entity =>
+        {
+            entity.HasIndex(hm => new { hm.HouseholdId, hm.UserId })
+                .IsUnique();
+
+            // User relationship
+            entity.HasOne(hm => hm.User)
+                .WithMany(u => u.HouseholdMemberships)
+                .HasForeignKey(hm => hm.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Household relationship
+            entity.HasOne(hm => hm.Household)
+                .WithMany(h => h.Members)
+                .HasForeignKey(hm => hm.HouseholdId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure Invitation entity
+        modelBuilder.Entity<Invitation>(entity =>
+        {
+            entity.HasIndex(i => i.Token)
+                .IsUnique();
+        });
     }
 }
