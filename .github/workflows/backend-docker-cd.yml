@@ -1,0 +1,90 @@
+name: CD - Build & Push Backend Docker Image
+
+on:
+  workflow_run:
+    workflows: [ "CI" ]          # must match your CI workflow name
+    types:
+      - completed
+
+jobs:
+  # 1) Check if this CI run touched backend files
+  check-backend-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend_changed: ${{ steps.changed-files.outputs.backend_changed }}
+
+    steps:
+      - name: Checkout repo at same commit as CI
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 2   # so we can diff against previous commit
+
+      - name: Detect backend changes
+        id: changed-files
+        run: |
+          echo "HEAD commit: $(git rev-parse HEAD)"
+          echo "Previous commit: $(git rev-parse HEAD^ || echo 'none')"
+
+          # Default to "false"
+          echo "backend_changed=false" >> $GITHUB_OUTPUT
+
+          # If this is the first commit, treat as changed
+          if ! git rev-parse HEAD^ >/dev/null 2>&1; then
+            echo "No parent commit found, treating as backend changed."
+            echo "backend_changed=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD || echo "")
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          if echo "$CHANGED_FILES" | grep -q '^backend/'; then
+            echo "Detected changes under backend/ – will build & push image."
+            echo "backend_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "No changes under backend/ – skipping image build."
+          fi
+
+  # 2) Build & push image, then trigger Render deploy
+  build-and-push:
+    needs: check-backend-changes
+    if: >
+      ${{ github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.head_branch == 'main' &&
+          needs.check-backend-changes.outputs.backend_changed == 'true' }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo at same commit as CI
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/goalboundfamily:backend-latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/goalboundfamily:backend-${{ github.event.workflow_run.head_sha }}
+
+      - name: Trigger Render deploy
+        run: |
+          echo "Triggering Render deploy..."
+          curl -X POST "$RENDER_DEPLOY_HOOK"
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}

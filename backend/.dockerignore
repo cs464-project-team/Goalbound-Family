@@ -1,0 +1,12 @@
+bin
+obj
+.vscode
+.idea
+.git
+.gitignore
+Dockerfile
+Dockerfile.*
+*.Test/
+Backend.Tests/
+.env
+.env.*

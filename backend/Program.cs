@@ -6,10 +6,21 @@ using GoalboundFamily.Api.Services;
 using GoalboundFamily.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-// Load environment variables from .env file
-Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
+
+var environment = builder.Environment.EnvironmentName;
+var contentRoot = builder.Environment.ContentRootPath;
+
+// Load environment variables from .env file
+if (environment == "Development")
+{
+    Env.Load(Path.Combine(contentRoot, ".env.development"));
+}
+else if (environment == "Testing")
+{
+    Env.Load(Path.Combine(contentRoot, ".env.testing"));
+}
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -111,3 +122,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
