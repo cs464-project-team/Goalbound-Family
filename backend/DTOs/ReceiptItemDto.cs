@@ -13,4 +13,9 @@ public class ReceiptItemDto
     public int LineNumber { get; set; }
     public bool IsManuallyAdded { get; set; }
     public decimal? OcrConfidence { get; set; }
+
+    /// <summary>
+    /// Assignments of this item to household members
+    /// </summary>
+    public List<ReceiptItemAssignmentDto> Assignments { get; set; } = new();
 }
