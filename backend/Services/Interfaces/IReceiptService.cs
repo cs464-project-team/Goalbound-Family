@@ -31,4 +31,10 @@ public interface IReceiptService
     /// Confirm receipt after user review
     /// </summary>
     Task<ReceiptResponseDto> ConfirmReceiptAsync(ConfirmReceiptDto confirmDto);
+
+    /// <summary>
+    /// Assign receipt items to household members with GST/Service Charge calculations
+    /// and update member expenditures
+    /// </summary>
+    Task<ReceiptResponseDto> AssignItemsToMembersAsync(AssignReceiptItemsDto assignDto);
 }
