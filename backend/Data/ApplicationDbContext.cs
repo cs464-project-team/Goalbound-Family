@@ -12,6 +12,8 @@ public class ApplicationDbContext : DbContext
 
     // DbSets for entities
     public DbSet<User> Users { get; set; }
+    public DbSet<Receipt> Receipts { get; set; }
+    public DbSet<ReceiptItem> ReceiptItems { get; set; }
 
     // Add more DbSets as needed
     // Example: public DbSet<Family> Families { get; set; }
@@ -29,6 +31,37 @@ public class ApplicationDbContext : DbContext
 
             entity.Property(u => u.CreatedAt)
                 .HasDefaultValueSql("NOW()");
+        });
+
+        // Configure Receipt entity
+        modelBuilder.Entity<Receipt>(entity =>
+        {
+            entity.HasIndex(r => r.UserId);
+            entity.HasIndex(r => r.Status);
+            entity.HasIndex(r => r.UploadedAt);
+
+            entity.Property(r => r.UploadedAt)
+                .HasDefaultValueSql("NOW()");
+
+            entity.HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure ReceiptItem entity
+        modelBuilder.Entity<ReceiptItem>(entity =>
+        {
+            entity.HasIndex(ri => ri.ReceiptId);
+            entity.HasIndex(ri => ri.LineNumber);
+
+            entity.Property(ri => ri.CreatedAt)
+                .HasDefaultValueSql("NOW()");
+
+            entity.HasOne(ri => ri.Receipt)
+                .WithMany(r => r.Items)
+                .HasForeignKey(ri => ri.ReceiptId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Add more entity configurations as needed
