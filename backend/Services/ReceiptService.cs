@@ -2,6 +2,8 @@ using GoalboundFamily.Api.DTOs;
 using GoalboundFamily.Api.Models;
 using GoalboundFamily.Api.Repositories.Interfaces;
 using GoalboundFamily.Api.Services.Interfaces;
+using GoalboundFamily.Api.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace GoalboundFamily.Api.Services;
 
@@ -14,6 +16,7 @@ public class ReceiptService : IReceiptService
     private readonly IOcrService _ocrService;
     private readonly IReceiptParserService _parserService;
     private readonly ISupabaseStorageService _storageService;
+    private readonly ApplicationDbContext _dbContext;
     private readonly ILogger<ReceiptService> _logger;
 
     public ReceiptService(
@@ -21,12 +24,14 @@ public class ReceiptService : IReceiptService
         IOcrService ocrService,
         IReceiptParserService parserService,
         ISupabaseStorageService storageService,
+        ApplicationDbContext dbContext,
         ILogger<ReceiptService> logger)
     {
         _receiptRepository = receiptRepository;
         _ocrService = ocrService;
         _parserService = parserService;
         _storageService = storageService;
+        _dbContext = dbContext;
         _logger = logger;
     }
 
@@ -42,6 +47,7 @@ public class ReceiptService : IReceiptService
         {
             Id = Guid.NewGuid(),
             UserId = uploadDto.UserId,
+            HouseholdId = uploadDto.HouseholdId,
             ImagePath = imagePath,
             OriginalFileName = uploadDto.Image.FileName,
             Status = ReceiptStatus.Processing,
@@ -111,7 +117,17 @@ public class ReceiptService : IReceiptService
 
     public async Task<ReceiptResponseDto?> GetReceiptAsync(Guid receiptId)
     {
-        var receipt = await _receiptRepository.GetByIdWithItemsAsync(receiptId);
+        // Load receipt with all needed relationships
+        var receipt = await _dbContext.Receipts
+            .Include(r => r.Items)
+                .ThenInclude(i => i.Assignments)
+                    .ThenInclude(a => a.HouseholdMember)
+                        .ThenInclude(hm => hm.User)
+            .Include(r => r.Household)
+                .ThenInclude(h => h.Members)
+                    .ThenInclude(m => m.User)
+            .FirstOrDefaultAsync(r => r.Id == receiptId);
+
         return receipt != null ? MapToDto(receipt) : null;
     }
 
@@ -206,12 +222,130 @@ public class ReceiptService : IReceiptService
         return imageUrl;
     }
 
+    public async Task<ReceiptResponseDto> AssignItemsToMembersAsync(AssignReceiptItemsDto assignDto)
+    {
+        var receipt = await _dbContext.Receipts
+            .Include(r => r.Items)
+                .ThenInclude(i => i.Assignments)
+                    .ThenInclude(a => a.HouseholdMember)
+                        .ThenInclude(hm => hm.User)
+            .Include(r => r.Household)
+                .ThenInclude(h => h.Members)
+                    .ThenInclude(m => m.User)
+            .FirstOrDefaultAsync(r => r.Id == assignDto.ReceiptId);
+
+        if (receipt == null)
+        {
+            throw new InvalidOperationException($"Receipt {assignDto.ReceiptId} not found");
+        }
+
+        // Verify household
+        if (receipt.HouseholdId != assignDto.HouseholdId)
+        {
+            receipt.HouseholdId = assignDto.HouseholdId;
+        }
+
+        // Clear existing assignments
+        var existingAssignments = await _dbContext.ReceiptItemAssignments
+            .Where(a => receipt.Items.Select(i => i.Id).Contains(a.ReceiptItemId))
+            .ToListAsync();
+        _dbContext.ReceiptItemAssignments.RemoveRange(existingAssignments);
+
+        // Create new assignments with calculated amounts
+        var newAssignments = new List<ReceiptItemAssignment>();
+        var memberExpenditures = new Dictionary<Guid, decimal>();
+
+        foreach (var itemAssignment in assignDto.ItemAssignments)
+        {
+            var receiptItem = receipt.Items.FirstOrDefault(i => i.Id == itemAssignment.ReceiptItemId);
+            if (receiptItem == null) continue;
+
+            var unitPrice = receiptItem.TotalPrice / receiptItem.Quantity;
+
+            foreach (var memberAssignment in itemAssignment.MemberAssignments)
+            {
+                // Calculate base amount for this member's portion
+                var baseAmount = unitPrice * memberAssignment.AssignedQuantity;
+
+                // Apply service charge to base amount
+                var serviceChargeAmount = assignDto.ApplyServiceCharge ? baseAmount * 0.10m : 0;
+                var amountAfterService = baseAmount + serviceChargeAmount;
+
+                // Apply GST to (base + service charge)
+                var gstAmount = assignDto.ApplyGst ? amountAfterService * 0.09m : 0;
+
+                // Total for this member's portion
+                var totalAmount = amountAfterService + gstAmount;
+
+                var assignment = new ReceiptItemAssignment
+                {
+                    Id = Guid.NewGuid(),
+                    ReceiptItemId = itemAssignment.ReceiptItemId,
+                    HouseholdMemberId = memberAssignment.HouseholdMemberId,
+                    AssignedQuantity = memberAssignment.AssignedQuantity,
+                    BaseAmount = baseAmount,
+                    ServiceChargeAmount = serviceChargeAmount,
+                    GstAmount = gstAmount,
+                    TotalAmount = totalAmount,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                newAssignments.Add(assignment);
+
+                // Track total expenditure per member
+                if (!memberExpenditures.ContainsKey(memberAssignment.HouseholdMemberId))
+                {
+                    memberExpenditures[memberAssignment.HouseholdMemberId] = 0;
+                }
+                memberExpenditures[memberAssignment.HouseholdMemberId] += totalAmount;
+            }
+        }
+
+        await _dbContext.ReceiptItemAssignments.AddRangeAsync(newAssignments);
+
+        // Update household member expenditures
+        var now = DateTime.UtcNow;
+        foreach (var (memberId, expenditure) in memberExpenditures)
+        {
+            var member = await _dbContext.HouseholdMembers.FindAsync(memberId);
+            if (member != null)
+            {
+                member.MonthlyExpenditure += expenditure;
+                member.LifetimeExpenditure += expenditure;
+                member.LastExpenditureUpdate = now;
+            }
+        }
+
+        // Mark receipt as confirmed
+        receipt.Status = ReceiptStatus.Confirmed;
+        receipt.UpdatedAt = now;
+
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation("Assigned receipt {ReceiptId} items to {MemberCount} household members",
+            receipt.Id, memberExpenditures.Count);
+
+        // Reload with all relationships
+        receipt = await _dbContext.Receipts
+            .Include(r => r.Items)
+                .ThenInclude(i => i.Assignments)
+                    .ThenInclude(a => a.HouseholdMember)
+                        .ThenInclude(hm => hm.User)
+            .Include(r => r.Household)
+                .ThenInclude(h => h.Members)
+                    .ThenInclude(m => m.User)
+            .FirstOrDefaultAsync(r => r.Id == assignDto.ReceiptId);
+
+        return MapToDto(receipt!);
+    }
+
     private ReceiptResponseDto MapToDto(Receipt receipt)
     {
-        return new ReceiptResponseDto
+        var dto = new ReceiptResponseDto
         {
             Id = receipt.Id,
             UserId = receipt.UserId,
+            HouseholdId = receipt.HouseholdId,
             Status = receipt.Status,
             MerchantName = receipt.MerchantName,
             ReceiptDate = receipt.ReceiptDate,
@@ -221,11 +355,27 @@ public class ReceiptService : IReceiptService
             UploadedAt = receipt.UploadedAt,
             Items = receipt.Items.Select(MapItemToDto).ToList()
         };
+
+        // Add household members if household is loaded
+        if (receipt.Household?.Members != null)
+        {
+            dto.HouseholdMembers = receipt.Household.Members
+                .Select(m => new HouseholdMemberSummaryDto
+                {
+                    Id = m.Id,
+                    UserId = m.UserId,
+                    UserName = m.User != null ? $"{m.User.FirstName} {m.User.LastName}" : "Unknown",
+                    Role = m.Role
+                })
+                .ToList();
+        }
+
+        return dto;
     }
 
     private ReceiptItemDto MapItemToDto(ReceiptItem item)
     {
-        return new ReceiptItemDto
+        var dto = new ReceiptItemDto
         {
             Id = item.Id,
             ItemName = item.ItemName,
@@ -236,5 +386,27 @@ public class ReceiptService : IReceiptService
             IsManuallyAdded = item.IsManuallyAdded,
             OcrConfidence = item.OcrConfidence
         };
+
+        // Add assignments if loaded
+        if (item.Assignments != null && item.Assignments.Any())
+        {
+            dto.Assignments = item.Assignments
+                .Select(a => new ReceiptItemAssignmentDto
+                {
+                    Id = a.Id,
+                    HouseholdMemberId = a.HouseholdMemberId,
+                    HouseholdMemberName = a.HouseholdMember?.User != null
+                        ? $"{a.HouseholdMember.User.FirstName} {a.HouseholdMember.User.LastName}"
+                        : "Unknown",
+                    AssignedQuantity = a.AssignedQuantity,
+                    BaseAmount = a.BaseAmount,
+                    ServiceChargeAmount = a.ServiceChargeAmount,
+                    GstAmount = a.GstAmount,
+                    TotalAmount = a.TotalAmount
+                })
+                .ToList();
+        }
+
+        return dto;
     }
 }
