@@ -9,6 +9,7 @@ public class ReceiptResponseDto
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
+    public Guid? HouseholdId { get; set; }
     public ReceiptStatus Status { get; set; }
     public string? MerchantName { get; set; }
     public DateTime? ReceiptDate { get; set; }
@@ -17,4 +18,5 @@ public class ReceiptResponseDto
     public string? ErrorMessage { get; set; }
     public DateTime UploadedAt { get; set; }
     public List<ReceiptItemDto> Items { get; set; } = new();
+    public List<HouseholdMemberSummaryDto> HouseholdMembers { get; set; } = new();
 }
