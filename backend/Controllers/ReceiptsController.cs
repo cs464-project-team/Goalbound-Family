@@ -26,6 +26,7 @@ public class ReceiptsController : ControllerBase
     /// Upload a receipt image for OCR processing
     /// </summary>
     /// <param name="userId">User ID</param>
+    /// <param name="householdId">Optional Household ID</param>
     /// <param name="image">Receipt image file</param>
     /// <returns>Processed receipt with extracted items</returns>
     [HttpPost("upload")]
@@ -34,6 +35,7 @@ public class ReceiptsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ReceiptResponseDto>> UploadReceipt(
         [FromForm] Guid userId,
+        [FromForm] Guid? householdId,
         [FromForm] IFormFile image)
     {
         try
@@ -60,6 +62,7 @@ public class ReceiptsController : ControllerBase
             var uploadDto = new ReceiptUploadDto
             {
                 UserId = userId,
+                HouseholdId = householdId,
                 Image = image
             };
 
@@ -179,16 +182,28 @@ public class ReceiptsController : ControllerBase
     }
 
     /// <summary>
-    /// [PLACEHOLDER] Assign receipt items to family members
-    /// This endpoint will be implemented in the future
+    /// Assign receipt items to household members with GST/Service Charge calculations
     /// </summary>
-    /// <param name="receiptId">Receipt ID</param>
-    /// <returns>Success message</returns>
-    [HttpPost("{receiptId}/assign")]
-    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
-    public ActionResult AssignItems(Guid receiptId)
+    /// <param name="assignDto">Assignment details</param>
+    /// <returns>Updated receipt with assignments</returns>
+    [HttpPost("assign")]
+    [ProducesResponseType(typeof(ReceiptResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ReceiptResponseDto>> AssignItemsToMembers([FromBody] AssignReceiptItemsDto assignDto)
     {
-        _logger.LogWarning("Assign items endpoint called but not yet implemented");
-        return StatusCode(501, new { message = "Item assignment feature coming soon" });
+        try
+        {
+            var receipt = await _receiptService.AssignItemsToMembersAsync(assignDto);
+            return Ok(receipt);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error assigning receipt items");
+            return StatusCode(500, new { message = "Internal server error" });
+        }
     }
 }
