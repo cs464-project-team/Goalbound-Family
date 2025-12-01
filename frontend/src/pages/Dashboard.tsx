@@ -66,7 +66,7 @@ type HouseholdBudget = {
     month: number;
 };
 
-function Dashboard({ onLogout }: { onLogout: () => void }) {
+function Dashboard() {
     // Invite link state
     const [inviteLink, setInviteLink] = useState<string | null>(null);
     const [generatingInvite, setGeneratingInvite] = useState(false);
