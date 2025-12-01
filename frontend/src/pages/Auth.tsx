@@ -19,7 +19,6 @@ function Auth() {
     loginError,
     signUp,
     signIn,
-    signOut,
   } = useAuthContext()
 
   const navigate = useNavigate();

@@ -13,16 +13,19 @@ const AcceptInvite: React.FC = () => {
     useEffect(() => {
         const token = searchParams.get('token');
         if (!token) {
-            setStatus('error');
-            setMessage('Invalid or missing invitation token.');
+            setTimeout(() => {
+                setStatus('error');
+                setMessage('Invalid or missing invitation token.');
+            }, 0);
             localStorage.removeItem('pendingInviteToken');
             return;
         }
 
         // Check if user is authenticated
         if (!session) {
-            setStatus('unauthenticated');
-            // Store token for after login
+            setTimeout(() => {
+                setStatus('unauthenticated');
+            }, 0);
             localStorage.setItem('pendingInviteToken', token);
             return;
         }
@@ -32,7 +35,7 @@ const AcceptInvite: React.FC = () => {
         setHasAttempted(true);
 
         // Call backend API to accept invite
-        console.log("[AcceptInvite] Accepting invite with token:", token, "userId:", session.user.id);
+        // console.log("[AcceptInvite] Accepting invite with token:", token, "userId:", session.user.id);
         fetch(`http://localhost:5073/api/invitations/accept?token=${encodeURIComponent(token)}`, {
             method: 'POST',
             headers: {
