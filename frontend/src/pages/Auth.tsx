@@ -25,7 +25,11 @@ function Auth() {
   const navigate = useNavigate();
 
   if (session) {
-    return <Navigate to="/dashboard" replace />
+    const pendingToken = localStorage.getItem('pendingInviteToken');
+    if (pendingToken) {
+      return <Navigate to={`/accept-invite?token=${pendingToken}`} replace />;
+    }
+    return <Navigate to="/dashboard" replace />;
   }
 
 

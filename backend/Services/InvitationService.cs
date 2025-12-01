@@ -63,18 +63,20 @@ public class InvitationService : IInvitationService
 
     public async Task<bool> AcceptAsync(AcceptInvitationRequest request)
     {
+        Console.WriteLine($"[AcceptInvite] userId={request.UserId}, token={request.Token}");
+
         var invite = await _inviteRepo.GetByTokenAsync(request.Token);
-        if (invite == null) return false;
+        if (invite == null) { Console.WriteLine("[AcceptInvite] Invite not found"); return false; }
 
-        if (invite.ExpiresAt < DateTime.UtcNow) return false;
+        if (invite.ExpiresAt < DateTime.UtcNow) { Console.WriteLine("[AcceptInvite] Invite expired"); return false; }
 
-        if (invite.IsAccepted) return false;
+        if (invite.IsAccepted) { Console.WriteLine("[AcceptInvite] Invite already accepted"); return false; }
 
         // Check if user is already a member of the household
         var existingMember = await _memberRepo.GetByUserAndHouseholdAsync(request.UserId, invite.HouseholdId);
         if (existingMember != null)
         {
-            // User is already a member, mark invite as accepted but don't add duplicate
+            Console.WriteLine("[AcceptInvite] User already a member");
             invite.IsAccepted = true;
             await _inviteRepo.UpdateAsync(invite);
             await _inviteRepo.SaveChangesAsync();
@@ -82,20 +84,36 @@ public class InvitationService : IInvitationService
         }
 
         // Add new member to household
-        var member = new HouseholdMember
+        try
         {
-            HouseholdId = invite.HouseholdId,
-            UserId = request.UserId,
-            Role = "Member"
-        };
+            Console.WriteLine("[AcceptInvite] Adding new member");
+            var member = new HouseholdMember
+            {
+                HouseholdId = invite.HouseholdId,
+                UserId = request.UserId,
+                Role = "Member"
+            };
 
-        await _memberRepo.AddAsync(member);
+            await _memberRepo.AddAsync(member);
 
-        invite.IsAccepted = true;
-        await _inviteRepo.UpdateAsync(invite);
+            invite.IsAccepted = true;
+            await _inviteRepo.UpdateAsync(invite);
 
-        await _inviteRepo.SaveChangesAsync();
-
-        return true;
+            await _inviteRepo.SaveChangesAsync();
+            return true;
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+        {
+            if (ex.InnerException is Npgsql.PostgresException pgEx && pgEx.SqlState == "23505")
+            {
+                // Duplicate key, treat as success
+                Console.WriteLine("[AcceptInvite] Duplicate key error, treating as success");
+                invite.IsAccepted = true;
+                await _inviteRepo.UpdateAsync(invite);
+                await _inviteRepo.SaveChangesAsync();
+                return true;
+            }
+            throw;
+        }
     }
 }

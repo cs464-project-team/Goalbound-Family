@@ -19,6 +19,7 @@ public class HouseholdMemberRepository
     {
         return await _dbSet
             .Include(m => m.Household)
+            .ThenInclude(h => h.Members)
             .Where(m => m.UserId == userId)
             .ToListAsync();
     }

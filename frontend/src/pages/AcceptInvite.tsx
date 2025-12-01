@@ -8,12 +8,14 @@ const AcceptInvite: React.FC = () => {
     const { session } = useAuth();
     const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'unauthenticated'>('loading');
     const [message, setMessage] = useState('');
+    const [hasAttempted, setHasAttempted] = useState(false);
 
     useEffect(() => {
         const token = searchParams.get('token');
         if (!token) {
             setStatus('error');
             setMessage('Invalid or missing invitation token.');
+            localStorage.removeItem('pendingInviteToken');
             return;
         }
 
@@ -25,7 +27,12 @@ const AcceptInvite: React.FC = () => {
             return;
         }
 
+        // Prevent duplicate API calls
+        if (hasAttempted) return;
+        setHasAttempted(true);
+
         // Call backend API to accept invite
+        console.log("[AcceptInvite] Accepting invite with token:", token, "userId:", session.user.id);
         fetch(`http://localhost:5073/api/invitations/accept?token=${encodeURIComponent(token)}`, {
             method: 'POST',
             headers: {
@@ -46,13 +53,17 @@ const AcceptInvite: React.FC = () => {
                     const data = await res.json().catch(() => ({}));
                     setStatus('error');
                     setMessage(data.message || 'Failed to accept invitation. The invite may be invalid, expired, or already used.');
+                    // Clear the pending token on error
+                    localStorage.removeItem('pendingInviteToken');
                 }
             })
             .catch(() => {
                 setStatus('error');
                 setMessage('Network error. Please try again later.');
+                // Clear the pending token on error
+                localStorage.removeItem('pendingInviteToken');
             });
-    }, [searchParams, session]);
+    }, [searchParams, session, hasAttempted]);
 
     const handleLogin = () => {
         navigate('/auth');
