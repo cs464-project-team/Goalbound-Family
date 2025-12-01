@@ -14,4 +14,12 @@ public class HouseholdMemberRepository
     {
         return await _dbSet.AnyAsync(m => m.UserId == userId && m.HouseholdId == householdId);
     }
+
+    public async Task<IEnumerable<HouseholdMember>> GetByUserIdAsync(Guid userId)
+    {
+        return await _dbSet
+            .Include(m => m.Household)
+            .Where(m => m.UserId == userId)
+            .ToListAsync();
+    }
 }

@@ -1,0 +1,107 @@
+.dashboard-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.dashboard-title {
+  font-size: 2.2rem;
+  margin-bottom: 1rem;
+}
+
+.signout-btn {
+  float: right;
+  background: #eee;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.no-household-section, .household-list-section {
+  margin: 2rem 0;
+}
+
+.create-household-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 350px;
+}
+
+.input {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  margin-left: 0.5rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.primary-btn {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.secondary-btn {
+  background: #eee;
+  color: #333;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.error-msg {
+  color: #d32f2f;
+  margin-top: 0.5rem;
+}
+
+.household-list {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.household-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+  min-width: 200px;
+  background: #fafafa;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  transition: border 0.2s;
+}
+
+.household-card.selected {
+  border: 2px solid #007bff;
+}
+
+.dashboard-data-section {
+  margin-top: 2rem;
+}
+
+.dashboard-summary {
+  background: #f4f4f4;
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.expenses-list {
+  list-style: none;
+  padding: 0;
+}
+
+.expenses-list li {
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #eee;
+}

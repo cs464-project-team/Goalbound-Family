@@ -11,6 +11,17 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:5073", // <-- your backend URL
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
+
   test: {
     environment: "jsdom",
     globals: true,

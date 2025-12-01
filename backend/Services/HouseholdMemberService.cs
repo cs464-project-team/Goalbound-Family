@@ -30,6 +30,20 @@ public class HouseholdMemberService : IHouseholdMemberService
         });
     }
 
+    public async Task<IEnumerable<HouseholdDto>> GetHouseholdsForUserAsync(Guid userId)
+    {
+        var memberships = await _memberRepo.GetByUserIdAsync(userId);
+        return memberships
+            .Where(m => m.Household != null)
+            .Select(m => new HouseholdDto
+            {
+                Id = m.Household!.Id,
+                Name = m.Household.Name,
+                ParentId = m.Household.ParentId,
+                MemberCount = m.Household.Members?.Count ?? 0
+            });
+    }
+
     public async Task<bool> AddMemberAsync(Guid householdId, Guid userId, string role)
     {
         if (await _memberRepo.IsUserInHouseholdAsync(userId, householdId))
