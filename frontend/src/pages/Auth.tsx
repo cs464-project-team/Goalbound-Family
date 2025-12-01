@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuthContext } from '../context/AuthProvider'
-import '../styles/Auth.css' 
+import '../styles/Auth.css'
 import { Navigate, useNavigate } from 'react-router-dom'
 
 function Auth() {
@@ -25,16 +25,21 @@ function Auth() {
   const navigate = useNavigate();
 
   if (session) {
-  return <Navigate to="/dashboard" replace />
-    }
+    return <Navigate to="/dashboard" replace />
+  }
 
-  
+
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     const success = await signUp(signupEmail, signupPassword, firstName, lastName)
     if (success) {
-      navigate('/dashboard');
+      const pendingToken = localStorage.getItem('pendingInviteToken');
+      if (pendingToken) {
+        navigate(`/accept-invite?token=${pendingToken}`);
+      } else {
+        navigate('/dashboard');
+      }
     }
   }
 
@@ -42,7 +47,12 @@ function Auth() {
     e.preventDefault()
     const success = await signIn(loginEmail, loginPassword)
     if (success) {
-      navigate('/dashboard');
+      const pendingToken = localStorage.getItem('pendingInviteToken');
+      if (pendingToken) {
+        navigate(`/accept-invite?token=${pendingToken}`);
+      } else {
+        navigate('/dashboard');
+      }
     }
   }
 

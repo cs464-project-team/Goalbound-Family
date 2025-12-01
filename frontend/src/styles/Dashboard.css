@@ -105,3 +105,25 @@
   padding: 0.3rem 0;
   border-bottom: 1px solid #eee;
 }
+
+
+.dashboard-summary {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.2rem 1.5rem;
+  font-size: 1.05rem;
+  color: #222;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  max-width: 600px;
+}
+
+.dashboard-data-section h2 {
+  margin-top: 0;
+  color: #2d5a8c;
+  font-size: 1.3rem;
+}

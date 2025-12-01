@@ -8,6 +8,7 @@ import { Layout } from "./components/layout";
 import RequireAuth from "./routes/RequireAuth";
 import { useAuthContext } from "./context/AuthProvider";
 import Navbar from "./components/Navbar";
+import AcceptInvite from "./pages/AcceptInvite";
 
 function AppRoutes() {
   const { signOut } = useAuthContext();
@@ -17,6 +18,8 @@ function AppRoutes() {
       // default route
       <Route path="/" element={<Navigate to="/auth" replace />} />
       <Route path="/auth" element={<Auth />} />
+
+      <Route path="/accept-invite" element={<AcceptInvite />} />
 
       <Route
         path="/dashboard"

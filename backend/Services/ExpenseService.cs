@@ -23,7 +23,7 @@ public class ExpenseService : IExpenseService
         var expense = new Expense
         {
             HouseholdId = request.HouseholdId,
-            CreatedByUserId = request.CreatedByUserId,
+            UserId = request.UserId,
             CategoryId = request.CategoryId,
             Amount = request.Amount,
             Date = request.Date,
@@ -39,7 +39,7 @@ public class ExpenseService : IExpenseService
         {
             Id = expense.Id,
             HouseholdId = expense.HouseholdId,
-            CreatedByUserId = expense.CreatedByUserId,
+            UserId = expense.UserId,
             CategoryId = expense.CategoryId,
             CategoryName = cat?.Name ?? string.Empty,
             Amount = expense.Amount,
@@ -55,7 +55,7 @@ public class ExpenseService : IExpenseService
         {
             Id = e.Id,
             HouseholdId = e.HouseholdId,
-            CreatedByUserId = e.CreatedByUserId,
+            UserId = e.UserId,
             CategoryId = e.CategoryId,
             CategoryName = e.Category?.Name ?? string.Empty,
             Amount = e.Amount,

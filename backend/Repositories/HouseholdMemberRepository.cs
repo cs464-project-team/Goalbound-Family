@@ -22,4 +22,10 @@ public class HouseholdMemberRepository
             .Where(m => m.UserId == userId)
             .ToListAsync();
     }
+
+    public async Task<HouseholdMember?> GetByUserAndHouseholdAsync(Guid userId, Guid householdId)
+    {
+        return await _dbSet
+            .FirstOrDefaultAsync(m => m.UserId == userId && m.HouseholdId == householdId);
+    }
 }

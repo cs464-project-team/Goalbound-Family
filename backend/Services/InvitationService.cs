@@ -24,7 +24,7 @@ public class InvitationService : IInvitationService
 
         var invitation = new Invitation
         {
-            Email = request.Email,
+            // Email = request.Email,
             HouseholdId = request.HouseholdId,
             InvitedByUserId = request.InvitedByUserId,
             Token = token
@@ -36,11 +36,12 @@ public class InvitationService : IInvitationService
         return new InvitationDto
         {
             Id = invitation.Id,
-            Email = invitation.Email,
+            // Email = invitation.Email,
             HouseholdId = invitation.HouseholdId,
             InvitedByUserId = invitation.InvitedByUserId,
             ExpiresAt = invitation.ExpiresAt,
-            IsAccepted = false
+            IsAccepted = false,
+            Token = invitation.Token
         };
     }
 
@@ -52,7 +53,7 @@ public class InvitationService : IInvitationService
         return new InvitationDto
         {
             Id = invite.Id,
-            Email = invite.Email,
+            // Email = invite.Email,
             HouseholdId = invite.HouseholdId,
             InvitedByUserId = invite.InvitedByUserId,
             ExpiresAt = invite.ExpiresAt,
@@ -66,6 +67,19 @@ public class InvitationService : IInvitationService
         if (invite == null) return false;
 
         if (invite.ExpiresAt < DateTime.UtcNow) return false;
+
+        if (invite.IsAccepted) return false;
+
+        // Check if user is already a member of the household
+        var existingMember = await _memberRepo.GetByUserAndHouseholdAsync(request.UserId, invite.HouseholdId);
+        if (existingMember != null)
+        {
+            // User is already a member, mark invite as accepted but don't add duplicate
+            invite.IsAccepted = true;
+            await _inviteRepo.UpdateAsync(invite);
+            await _inviteRepo.SaveChangesAsync();
+            return true;
+        }
 
         // Add new member to household
         var member = new HouseholdMember

@@ -11,7 +11,7 @@ public class Expense
     public Guid HouseholdId { get; set; }
 
     [Required]
-    public Guid CreatedByUserId { get; set; }
+    public Guid UserId { get; set; }
 
     [Required]
     public Guid CategoryId { get; set; }
