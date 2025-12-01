@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
@@ -8,7 +8,7 @@ const AcceptInvite: React.FC = () => {
     const { session } = useAuth();
     const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'unauthenticated'>('loading');
     const [message, setMessage] = useState('');
-    const [hasAttempted, setHasAttempted] = useState(false);
+    const hasAttemptedRef = useRef(false);
 
     useEffect(() => {
         const token = searchParams.get('token');
@@ -31,8 +31,8 @@ const AcceptInvite: React.FC = () => {
         }
 
         // Prevent duplicate API calls
-        if (hasAttempted) return;
-        setHasAttempted(true);
+        if (hasAttemptedRef.current) return;
+        hasAttemptedRef.current = true;
 
         // Call backend API to accept invite
         // console.log("[AcceptInvite] Accepting invite with token:", token, "userId:", session.user.id);
@@ -66,7 +66,7 @@ const AcceptInvite: React.FC = () => {
                 // Clear the pending token on error
                 localStorage.removeItem('pendingInviteToken');
             });
-    }, [searchParams, session, hasAttempted]);
+    }, [searchParams, session]);
 
     const handleLogin = () => {
         navigate('/auth');

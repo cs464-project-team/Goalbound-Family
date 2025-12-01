@@ -92,8 +92,8 @@ function Dashboard() {
             const data = await res.json();
             const link = `${window.location.origin}/accept-invite?token=${data.token}`;
             setInviteLink(link);
-        } catch (err: any) {
-            setInviteError(err.message || 'Unknown error');
+        } catch (err: unknown) {
+            setInviteError(err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setGeneratingInvite(false);
         }
@@ -138,8 +138,8 @@ function Dashboard() {
             const month = now.getMonth() + 1;
             const dashboardData = await fetch(`/api/dashboard/${selectedHouseholdId}/${year}/${month}`).then(res => res.json());
             setDashboard(dashboardData);
-        } catch (err: any) {
-            setCategoryError(err.message || 'Unknown error');
+        } catch (err: unknown) {
+            setCategoryError(err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setAddingCategory(false);
         }
@@ -154,10 +154,6 @@ function Dashboard() {
     const [newHouseholdName, setNewHouseholdName] = useState('');
     const [creating, setCreating] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    if (!session) {
-        return <Navigate to="/auth" replace />;
-    }
 
     useEffect(() => {
         if (!session?.user?.id) return;
@@ -188,6 +184,10 @@ function Dashboard() {
             setLoading(false);
         });
     }, [selectedHouseholdId]);
+
+    if (!session) {
+        return <Navigate to="/auth" replace />;
+    }
     const handleSetBudget = async (categoryId: string) => {
         if (!selectedHouseholdId) return;
         const now = new Date();
@@ -214,8 +214,8 @@ function Dashboard() {
             const budgetsData = await fetch(`/api/householdbudgets/${selectedHouseholdId}/${year}/${month}`).then(res => res.json());
             setBudgets(budgetsData);
             setBudgetInputs(prev => ({ ...prev, [categoryId]: '' }));
-        } catch (err: any) {
-            setBudgetError(prev => ({ ...prev, [categoryId]: err.message || 'Unknown error' }));
+        } catch (err: unknown) {
+            setBudgetError(prev => ({ ...prev, [categoryId]: err instanceof Error ? err.message : 'Unknown error' }));
         } finally {
             setBudgetLoading(prev => ({ ...prev, [categoryId]: false }));
         }
@@ -237,8 +237,8 @@ function Dashboard() {
             const data: Household[] = await fetch(`/api/householdmembers/user/${session.user.id}`).then(r => r.json());
             setHouseholds(data);
             if (data.length > 0) setSelectedHouseholdId(data[0].id);
-        } catch (err: any) {
-            setError(err.message || 'Unknown error');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setCreating(false);
         }
