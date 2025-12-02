@@ -124,4 +124,5 @@ public class UsersControllerTests
         returnedUser.Should().NotBeNull();
         returnedUser!.Id.Should().Be(newUserId);
     }
+
 }
