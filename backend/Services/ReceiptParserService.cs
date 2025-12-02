@@ -504,29 +504,29 @@ public partial class ReceiptParserService : IReceiptParserService
                     {
                         var nextLine = lines[j];
 
-                    // Skip lines that have already been claimed as prices by previous items
-                    if (skipLines.Contains(j))
-                    {
-                        _logger.LogInformation("  → Line {J} already claimed, skipping in look-ahead", j);
-                        continue;
-                    }
+                        // Skip lines that have already been claimed as prices by previous items
+                        if (skipLines.Contains(j))
+                        {
+                            _logger.LogInformation("  → Line {J} already claimed, skipping in look-ahead", j);
+                            continue;
+                        }
 
-                    // Skip sub-items, header/footer lines when looking for item prices
-                    if (IsIndentedSubItem(nextLine) || IsHeaderFooterLine(nextLine) || IsTotalOrSubtotalLine(nextLine))
-                    {
-                        _logger.LogInformation("  → Line {J} is sub-item/header/total, skipping in look-ahead", j);
-                        continue;
-                    }
+                        // Skip sub-items, header/footer lines when looking for item prices
+                        if (IsIndentedSubItem(nextLine) || IsHeaderFooterLine(nextLine) || IsTotalOrSubtotalLine(nextLine))
+                        {
+                            _logger.LogInformation("  → Line {J} is sub-item/header/total, skipping in look-ahead", j);
+                            continue;
+                        }
 
-                    // CRITICAL: If we encounter a line with quantity, stop looking for price
-                    // This prevents description lines from stealing prices that belong to upcoming items
-                    // Example: "Pelu Cabernet Sauvignon" shouldn't steal price from "1 SAND GOLD CHIX"
-                    // OCR errors: ":" "I" "l" might be misread "1"
-                    if (Regex.IsMatch(nextLine.Trim(), @"^[1-9Il:]\s"))
-                    {
-                        _logger.LogInformation("  → Line {J} has quantity, stopping price search (price likely belongs to that line)", j);
-                        break;
-                    }
+                        // CRITICAL: If we encounter a line with quantity, stop looking for price
+                        // This prevents description lines from stealing prices that belong to upcoming items
+                        // Example: "Pelu Cabernet Sauvignon" shouldn't steal price from "1 SAND GOLD CHIX"
+                        // OCR errors: ":" "I" "l" might be misread "1"
+                        if (Regex.IsMatch(nextLine.Trim(), @"^[1-9Il:]\s"))
+                        {
+                            _logger.LogInformation("  → Line {J} has quantity, stopping price search (price likely belongs to that line)", j);
+                            break;
+                        }
 
                         // Check if this line contains a price
                         var priceMatch = PricePattern().Match(nextLine);
