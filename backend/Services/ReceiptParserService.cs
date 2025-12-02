@@ -1034,6 +1034,7 @@ public partial class ReceiptParserService : IReceiptParserService
             Regex.IsMatch(trimmed, @"^(reprint|copy|duplicate)[:\s#]+", RegexOptions.IgnoreCase) ||
             Regex.IsMatch(trimmed, @"^(member|membership|invoice|pickup)[:\s]+", RegexOptions.IgnoreCase) ||  // Member info, invoice numbers, pickup numbers
             Regex.IsMatch(trimmed, @"^table[\s#:]+\d+", RegexOptions.IgnoreCase) ||   // Table info: "Table 5", "Table: 14", "TABLE #6"
+            Regex.IsMatch(trimmed, @"^table[\s#:]+[A-Z0-9]+$", RegexOptions.IgnoreCase) ||   // Alphanumeric table identifiers: "Table D2", "Table A1", "Table B12"
             Regex.IsMatch(trimmed, @"^(bill|check|order|receipt|transaction|trans)[:\s#]+\d+", RegexOptions.IgnoreCase) ||  // Bill/check numbers: "Bill: 59980", "Check #123", "Order #456"
             Regex.IsMatch(trimmed, @"^phone[:\s]+", RegexOptions.IgnoreCase) ||       // Phone label: "Phone (626)288-9999"
             Regex.IsMatch(trimmed, @"^(date|time)[:\s]+", RegexOptions.IgnoreCase) || // Date/time labels: "Date: Apr 01", "Time: 05:12PM"
@@ -1161,7 +1162,8 @@ public partial class ReceiptParserService : IReceiptParserService
             Regex.IsMatch(trimmed, @"\d{1,2}:\d{2}(:\d{2})?[AP]?M?", RegexOptions.IgnoreCase) || // 14:30:00 or 2:30PM
             Regex.IsMatch(trimmed, @"^ORDER[:\s#]", RegexOptions.IgnoreCase) ||            // ORDER: #123
             Regex.IsMatch(trimmed, @"^CHECK[:\s#]", RegexOptions.IgnoreCase) ||            // CHECK #278470-1
-            Regex.IsMatch(trimmed, @"^TABLE[\s#]*\d+", RegexOptions.IgnoreCase))           // Table 5, TABLE #6
+            Regex.IsMatch(trimmed, @"^TABLE[\s#]*\d+", RegexOptions.IgnoreCase) ||         // Table 5, TABLE #6
+            Regex.IsMatch(trimmed, @"^TABLE[\s#:]+[A-Z0-9]+$", RegexOptions.IgnoreCase))   // Alphanumeric table identifiers: "Table D2", "Table A1"
             return false;
 
         // Not UI elements or metadata patterns from delivery apps
