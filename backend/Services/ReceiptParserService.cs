@@ -305,6 +305,31 @@ public partial class ReceiptParserService : IReceiptParserService
                 continue;
             }
 
+            // 4. Skip English translations that come right after "+++" indented sub-items (like "+++百香果气泡水 $0" followed by "Passion Fruit Soda")
+            // These are translation lines, not separate items
+            // IMPORTANT: Only apply this filter for "+++" style sub-items (common in Asian receipts), not all sub-items
+            if (i > startLine)
+            {
+                var prevLine = lines[i - 1];
+                var prevLineTrimmed = prevLine.Trim();
+
+                // Check if previous line is specifically a "+++" style sub-item (not just any indented line)
+                if (prevLineTrimmed.StartsWith("+++") || prevLineTrimmed.StartsWith("+ + +"))
+                {
+                    // Previous line was a "+++" sub-item (e.g., "+++百香果气泡水 $0")
+                    // Check if current line is a translation (no quantity prefix, no price on same line)
+                    var trimmed = line.Trim();
+                    var hasQuantityPrefix = Regex.IsMatch(trimmed, @"^[1-9Il:]\s");
+                    var hasPriceOnLine = HasPriceOnSameLine(line);
+
+                    if (!hasQuantityPrefix && !hasPriceOnLine)
+                    {
+                        _logger.LogInformation("  → Skipping translation line after +++ sub-item at line {LineNum}: '{Line}'", i, line);
+                        continue;
+                    }
+                }
+            }
+
             // Try to parse line with format: Qty Item Price
             var qtyItemPriceMatch = QuantityItemPricePattern().Match(line);
             _logger.LogInformation("  → QuantityItemPricePattern match: {Success}", qtyItemPriceMatch.Success);
@@ -401,11 +426,42 @@ public partial class ReceiptParserService : IReceiptParserService
                     // Check if this is a modifier/continuation line (pass previous line for context)
                     if (IsModifierOrContinuationLine(nextLine, prevLineForModifier))
                     {
-                        _logger.LogInformation("  → Line {J} is modifier/continuation: '{Line}'", j, nextLine);
-                        modifierLines.Add(nextLine);
-                        modifierEndLine = j;
-                        skipLines.Add(j); // Mark as consumed
-                        prevLineForModifier = nextLine; // Update for next iteration
+                        // CRITICAL: Before treating as modifier, check if next line is a price
+                        // If so, this line is actually a separate item with its own price
+                        // Example: "Make It Blue" followed by "$5.00" should be separate item
+                        bool hasOwnPrice = false;
+                        if (j + 1 < lines.Count && !skipLines.Contains(j + 1))
+                        {
+                            var lineAfterModifier = lines[j + 1];
+                            if (IsPriceOnlyLine(lineAfterModifier))
+                            {
+                                var priceMatch = PricePattern().Match(lineAfterModifier);
+                                if (priceMatch.Success && decimal.TryParse(NormalizePrice(priceMatch.Groups[1].Value), out var priceValue))
+                                {
+                                    if (IsValidItemPrice(priceValue))
+                                    {
+                                        hasOwnPrice = true;
+                                        _logger.LogInformation("  → Line {J} has own price on next line (${Price}), treating as separate item not modifier", j, priceValue);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (hasOwnPrice)
+                        {
+                            // This line has its own price, so it's a separate item, not a modifier
+                            // Stop collecting modifiers here
+                            _logger.LogInformation("  → Stopping modifier collection before line {J} (has own price)", j);
+                            break;
+                        }
+                        else
+                        {
+                            _logger.LogInformation("  → Line {J} is modifier/continuation: '{Line}'", j, nextLine);
+                            modifierLines.Add(nextLine);
+                            modifierEndLine = j;
+                            skipLines.Add(j); // Mark as consumed
+                            prevLineForModifier = nextLine; // Update for next iteration
+                        }
                     }
                     // CRITICAL: Track price lines during modifier collection
                     else if (IsPriceOnlyLine(nextLine))
@@ -643,11 +699,18 @@ public partial class ReceiptParserService : IReceiptParserService
         if (trimmed.StartsWith("["))
             return true;
 
+        // Check for parenthetical quantity notes like "(2) BMOD Up", "(3) Extra Sauce"
+        // These are modifier notes that apply to previous items, not separate billable items
+        // Pattern: starts with "(digit)" or "(digit+)" like "(2)", "(10)", etc.
+        if (Regex.IsMatch(trimmed, @"^\(\d+\)\s+"))
+            return true;
+
         // Check for modification keywords (usually sub-items)
+        // IMPORTANT: Only if the line doesn't start with actual indentation
+        // Lines like "Add Lobster" with their own price should not be treated as sub-items
         var lower = trimmed.ToLower();
         if (lower.StartsWith("no ") ||
             lower.StartsWith("extra ") ||
-            lower.StartsWith("add ") ||
             lower.StartsWith("less ") ||
             lower.StartsWith("with ") ||
             lower.StartsWith("without ") ||
@@ -657,6 +720,9 @@ public partial class ReceiptParserService : IReceiptParserService
             lower.StartsWith("copa ") ||     // Spanish: "cup/glass" (drink/sauce options)
             lower.Contains(" copa "))        // Handle "S. COPA" or middle-position copa
             return true;
+
+        // NOTE: Removed "add " from keyword check - "Add Lobster" with its own price
+        // should be a separate item, not a sub-item
 
         return false;
     }
@@ -890,8 +956,75 @@ public partial class ReceiptParserService : IReceiptParserService
         var lower = line.ToLower();
         var trimmed = line.Trim();
 
+        // Column headers on receipts (should not be treated as items)
+        // Common headers: Price, Qty, Item, Amount, Description, etc.
+        if (lower == "price" ||
+            lower == "qty" ||
+            lower == "item" ||
+            lower == "qty item" ||
+            lower == "quantity" ||
+            lower == "amount" ||
+            lower == "description" ||
+            lower == "unit price" ||
+            lower == "total price")
+            return true;
+
+        // Store location patterns (e.g., "pandamart (Punggol)", "Starbucks (Downtown)")
+        // Matches: word(s) followed by (Location) where Location is capitalized word(s)
+        // IMPORTANT: Only match if it has Latin characters to avoid filtering Chinese text
+        if (trimmed.Any(c => c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z') &&
+            Regex.IsMatch(trimmed, @"^[\w\s]+\([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\)$"))
+            return true;
+
+        // UI elements from food delivery apps (buttons, links, action text)
+        if (lower == "help" ||
+            lower == "view details" ||
+            lower.StartsWith("view details") ||
+            lower == "your order" ||
+            lower.Contains("(") && lower.Contains("items)"))  // "(13 items)", "(X items)"
+            return true;
+
+        // Fee-related lines (not food items)
+        if (lower.Contains("platform fee") ||
+            lower.Contains("service fee") ||
+            lower.Contains("convenience fee") ||
+            lower.Contains("delivery fee") ||
+            lower.Contains("booking fee") ||
+            lower.Contains("processing fee") ||
+            lower.Contains("small order fee"))
+            return true;
+
+        // Common non-item indicator words (delivery status, promotional text)
+        if (lower == "free" ||
+            lower == "promo" ||
+            lower == "discount applied" ||
+            lower == "applied")
+            return true;
+
+        // Delivery/order type indicators
+        if (lower == "standard delivery" ||
+            lower == "express delivery" ||
+            lower == "priority delivery" ||
+            lower == "scheduled delivery")
+            return true;
+
         // Order/table numbers (e.g., "#77 - HERE", "Order #123", "Table 5")
         if (Regex.IsMatch(trimmed, @"^#\d+\s*-?\s*(HERE|TO[-\s]?GO|DINE[-\s]?IN)?$", RegexOptions.IgnoreCase))
+            return true;
+
+        // Receipt metadata patterns (server, guests, reprint, table info)
+        // These commonly appear near the top of receipts and should not be treated as items
+        if (Regex.IsMatch(trimmed, @"^(server|cashier|clerk|employee|staff|waiter|waitress)[:\s]+", RegexOptions.IgnoreCase) ||
+            Regex.IsMatch(trimmed, @"^(guest|guests|party|people|ppl|covers?)[:\s]+", RegexOptions.IgnoreCase) ||
+            Regex.IsMatch(trimmed, @"^(reprint|copy|duplicate)[:\s#]+", RegexOptions.IgnoreCase) ||
+            Regex.IsMatch(trimmed, @"^(member|membership|invoice|pickup)[:\s]+", RegexOptions.IgnoreCase) ||  // Member info, invoice numbers, pickup numbers
+            Regex.IsMatch(trimmed, @"^table[\s#]+\d+", RegexOptions.IgnoreCase) ||
+            Regex.IsMatch(trimmed, @"^\(\d{3}\)\s*\d{3}[-\s]?\d{4}") ||  // Phone numbers like (858) 488-7311
+            Regex.IsMatch(trimmed, @"^\d{3}[-.\s]\d{3}[-.\s]\d{4}"))     // Alternative phone format 858-488-7311
+            return true;
+
+        // Membership and policy text
+        if (lower.Contains("member") && (lower.Contains("consumption") || lower.Contains("policy") || lower.Contains("preferential")))
             return true;
 
         // Thank you messages, receipts headers
@@ -980,6 +1113,12 @@ public partial class ReceiptParserService : IReceiptParserService
         if (trimmed.StartsWith("(") && trimmed.EndsWith(")") && trimmed.Length < 10)
             return false;
 
+        // Skip parenthetical quantity notes like "(2) BMOD Up", "(3) Extra Sauce"
+        // These are modifier notes that apply to previous items, not separate billable items
+        // Pattern: starts with "(digit)" or "(digit+)" like "(2)", "(10)", etc.
+        if (Regex.IsMatch(trimmed, @"^\(\d+\)\s+"))
+            return false;
+
         // Not a date/time pattern (these commonly appear on receipts and get misidentified as items)
         // Common patterns:
         // - "27-Apr-2017 6:21:59P" (date with time)
@@ -999,6 +1138,22 @@ public partial class ReceiptParserService : IReceiptParserService
             Regex.IsMatch(trimmed, @"^ORDER[:\s#]", RegexOptions.IgnoreCase) ||            // ORDER: #123
             Regex.IsMatch(trimmed, @"^CHECK[:\s#]", RegexOptions.IgnoreCase) ||            // CHECK #278470-1
             Regex.IsMatch(trimmed, @"^TABLE[\s#]*\d+", RegexOptions.IgnoreCase))           // Table 5, TABLE #6
+            return false;
+
+        // Not UI elements or metadata patterns from delivery apps
+        // - "View details (13 items)" - UI action with item count
+        // - "pandamart (Location)" - Store name with location
+        // - Parenthetical item counts like "(13 items)", "(5 items)"
+        var lower = trimmed.ToLower();
+        if (lower.StartsWith("view details") ||
+            lower.StartsWith("view order") ||
+            lower.StartsWith("see details") ||
+            Regex.IsMatch(trimmed, @"^\(\d+\s+items?\)$", RegexOptions.IgnoreCase))      // (13 items), (1 item)
+            return false;
+
+        // Store location pattern - only apply if it has Latin characters (avoid filtering Chinese text)
+        if (trimmed.Any(c => c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z') &&
+            Regex.IsMatch(trimmed, @"^[\w\s]+\([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\)$"))       // Store (Location)
             return false;
 
         // Not indented (sub-item)
