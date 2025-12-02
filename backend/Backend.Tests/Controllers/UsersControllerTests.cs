@@ -128,10 +128,11 @@ public class UsersControllerTests
     [Fact]
     public void Intentional_Failure_For_CI_Test()
     {
-        // This test is *supposed* to fail so you can verify CI behaviour.
-        // Remove or comment this out once you're done testing.
+        // This will always fail by throwing an exception.
+        // Use this just to confirm CI fails when tests fail.
 
-        true.Should().BeFalse("this test is intentionally failing to verify CI breaks the build");
+        throw new Exception("Intentional CI failure – this test should break the build.");
     }
+
 
 }
