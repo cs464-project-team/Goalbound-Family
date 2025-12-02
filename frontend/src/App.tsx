@@ -8,7 +8,6 @@ import ReceiptScanner from "./pages/ReceiptScanner";
 import { Layout } from "./components/layout";
 import RequireAuth from "./routes/RequireAuth";
 import { useAuthContext } from "./context/AuthProvider";
-import Navbar from "./components/Navbar";
 
 function AppRoutes() {
   const { signOut } = useAuthContext();
@@ -23,33 +22,31 @@ function AppRoutes() {
         path="/dashboard"
         element={
           <RequireAuth>
-            <Dashboard onLogout={signOut} />
+            <Layout>
+              <Dashboard onLogout={signOut} />
+            </Layout>
           </RequireAuth>
         }
       />
 
-      {/* <Route
-        path="/leaderboard"
-        element={
-          <RequireAuth>
-            <Leaderboard />
-          </RequireAuth>
-        }
-      /> */}
       <Route
         path="/leaderboard"
         element={
-          <Layout>
-            <Leaderboard />
-          </Layout>
+          <RequireAuth>
+            <Layout>
+              <Leaderboard />
+            </Layout>
+          </RequireAuth>
         }
       />
 
       <Route
-        path="/receipt-scanner"
+        path="/scanner"
         element={
           <RequireAuth>
-            <ReceiptScanner />
+            <Layout>
+              <ReceiptScanner />
+            </Layout>
           </RequireAuth>
         }
       />
@@ -61,7 +58,6 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Navbar />
         <AppRoutes />
       </BrowserRouter>
     </AuthProvider>
