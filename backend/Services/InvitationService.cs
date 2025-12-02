@@ -24,7 +24,7 @@ public class InvitationService : IInvitationService
 
         var invitation = new Invitation
         {
-            Email = request.Email,
+            // Email = request.Email,
             HouseholdId = request.HouseholdId,
             InvitedByUserId = request.InvitedByUserId,
             Token = token
@@ -36,11 +36,12 @@ public class InvitationService : IInvitationService
         return new InvitationDto
         {
             Id = invitation.Id,
-            Email = invitation.Email,
+            // Email = invitation.Email,
             HouseholdId = invitation.HouseholdId,
             InvitedByUserId = invitation.InvitedByUserId,
             ExpiresAt = invitation.ExpiresAt,
-            IsAccepted = false
+            IsAccepted = false,
+            Token = invitation.Token
         };
     }
 
@@ -52,7 +53,7 @@ public class InvitationService : IInvitationService
         return new InvitationDto
         {
             Id = invite.Id,
-            Email = invite.Email,
+            // Email = invite.Email,
             HouseholdId = invite.HouseholdId,
             InvitedByUserId = invite.InvitedByUserId,
             ExpiresAt = invite.ExpiresAt,
@@ -62,26 +63,57 @@ public class InvitationService : IInvitationService
 
     public async Task<bool> AcceptAsync(AcceptInvitationRequest request)
     {
-        var invite = await _inviteRepo.GetByTokenAsync(request.Token);
-        if (invite == null) return false;
+        Console.WriteLine($"[AcceptInvite] userId={request.UserId}, token={request.Token}");
 
-        if (invite.ExpiresAt < DateTime.UtcNow) return false;
+        var invite = await _inviteRepo.GetByTokenAsync(request.Token);
+        if (invite == null) { Console.WriteLine("[AcceptInvite] Invite not found"); return false; }
+
+        if (invite.ExpiresAt < DateTime.UtcNow) { Console.WriteLine("[AcceptInvite] Invite expired"); return false; }
+
+        if (invite.IsAccepted) { Console.WriteLine("[AcceptInvite] Invite already accepted"); return false; }
+
+        // Check if user is already a member of the household
+        var existingMember = await _memberRepo.GetByUserAndHouseholdAsync(request.UserId, invite.HouseholdId);
+        if (existingMember != null)
+        {
+            Console.WriteLine("[AcceptInvite] User already a member");
+            invite.IsAccepted = true;
+            await _inviteRepo.UpdateAsync(invite);
+            await _inviteRepo.SaveChangesAsync();
+            return true;
+        }
 
         // Add new member to household
-        var member = new HouseholdMember
+        try
         {
-            HouseholdId = invite.HouseholdId,
-            UserId = request.UserId,
-            Role = "Member"
-        };
+            Console.WriteLine("[AcceptInvite] Adding new member");
+            var member = new HouseholdMember
+            {
+                HouseholdId = invite.HouseholdId,
+                UserId = request.UserId,
+                Role = "Member"
+            };
 
-        await _memberRepo.AddAsync(member);
+            await _memberRepo.AddAsync(member);
 
-        invite.IsAccepted = true;
-        await _inviteRepo.UpdateAsync(invite);
+            invite.IsAccepted = true;
+            await _inviteRepo.UpdateAsync(invite);
 
-        await _inviteRepo.SaveChangesAsync();
-
-        return true;
+            await _inviteRepo.SaveChangesAsync();
+            return true;
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+        {
+            if (ex.InnerException is Npgsql.PostgresException pgEx && pgEx.SqlState == "23505")
+            {
+                // Duplicate key, treat as success
+                Console.WriteLine("[AcceptInvite] Duplicate key error, treating as success");
+                invite.IsAccepted = true;
+                await _inviteRepo.UpdateAsync(invite);
+                await _inviteRepo.SaveChangesAsync();
+                return true;
+            }
+            throw;
+        }
     }
 }

@@ -21,4 +21,11 @@ public class HouseholdMembersController : ControllerBase
         var members = await _service.GetMembersAsync(householdId);
         return Ok(members);
     }
+
+    [HttpGet("user/{userId:guid}")]
+    public async Task<ActionResult<IEnumerable<HouseholdDto>>> GetHouseholdsForUser(Guid userId)
+    {
+        var households = await _service.GetHouseholdsForUserAsync(userId);
+        return Ok(households);
+    }
 }

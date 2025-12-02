@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuthContext } from '../context/AuthProvider'
 import '../styles/Auth.css'
-import { Navigate, useNavigate, useLocation } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 
 function Auth() {
   // form state
@@ -19,24 +19,30 @@ function Auth() {
     loginError,
     signUp,
     signIn,
-    signOut,
   } = useAuthContext()
 
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = (location.state as any)?.from?.pathname || '/dashboard';
 
   if (session) {
-    return <Navigate to={from} replace />
+    const pendingToken = localStorage.getItem('pendingInviteToken');
+    if (pendingToken) {
+      return <Navigate to={`/accept-invite?token=${pendingToken}`} replace />;
+    }
+    return <Navigate to="/dashboard" replace />;
   }
 
-  
+
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     const success = await signUp(signupEmail, signupPassword, firstName, lastName)
     if (success) {
-      navigate(from);
+      const pendingToken = localStorage.getItem('pendingInviteToken');
+      if (pendingToken) {
+        navigate(`/accept-invite?token=${pendingToken}`);
+      } else {
+        navigate('/dashboard');
+      }
     }
   }
 
@@ -44,7 +50,12 @@ function Auth() {
     e.preventDefault()
     const success = await signIn(loginEmail, loginPassword)
     if (success) {
-      navigate(from);
+      const pendingToken = localStorage.getItem('pendingInviteToken');
+      if (pendingToken) {
+        navigate(`/accept-invite?token=${pendingToken}`);
+      } else {
+        navigate('/dashboard');
+      }
     }
   }
 

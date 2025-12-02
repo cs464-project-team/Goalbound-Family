@@ -6,6 +6,7 @@
 
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <UserSecretsId>c96f9cd3-b20f-41ec-8985-7a591ba05dad</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,9 +29,11 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
-    <ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="Backend.Tests\**\*.cs" />
   </ItemGroup>
+
   <ItemGroup>
     <None Include="tessdata\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
