@@ -54,9 +54,6 @@ namespace GoalboundFamily.Api.Migrations
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime>("Date")
                         .HasColumnType("timestamp with time zone");
 
@@ -66,13 +63,21 @@ namespace GoalboundFamily.Api.Migrations
                     b.Property<Guid>("HouseholdId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ReceiptId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("CreatedByUserId");
-
                     b.HasIndex("HouseholdId");
+
+                    b.HasIndex("ReceiptId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Expenses");
                 });
@@ -420,23 +425,29 @@ namespace GoalboundFamily.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GoalboundFamily.Api.Models.User", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("GoalboundFamily.Api.Models.Household", "Household")
                         .WithMany()
                         .HasForeignKey("HouseholdId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("GoalboundFamily.Api.Models.Receipt", "Receipt")
+                        .WithMany()
+                        .HasForeignKey("ReceiptId");
+
+                    b.HasOne("GoalboundFamily.Api.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Category");
 
-                    b.Navigation("CreatedByUser");
-
                     b.Navigation("Household");
+
+                    b.Navigation("Receipt");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("GoalboundFamily.Api.Models.Household", b =>
