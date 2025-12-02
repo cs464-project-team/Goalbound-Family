@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows: [ "CI" ]          # must match your CI workflow name
     types:
-      - completed                # completed in any state
+      - completed                # CI finished (success/failure/cancelled)
 
 jobs:
   # 1) Only run this job if:
@@ -57,6 +57,9 @@ jobs:
   # 2) Build & push image, then trigger Render deploy
   build-and-push:
     needs: check-backend-changes
+    # Only run if:
+    #  - the previous job actually ran & succeeded
+    #  - it detected backend_changed == 'true'
     if: >
       ${{ needs.check-backend-changes.result == 'success' &&
           needs.check-backend-changes.outputs.backend_changed == 'true' }}
@@ -64,6 +67,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Debug backend_changed
+        run: |
+          echo "backend_changed='${{ needs.check-backend-changes.outputs.backend_changed }}'"
+          echo "job result='${{ needs.check-backend-changes.result }}'"
+
       - name: Checkout repo at same commit as CI
         uses: actions/checkout@v4
         with:
