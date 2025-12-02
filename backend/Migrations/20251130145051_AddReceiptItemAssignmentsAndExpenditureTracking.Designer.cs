@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GoalboundFamily.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251130142004_AddReceiptItemAssignmentsAndExpenditureTracking")]
+    [Migration("20251130145051_AddReceiptItemAssignmentsAndExpenditureTracking")]
     partial class AddReceiptItemAssignmentsAndExpenditureTracking
     {
         /// <inheritdoc />
