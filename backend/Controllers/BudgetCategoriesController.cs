@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GoalboundFamily.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/budgets/categories")]
 public class BudgetCategoriesController : ControllerBase
 {
     private readonly IBudgetCategoryService _service;

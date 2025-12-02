@@ -2,6 +2,8 @@ using GoalboundFamily.Api.DTOs;
 using GoalboundFamily.Api.Models;
 using GoalboundFamily.Api.Repositories.Interfaces;
 using GoalboundFamily.Api.Services.Interfaces;
+using GoalboundFamily.Api.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace GoalboundFamily.Api.Services;
 
@@ -9,13 +11,16 @@ public class HouseholdService : IHouseholdService
 {
     private readonly IHouseholdRepository _houseRepo;
     private readonly IHouseholdMemberRepository _memberRepo;
+    private readonly ApplicationDbContext _dbContext;
 
     public HouseholdService(
         IHouseholdRepository houseRepo,
-        IHouseholdMemberRepository memberRepo)
+        IHouseholdMemberRepository memberRepo,
+        ApplicationDbContext dbContext)
     {
         _houseRepo = houseRepo;
         _memberRepo = memberRepo;
+        _dbContext = dbContext;
     }
 
     public async Task<HouseholdDto?> GetAsync(Guid id)
@@ -41,6 +46,45 @@ public class HouseholdService : IHouseholdService
             Name = h.Name,
             ParentId = h.ParentId,
             MemberCount = 0
+        });
+    }
+
+    public async Task<IEnumerable<HouseholdDto>> GetByUserIdAsync(Guid userId)
+    {
+        var households = await _dbContext.HouseholdMembers
+            .Where(hm => hm.UserId == userId)
+            .Include(hm => hm.Household)
+                .ThenInclude(h => h.Members)
+            .Select(hm => hm.Household)
+            .Distinct()
+            .ToListAsync();
+
+        return households.Select(h => new HouseholdDto
+        {
+            Id = h.Id,
+            Name = h.Name,
+            ParentId = h.ParentId,
+            MemberCount = h.Members.Count
+        });
+    }
+
+    public async Task<IEnumerable<HouseholdMemberDto>> GetMembersAsync(Guid householdId)
+    {
+        var members = await _dbContext.HouseholdMembers
+            .Where(hm => hm.HouseholdId == householdId)
+            .Include(hm => hm.User)
+            .ToListAsync();
+
+        return members.Select(m => new HouseholdMemberDto
+        {
+            Id = m.Id,
+            UserId = m.UserId,
+            FirstName = m.User?.FirstName ?? string.Empty,
+            LastName = m.User?.LastName ?? string.Empty,
+            Email = m.User?.Email ?? string.Empty,
+            UserName = $"{m.User?.FirstName ?? ""} {m.User?.LastName ?? ""}".Trim(),
+            Role = m.Role,
+            JoinedAt = m.JoinedAt
         });
     }
 
