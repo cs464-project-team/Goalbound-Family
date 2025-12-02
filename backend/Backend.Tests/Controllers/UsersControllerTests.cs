@@ -125,14 +125,4 @@ public class UsersControllerTests
         returnedUser!.Id.Should().Be(newUserId);
     }
 
-    [Fact]
-    public void Intentional_Failure_For_CI_Test()
-    {
-        // This will always fail by throwing an exception.
-        // Use this just to confirm CI fails when tests fail.
-
-        throw new Exception("Intentional CI failure – this test should break the build.");
-    }
-
-
 }
