@@ -972,9 +972,24 @@ public partial class ReceiptParserService : IReceiptParserService
         // Store location patterns (e.g., "pandamart (Punggol)", "Starbucks (Downtown)")
         // Matches: word(s) followed by (Location) where Location is capitalized word(s)
         // IMPORTANT: Only match if it has Latin characters to avoid filtering Chinese text
+        // IMPORTANT: Exclude common food size modifiers: (Small), (Medium), (Large), (Regular)
         if (trimmed.Any(c => c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z') &&
             Regex.IsMatch(trimmed, @"^[\w\s]+\([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\)$"))
-            return true;
+        {
+            // Don't filter out items with size modifiers like "Pho Ga (Small)" or "Coffee (Large)"
+            var lowerTrim = trimmed.ToLower();
+            if (lowerTrim.Contains("(small)") ||
+                lowerTrim.Contains("(medium)") ||
+                lowerTrim.Contains("(large)") ||
+                lowerTrim.Contains("(regular)") ||
+                lowerTrim.Contains("(grande)") ||
+                lowerTrim.Contains("(venti)") ||
+                lowerTrim.Contains("(xl)") ||
+                lowerTrim.Contains("(xxl)"))
+                return false; // Keep these as potential items
+
+            return true; // Filter out actual location patterns
+        }
 
         // UI elements from food delivery apps (buttons, links, action text)
         if (lower == "help" ||
@@ -1018,9 +1033,18 @@ public partial class ReceiptParserService : IReceiptParserService
             Regex.IsMatch(trimmed, @"^(guest|guests|party|people|ppl|covers?)[:\s]+", RegexOptions.IgnoreCase) ||
             Regex.IsMatch(trimmed, @"^(reprint|copy|duplicate)[:\s#]+", RegexOptions.IgnoreCase) ||
             Regex.IsMatch(trimmed, @"^(member|membership|invoice|pickup)[:\s]+", RegexOptions.IgnoreCase) ||  // Member info, invoice numbers, pickup numbers
-            Regex.IsMatch(trimmed, @"^table[\s#]+\d+", RegexOptions.IgnoreCase) ||
+            Regex.IsMatch(trimmed, @"^table[\s#:]+\d+", RegexOptions.IgnoreCase) ||   // Table info: "Table 5", "Table: 14", "TABLE #6"
+            Regex.IsMatch(trimmed, @"^(bill|check|order|receipt|transaction|trans)[:\s#]+\d+", RegexOptions.IgnoreCase) ||  // Bill/check numbers: "Bill: 59980", "Check #123", "Order #456"
+            Regex.IsMatch(trimmed, @"^phone[:\s]+", RegexOptions.IgnoreCase) ||       // Phone label: "Phone (626)288-9999"
+            Regex.IsMatch(trimmed, @"^(date|time)[:\s]+", RegexOptions.IgnoreCase) || // Date/time labels: "Date: Apr 01", "Time: 05:12PM"
             Regex.IsMatch(trimmed, @"^\(\d{3}\)\s*\d{3}[-\s]?\d{4}") ||  // Phone numbers like (858) 488-7311
             Regex.IsMatch(trimmed, @"^\d{3}[-.\s]\d{3}[-.\s]\d{4}"))     // Alternative phone format 858-488-7311
+            return true;
+
+        // Address/location patterns (city, state, zip code)
+        // Examples: "Rosemead, CA 91770", "123 Main St, New York, NY 10001"
+        if (Regex.IsMatch(trimmed, @"[A-Z]{2}\s+\d{5}") ||                            // State + ZIP: "CA 91770"
+            Regex.IsMatch(trimmed, @",\s*[A-Z]{2}\s+\d{5}"))                          // City, State ZIP: "Rosemead, CA 91770"
             return true;
 
         // Membership and policy text
@@ -1152,9 +1176,24 @@ public partial class ReceiptParserService : IReceiptParserService
             return false;
 
         // Store location pattern - only apply if it has Latin characters (avoid filtering Chinese text)
+        // IMPORTANT: Exclude common food size modifiers: (Small), (Medium), (Large), (Regular)
         if (trimmed.Any(c => c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z') &&
             Regex.IsMatch(trimmed, @"^[\w\s]+\([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\)$"))       // Store (Location)
-            return false;
+        {
+            // Don't filter out items with size modifiers like "Pho Ga (Small)" or "Coffee (Large)"
+            var lowerTrim = trimmed.ToLower();
+            if (lowerTrim.Contains("(small)") ||
+                lowerTrim.Contains("(medium)") ||
+                lowerTrim.Contains("(large)") ||
+                lowerTrim.Contains("(regular)") ||
+                lowerTrim.Contains("(grande)") ||
+                lowerTrim.Contains("(venti)") ||
+                lowerTrim.Contains("(xl)") ||
+                lowerTrim.Contains("(xxl)"))
+                return true; // Keep these as potential items
+
+            return false; // Filter out actual location patterns
+        }
 
         // Not indented (sub-item)
         if (IsIndentedSubItem(line))
