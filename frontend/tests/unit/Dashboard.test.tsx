@@ -1,7 +1,15 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import Dashboard from "../../src/pages/Dashboard";
+
+// Mock fetch globally
+globalThis.fetch = vi.fn(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve([]),
+  })
+) as any;
 
 // Mock Supabase client BEFORE any imports that use it
 vi.mock("../../src/services/supabaseClient", () => ({
@@ -31,6 +39,11 @@ vi.mock("../../src/context/AuthProvider", () => ({
 }));
 
 describe("Dashboard page", () => {
+  beforeEach(() => {
+    // Clear all mocks before each test
+    vi.clearAllMocks();
+  });
+
   it("renders dashboard heading", () => {
     render(
       <BrowserRouter>
