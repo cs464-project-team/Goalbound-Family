@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
+import { useAuthContext } from "@/context/AuthProvider";
 
 import {
   Collapsible,
@@ -63,28 +64,35 @@ const routes: RouteItem[] = [
 ];
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
+  const { session } = useAuthContext();
+
+  const userEmail = session?.user?.email || "user@example.com";
+  const displayName = userEmail.split('@')[0];
+
   const user = {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: displayName,
+    email: userEmail,
+    avatar: "",
   };
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
+      <SidebarHeader className="bg-gradient-to-br from-purple-600 to-purple-800 border-b border-purple-700">
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-          <div className="flex items-center px-1">
-            <PiggyBank />
-            <span className="ml-2 text-lg font-semibold">Goalbound Family</span>
+          <div className="flex items-center px-1 py-2">
+            <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg backdrop-blur-sm">
+              <PiggyBank className="text-white" size={24} />
+            </div>
+            <span className="ml-3 text-xl font-bold text-white tracking-tight">Goalbound Family</span>
           </div>
         </SidebarGroup>
       </SidebarHeader>
 
-      <SidebarContent>
-        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-          <SidebarGroupLabel>Start Tracking</SidebarGroupLabel>
+      <SidebarContent className="px-2">
+        <SidebarGroup className="group-data-[collapsible=icon]:hidden mt-4">
+          <SidebarGroupLabel className="px-2 mb-2">Start Tracking</SidebarGroupLabel>
 
-          <SidebarMenu>
+          <SidebarMenu className="gap-1">
             {routes.map((route) => {
               if (route.subItems) {
                 return (
