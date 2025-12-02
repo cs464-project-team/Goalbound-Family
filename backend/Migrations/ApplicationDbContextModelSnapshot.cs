@@ -63,6 +63,9 @@ namespace GoalboundFamily.Api.Migrations
                     b.Property<Guid>("HouseholdId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ReceiptId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
@@ -71,6 +74,8 @@ namespace GoalboundFamily.Api.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("HouseholdId");
+
+                    b.HasIndex("ReceiptId");
 
                     b.HasIndex("UserId");
 
@@ -145,6 +150,15 @@ namespace GoalboundFamily.Api.Migrations
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("LastExpenditureUpdate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("LifetimeExpenditure")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("MonthlyExpenditure")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("text");
@@ -167,6 +181,10 @@ namespace GoalboundFamily.Api.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
@@ -194,6 +212,161 @@ namespace GoalboundFamily.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("Invitations");
+                });
+
+            modelBuilder.Entity("GoalboundFamily.Api.Models.Receipt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid?>("HouseholdId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("MerchantName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<decimal?>("OcrConfidence")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("RawOcrText")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ReceiptDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HouseholdId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("UploadedAt");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Receipts");
+                });
+
+            modelBuilder.Entity("GoalboundFamily.Api.Models.ReceiptItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<bool>("IsManuallyAdded")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ItemName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("LineNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("OcrConfidence")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ReceiptId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LineNumber");
+
+                    b.HasIndex("ReceiptId");
+
+                    b.ToTable("ReceiptItems");
+                });
+
+            modelBuilder.Entity("GoalboundFamily.Api.Models.ReceiptItemAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("AssignedQuantity")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal>("BaseAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<decimal>("GstAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("HouseholdMemberId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ReceiptItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("ServiceChargeAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HouseholdMemberId");
+
+                    b.HasIndex("ReceiptItemId");
+
+                    b.HasIndex("ReceiptItemId", "HouseholdMemberId");
+
+                    b.ToTable("ReceiptItemAssignments");
                 });
 
             modelBuilder.Entity("GoalboundFamily.Api.Models.User", b =>
@@ -258,7 +431,11 @@ namespace GoalboundFamily.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GoalboundFamily.Api.Models.User", "CreatedByUser")
+                    b.HasOne("GoalboundFamily.Api.Models.Receipt", "Receipt")
+                        .WithMany()
+                        .HasForeignKey("ReceiptId");
+
+                    b.HasOne("GoalboundFamily.Api.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -266,9 +443,11 @@ namespace GoalboundFamily.Api.Migrations
 
                     b.Navigation("Category");
 
-                    b.Navigation("CreatedByUser");
-
                     b.Navigation("Household");
+
+                    b.Navigation("Receipt");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("GoalboundFamily.Api.Models.Household", b =>
@@ -339,9 +518,67 @@ namespace GoalboundFamily.Api.Migrations
                     b.Navigation("InvitedByUser");
                 });
 
+            modelBuilder.Entity("GoalboundFamily.Api.Models.Receipt", b =>
+                {
+                    b.HasOne("GoalboundFamily.Api.Models.Household", "Household")
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("GoalboundFamily.Api.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Household");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GoalboundFamily.Api.Models.ReceiptItem", b =>
+                {
+                    b.HasOne("GoalboundFamily.Api.Models.Receipt", "Receipt")
+                        .WithMany("Items")
+                        .HasForeignKey("ReceiptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Receipt");
+                });
+
+            modelBuilder.Entity("GoalboundFamily.Api.Models.ReceiptItemAssignment", b =>
+                {
+                    b.HasOne("GoalboundFamily.Api.Models.HouseholdMember", "HouseholdMember")
+                        .WithMany()
+                        .HasForeignKey("HouseholdMemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GoalboundFamily.Api.Models.ReceiptItem", "ReceiptItem")
+                        .WithMany("Assignments")
+                        .HasForeignKey("ReceiptItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HouseholdMember");
+
+                    b.Navigation("ReceiptItem");
+                });
+
             modelBuilder.Entity("GoalboundFamily.Api.Models.Household", b =>
                 {
                     b.Navigation("Members");
+                });
+
+            modelBuilder.Entity("GoalboundFamily.Api.Models.Receipt", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("GoalboundFamily.Api.Models.ReceiptItem", b =>
+                {
+                    b.Navigation("Assignments");
                 });
 
             modelBuilder.Entity("GoalboundFamily.Api.Models.User", b =>

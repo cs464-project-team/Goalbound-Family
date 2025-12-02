@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuthContext } from '../context/AuthProvider'
 import '../styles/Auth.css'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate, useLocation } from 'react-router-dom'
 
 function Auth() {
   // form state
@@ -22,6 +22,8 @@ function Auth() {
   } = useAuthContext()
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as any)?.from?.pathname || '/dashboard';
 
   if (session) {
     const pendingToken = localStorage.getItem('pendingInviteToken');

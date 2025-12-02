@@ -121,3 +121,52 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  /* Custom sidebar styles for a more tasteful design */
+  [data-sidebar] {
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Sidebar menu button base styles */
+  [data-sidebar] [data-sidebar-menu-button] {
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  /* Active nav link styles */
+  [data-sidebar] a[aria-current="page"] {
+    background: linear-gradient(135deg, rgb(124 58 237) 0%, rgb(139 92 246) 100%);
+    color: white !important;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+    border-radius: 0.5rem;
+  }
+
+  [data-sidebar] a[aria-current="page"] svg {
+    color: white !important;
+  }
+
+  /* Hover effects for nav items */
+  [data-sidebar] [data-sidebar-menu-button]:not([aria-current="page"]):hover {
+    background: linear-gradient(135deg, rgb(243 232 255) 0%, rgb(237 233 254) 100%);
+    color: rgb(124 58 237);
+    transform: translateX(2px);
+  }
+
+  /* Group label styling */
+  [data-sidebar] [data-sidebar-group-label] {
+    color: rgb(107 114 128);
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* Footer user section */
+  [data-sidebar] [data-sidebar-footer] {
+    border-top: 1px solid rgb(229 231 235);
+    padding-top: 0.75rem;
+    margin-top: auto;
+  }
+}

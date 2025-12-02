@@ -4,10 +4,9 @@ import "./App.css";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Leaderboard from "./pages/Leaderboard";
+import ReceiptScanner from "./pages/ReceiptScanner";
 import { Layout } from "./components/layout";
 import RequireAuth from "./routes/RequireAuth";
-// import { useAuthContext } from "./context/AuthProvider";
-import Navbar from "./components/Navbar";
 import AcceptInvite from "./pages/AcceptInvite";
 
 function AppRoutes() {
@@ -25,25 +24,32 @@ function AppRoutes() {
         path="/dashboard"
         element={
           <RequireAuth>
-            <Dashboard />
+            <Layout>
+              <Dashboard />
+            </Layout>
           </RequireAuth>
         }
       />
 
-      {/* <Route
-        path="/leaderboard"
-        element={
-          <RequireAuth>
-            <Leaderboard />
-          </RequireAuth>
-        }
-      /> */}
       <Route
         path="/leaderboard"
         element={
-          <Layout>
-            <Leaderboard />
-          </Layout>
+          <RequireAuth>
+            <Layout>
+              <Leaderboard />
+            </Layout>
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/scanner"
+        element={
+          <RequireAuth>
+            <Layout>
+              <ReceiptScanner />
+            </Layout>
+          </RequireAuth>
         }
       />
     </Routes>
@@ -54,7 +60,6 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Navbar />
         <AppRoutes />
       </BrowserRouter>
     </AuthProvider>

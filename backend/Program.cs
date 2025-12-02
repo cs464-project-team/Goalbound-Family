@@ -14,7 +14,18 @@ var contentRoot = Directory.GetCurrentDirectory();
 // Load environment variables from .env file
 if (environment == "Development")
 {
-    Env.Load(Path.Combine(contentRoot, ".env.development"));
+    var devEnvFile = Path.Combine(contentRoot, ".env.development");
+    var defaultEnvFile = Path.Combine(contentRoot, ".env");
+
+    // Try .env.development first, fallback to .env
+    if (File.Exists(devEnvFile))
+    {
+        Env.Load(devEnvFile);
+    }
+    else if (File.Exists(defaultEnvFile))
+    {
+        Env.Load(defaultEnvFile);
+    }
 }
 else if (environment == "Testing")
 {
@@ -73,6 +84,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Configure HttpClient for Python OCR service
+builder.Services.AddHttpClient();
+
 // Register Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -82,7 +96,7 @@ builder.Services.AddScoped<IInvitationRepository, InvitationRepository>();
 builder.Services.AddScoped<IBudgetCategoryRepository, BudgetCategoryRepository>();
 builder.Services.AddScoped<IHouseholdBudgetRepository, HouseholdBudgetRepository>();
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
-// Add more repositories here as you create them
+builder.Services.AddScoped<IReceiptRepository, ReceiptRepository>();
 
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -94,6 +108,29 @@ builder.Services.AddScoped<IHouseholdBudgetService, HouseholdBudgetService>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 // Add more services here as you create them
+builder.Services.AddScoped<IImagePreprocessingService, ImagePreprocessingService>();
+builder.Services.AddScoped<IOcrService, AzureOcrService>(); // Azure Computer Vision (95-99% accuracy)
+builder.Services.AddScoped<IReceiptParserService, ReceiptParserService>();
+builder.Services.AddScoped<IReceiptService, ReceiptService>();
+builder.Services.AddScoped<IBudgetCategoryService, BudgetCategoryService>();
+
+// Configure Supabase Client for Storage
+var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL")
+    ?? throw new InvalidOperationException("SUPABASE_URL not configured in .env file");
+var supabaseKey = Environment.GetEnvironmentVariable("SUPABASE_SERVICE_KEY")
+    ?? throw new InvalidOperationException("SUPABASE_SERVICE_KEY not configured in .env file");
+
+builder.Services.AddScoped(_ =>
+{
+    var options = new Supabase.SupabaseOptions
+    {
+        AutoConnectRealtime = false  // We don't need realtime for storage
+    };
+    return new Supabase.Client(supabaseUrl, supabaseKey, options);
+});
+
+// Register Supabase Storage Service
+builder.Services.AddScoped<ISupabaseStorageService, SupabaseStorageService>();
 
 var app = builder.Build();
 

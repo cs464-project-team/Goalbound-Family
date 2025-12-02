@@ -24,7 +24,13 @@ public class Expense
 
     public string? Description { get; set; }
 
+    /// <summary>
+    /// Optional reference to the receipt this expense was created from
+    /// </summary>
+    public Guid? ReceiptId { get; set; }
+
     public BudgetCategory? Category { get; set; }
     public Household? Household { get; set; }
-    public User? CreatedByUser { get; set; }
+    public User? User { get; set; }
+    public Receipt? Receipt { get; set; }
 }

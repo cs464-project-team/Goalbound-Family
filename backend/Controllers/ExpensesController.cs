@@ -22,6 +22,13 @@ public class ExpensesController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("bulk")]
+    public async Task<ActionResult<IEnumerable<ExpenseDto>>> CreateBulk(CreateBulkExpensesRequest request)
+    {
+        var result = await _service.CreateBulkAsync(request);
+        return Ok(result);
+    }
+
     [HttpGet("{householdId:guid}/{year:int}/{month:int}")]
     public async Task<ActionResult<IEnumerable<ExpenseDto>>> Get(Guid householdId, int year, int month)
     {
