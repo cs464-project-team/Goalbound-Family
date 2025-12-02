@@ -13,6 +13,12 @@ public interface IReceiptService
     Task<ReceiptResponseDto> UploadReceiptAsync(ReceiptUploadDto uploadDto);
 
     /// <summary>
+    /// Process receipt OCR without saving to database
+    /// Returns parsed data for user review before persistence
+    /// </summary>
+    Task<ProcessReceiptOcrResponseDto> ProcessReceiptOcrOnlyAsync(ReceiptUploadDto uploadDto);
+
+    /// <summary>
     /// Get receipt by ID
     /// </summary>
     Task<ReceiptResponseDto?> GetReceiptAsync(Guid receiptId);

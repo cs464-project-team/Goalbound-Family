@@ -200,8 +200,10 @@ public partial class ReceiptParserService : IReceiptParserService
                 if (DateTime.TryParse($"{isoMatch.Groups[1].Value}-{isoMatch.Groups[2].Value}-{isoMatch.Groups[3].Value}",
                     out var isoDate))
                 {
-                    _logger.LogInformation("Extracted date: {Date}", isoDate);
-                    return isoDate;
+                    // Convert to UTC for PostgreSQL compatibility
+                    var utcDate = DateTime.SpecifyKind(isoDate, DateTimeKind.Utc);
+                    _logger.LogInformation("Extracted date: {Date}", utcDate);
+                    return utcDate;
                 }
             }
 
@@ -216,8 +218,10 @@ public partial class ReceiptParserService : IReceiptParserService
                     DateTimeStyles.None,
                     out var date))
                 {
-                    _logger.LogInformation("Extracted date: {Date}", date);
-                    return date;
+                    // Convert to UTC for PostgreSQL compatibility
+                    var utcDate = DateTime.SpecifyKind(date, DateTimeKind.Utc);
+                    _logger.LogInformation("Extracted date: {Date}", utcDate);
+                    return utcDate;
                 }
             }
         }

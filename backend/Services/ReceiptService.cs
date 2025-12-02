@@ -55,6 +55,7 @@ public class ReceiptService : IReceiptService
         };
 
         await _receiptRepository.AddAsync(receipt);
+        await _receiptRepository.SaveChangesAsync();
 
         try
         {
@@ -66,8 +67,16 @@ public class ReceiptService : IReceiptService
             {
                 receipt.Status = ReceiptStatus.Failed;
                 receipt.ErrorMessage = ocrResult.ErrorMessage;
-                await _receiptRepository.UpdateAsync(receipt);
-                return MapToDto(receipt);
+                await _dbContext.SaveChangesAsync();
+
+                // Reload receipt with household members for response
+                var failedReceipt = await _dbContext.Receipts
+                    .Include(r => r.Household)
+                        .ThenInclude(h => h.Members)
+                            .ThenInclude(m => m.User)
+                    .FirstOrDefaultAsync(r => r.Id == receipt.Id);
+
+                return MapToDto(failedReceipt ?? receipt);
             }
 
             receipt.RawOcrText = ocrResult.Text;
@@ -96,22 +105,123 @@ public class ReceiptService : IReceiptService
                 CreatedAt = DateTime.UtcNow
             }).ToList();
 
-            receipt.Items = items;
-
-            await _receiptRepository.UpdateAsync(receipt);
+            await _dbContext.ReceiptItems.AddRangeAsync(items);
+            await _dbContext.SaveChangesAsync();
 
             _logger.LogInformation("Receipt {ReceiptId} processed successfully with {ItemCount} items",
                 receipt.Id, items.Count);
 
-            return MapToDto(receipt);
+            // Reload receipt with household members for response
+            var receiptWithMembers = await _dbContext.Receipts
+                .Include(r => r.Items)
+                .Include(r => r.Household)
+                    .ThenInclude(h => h.Members)
+                        .ThenInclude(m => m.User)
+                .FirstOrDefaultAsync(r => r.Id == receipt.Id);
+
+            return MapToDto(receiptWithMembers ?? receipt);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing receipt {ReceiptId}", receipt.Id);
             receipt.Status = ReceiptStatus.Failed;
             receipt.ErrorMessage = $"Processing error: {ex.Message}";
-            await _receiptRepository.UpdateAsync(receipt);
-            return MapToDto(receipt);
+            await _dbContext.SaveChangesAsync();
+
+            // Reload receipt with household members for response
+            var errorReceipt = await _dbContext.Receipts
+                .Include(r => r.Household)
+                    .ThenInclude(h => h.Members)
+                        .ThenInclude(m => m.User)
+                .FirstOrDefaultAsync(r => r.Id == receipt.Id);
+
+            return MapToDto(errorReceipt ?? receipt);
+        }
+    }
+
+    public async Task<ProcessReceiptOcrResponseDto> ProcessReceiptOcrOnlyAsync(ReceiptUploadDto uploadDto)
+    {
+        _logger.LogInformation("Processing receipt OCR without saving for user {UserId}", uploadDto.UserId);
+
+        var response = new ProcessReceiptOcrResponseDto
+        {
+            Success = false
+        };
+
+        try
+        {
+            // Step 1: Upload the image to Supabase Storage
+            var imagePath = await SaveImageAsync(uploadDto.UserId, uploadDto.Image);
+            response.ImagePath = imagePath;
+            response.OriginalFileName = uploadDto.Image.FileName;
+
+            // Step 2: Perform OCR
+            using var imageStream = uploadDto.Image.OpenReadStream();
+            var ocrResult = await _ocrService.ProcessImageAsync(imageStream);
+
+            if (!ocrResult.Success)
+            {
+                response.ErrorMessage = ocrResult.ErrorMessage;
+                return response;
+            }
+
+            response.RawOcrText = ocrResult.Text;
+            response.OcrConfidence = ocrResult.Confidence;
+
+            // Step 3: Parse receipt
+            var parsedReceipt = await _parserService.ParseReceiptAsync(ocrResult);
+
+            response.MerchantName = parsedReceipt.MerchantName;
+            response.ReceiptDate = parsedReceipt.ReceiptDate;
+            response.TotalAmount = parsedReceipt.TotalAmount;
+
+            // Step 4: Map items to DTO
+            response.Items = parsedReceipt.Items.Select(item => new ParsedReceiptItemDto
+            {
+                TempId = Guid.NewGuid().ToString(),
+                ItemName = item.ItemName,
+                Quantity = item.Quantity,
+                UnitPrice = item.UnitPrice,
+                TotalPrice = item.TotalPrice,
+                LineNumber = item.LineNumber,
+                IsManuallyAdded = false,
+                OcrConfidence = item.Confidence
+            }).ToList();
+
+            response.Success = true;
+
+            // Step 5: Load household members if household ID provided
+            if (uploadDto.HouseholdId.HasValue)
+            {
+                var household = await _dbContext.Households
+                    .Include(h => h.Members)
+                        .ThenInclude(m => m.User)
+                    .FirstOrDefaultAsync(h => h.Id == uploadDto.HouseholdId.Value);
+
+                if (household?.Members != null)
+                {
+                    response.HouseholdMembers = household.Members
+                        .Select(m => new HouseholdMemberSummaryDto
+                        {
+                            Id = m.Id,
+                            UserId = m.UserId,
+                            UserName = m.User != null ? $"{m.User.FirstName} {m.User.LastName}" : "Unknown",
+                            Role = m.Role
+                        })
+                        .ToList();
+                }
+            }
+
+            _logger.LogInformation("OCR processing successful with {ItemCount} items (not saved to DB)", response.Items.Count);
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing receipt OCR");
+            response.Success = false;
+            response.ErrorMessage = $"Processing error: {ex.Message}";
+            return response;
         }
     }
 
@@ -224,19 +334,57 @@ public class ReceiptService : IReceiptService
 
     public async Task<ReceiptResponseDto> AssignItemsToMembersAsync(AssignReceiptItemsDto assignDto)
     {
-        var receipt = await _dbContext.Receipts
-            .Include(r => r.Items)
-                .ThenInclude(i => i.Assignments)
-                    .ThenInclude(a => a.HouseholdMember)
-                        .ThenInclude(hm => hm.User)
-            .Include(r => r.Household)
-                .ThenInclude(h => h.Members)
-                    .ThenInclude(m => m.User)
-            .FirstOrDefaultAsync(r => r.Id == assignDto.ReceiptId);
+        Receipt receipt;
 
-        if (receipt == null)
+        // Check if this is for an existing receipt or a new one
+        if (assignDto.ReceiptId.HasValue)
         {
-            throw new InvalidOperationException($"Receipt {assignDto.ReceiptId} not found");
+            // Load existing receipt
+            receipt = await _dbContext.Receipts
+                .Include(r => r.Items)
+                    .ThenInclude(i => i.Assignments)
+                        .ThenInclude(a => a.HouseholdMember)
+                            .ThenInclude(hm => hm.User)
+                .Include(r => r.Household)
+                    .ThenInclude(h => h.Members)
+                        .ThenInclude(m => m.User)
+                .FirstOrDefaultAsync(r => r.Id == assignDto.ReceiptId.Value);
+
+            if (receipt == null)
+            {
+                throw new InvalidOperationException($"Receipt {assignDto.ReceiptId} not found");
+            }
+        }
+        else
+        {
+            // Create new receipt
+            if (!assignDto.UserId.HasValue)
+            {
+                throw new InvalidOperationException("UserId is required when creating a new receipt");
+            }
+            if (string.IsNullOrEmpty(assignDto.ImagePath))
+            {
+                throw new InvalidOperationException("ImagePath is required when creating a new receipt");
+            }
+
+            receipt = new Receipt
+            {
+                Id = Guid.NewGuid(),
+                UserId = assignDto.UserId.Value,
+                HouseholdId = assignDto.HouseholdId,
+                ImagePath = assignDto.ImagePath,
+                OriginalFileName = assignDto.OriginalFileName ?? "unknown",
+                MerchantName = assignDto.MerchantName,
+                ReceiptDate = assignDto.ReceiptDate,
+                TotalAmount = assignDto.TotalAmount,
+                RawOcrText = assignDto.RawOcrText,
+                OcrConfidence = assignDto.OcrConfidence,
+                Status = ReceiptStatus.Confirmed, // Directly confirmed
+                UploadedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            await _dbContext.Receipts.AddAsync(receipt);
         }
 
         // Verify household
@@ -245,20 +393,63 @@ public class ReceiptService : IReceiptService
             receipt.HouseholdId = assignDto.HouseholdId;
         }
 
-        // Clear existing assignments
-        var existingAssignments = await _dbContext.ReceiptItemAssignments
-            .Where(a => receipt.Items.Select(i => i.Id).Contains(a.ReceiptItemId))
-            .ToListAsync();
-        _dbContext.ReceiptItemAssignments.RemoveRange(existingAssignments);
+        // For existing receipts: clear existing assignments and items (if not creating new)
+        if (assignDto.ReceiptId.HasValue)
+        {
+            var existingAssignments = await _dbContext.ReceiptItemAssignments
+                .Where(a => receipt.Items.Select(i => i.Id).Contains(a.ReceiptItemId))
+                .ToListAsync();
+            _dbContext.ReceiptItemAssignments.RemoveRange(existingAssignments);
+        }
 
-        // Create new assignments with calculated amounts
+        // Create or reference receipt items and their assignments
         var newAssignments = new List<ReceiptItemAssignment>();
         var memberExpenditures = new Dictionary<Guid, decimal>();
+        var createdItems = new List<ReceiptItem>();
 
         foreach (var itemAssignment in assignDto.ItemAssignments)
         {
-            var receiptItem = receipt.Items.FirstOrDefault(i => i.Id == itemAssignment.ReceiptItemId);
-            if (receiptItem == null) continue;
+            ReceiptItem receiptItem;
+
+            // Check if this is a reference to an existing item or a new item
+            if (itemAssignment.ReceiptItemId.HasValue)
+            {
+                // Existing item
+                receiptItem = receipt.Items.FirstOrDefault(i => i.Id == itemAssignment.ReceiptItemId.Value);
+                if (receiptItem == null)
+                {
+                    _logger.LogWarning("Receipt item {ItemId} not found, skipping", itemAssignment.ReceiptItemId);
+                    continue;
+                }
+            }
+            else
+            {
+                // New item - validate required fields
+                if (string.IsNullOrEmpty(itemAssignment.ItemName) ||
+                    !itemAssignment.Quantity.HasValue ||
+                    !itemAssignment.TotalPrice.HasValue)
+                {
+                    _logger.LogWarning("Item assignment missing required fields, skipping");
+                    continue;
+                }
+
+                // Create new item
+                receiptItem = new ReceiptItem
+                {
+                    Id = Guid.NewGuid(),
+                    ReceiptId = receipt.Id,
+                    ItemName = itemAssignment.ItemName,
+                    Quantity = itemAssignment.Quantity.Value,
+                    UnitPrice = itemAssignment.UnitPrice ?? (itemAssignment.TotalPrice.Value / itemAssignment.Quantity.Value),
+                    TotalPrice = itemAssignment.TotalPrice.Value,
+                    LineNumber = itemAssignment.LineNumber ?? 0,
+                    IsManuallyAdded = itemAssignment.IsManuallyAdded ?? false,
+                    OcrConfidence = itemAssignment.OcrConfidence ?? 0,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                createdItems.Add(receiptItem);
+            }
 
             var unitPrice = receiptItem.TotalPrice / receiptItem.Quantity;
 
@@ -280,7 +471,7 @@ public class ReceiptService : IReceiptService
                 var assignment = new ReceiptItemAssignment
                 {
                     Id = Guid.NewGuid(),
-                    ReceiptItemId = itemAssignment.ReceiptItemId,
+                    ReceiptItemId = receiptItem.Id, // Use the actual item ID
                     HouseholdMemberId = memberAssignment.HouseholdMemberId,
                     AssignedQuantity = memberAssignment.AssignedQuantity,
                     BaseAmount = baseAmount,
@@ -301,10 +492,19 @@ public class ReceiptService : IReceiptService
             }
         }
 
+        // Add new items to database if any were created
+        if (createdItems.Any())
+        {
+            await _dbContext.ReceiptItems.AddRangeAsync(createdItems);
+            _logger.LogInformation("Created {Count} new receipt items", createdItems.Count);
+        }
+
         await _dbContext.ReceiptItemAssignments.AddRangeAsync(newAssignments);
 
-        // Update household member expenditures
+        // Update household member expenditures and create Expense entries
         var now = DateTime.UtcNow;
+        var expenseDate = receipt.ReceiptDate ?? now.Date;
+
         foreach (var (memberId, expenditure) in memberExpenditures)
         {
             var member = await _dbContext.HouseholdMembers.FindAsync(memberId);
@@ -313,6 +513,22 @@ public class ReceiptService : IReceiptService
                 member.MonthlyExpenditure += expenditure;
                 member.LifetimeExpenditure += expenditure;
                 member.LastExpenditureUpdate = now;
+
+                // Create an Expense entry for this member's share
+                var totalItemCount = (receipt.Items?.Count ?? 0) + createdItems.Count;
+                var expense = new Expense
+                {
+                    Id = Guid.NewGuid(),
+                    HouseholdId = assignDto.HouseholdId,
+                    UserId = member.UserId,
+                    CategoryId = assignDto.CategoryId,
+                    Amount = expenditure,
+                    Date = expenseDate,
+                    Description = $"Receipt from {receipt.MerchantName ?? "Unknown"} - {totalItemCount} item(s)",
+                    ReceiptId = receipt.Id
+                };
+
+                await _dbContext.Expenses.AddAsync(expense);
             }
         }
 
