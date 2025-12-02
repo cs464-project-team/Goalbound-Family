@@ -9,7 +9,7 @@ globalThis.fetch = vi.fn(() =>
     ok: true,
     json: () => Promise.resolve([]),
   })
-) as any;
+) as unknown as typeof fetch;
 
 // Mock Supabase client BEFORE any imports that use it
 vi.mock("../../src/services/supabaseClient", () => ({
