@@ -35,9 +35,13 @@ jobs:
         working-directory: backend
         run: dotnet format --verify-no-changes
 
+      - name: List backend tests
+        working-directory: backend
+        run: dotnet test Backend.Tests/Backend.Tests.csproj --list-tests
+
       - name: Run backend tests (unit + integration)
         working-directory: backend
-        run: dotnet test Backend.Tests/Backend.Tests.csproj --no-build --verbosity normal
+        run: dotnet test Backend.Tests/Backend.Tests.csproj --verbosity normal
 
   frontend-tests:
     runs-on: ubuntu-latest
