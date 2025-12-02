@@ -42,21 +42,6 @@ interface ReceiptItem {
   assignments: ReceiptItemAssignment[];
 }
 
-interface ReceiptResponse {
-  id: string;
-  userId: string;
-  householdId?: string;
-  status: string;
-  merchantName?: string;
-  receiptDate?: string;
-  totalAmount?: number;
-  ocrConfidence?: number;
-  errorMessage?: string;
-  uploadedAt: string;
-  items: ReceiptItem[];
-  householdMembers: HouseholdMember[];
-}
-
 interface ItemAssignment {
   [itemId: string]: {
     [memberId: string]: number; // memberId -> quantity assigned
@@ -90,7 +75,6 @@ export default function ReceiptUploadWithAssignment() {
   // OCR mode state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [receipt, setReceipt] = useState<ReceiptResponse | null>(null);
   const [items, setItems] = useState<ReceiptItem[]>([]);
   const [includeServiceCharge, setIncludeServiceCharge] = useState(false);
   const [includeGST, setIncludeGST] = useState(false);
@@ -271,7 +255,6 @@ export default function ReceiptUploadWithAssignment() {
       // Check if OCR failed
       if (!data.success) {
         setError(data.errorMessage || 'We couldn\'t read your receipt. Please make sure the image is clear and try uploading again.');
-        setReceipt(null);
         setItems([]);
         setOcrMetadata(null);
         return;
@@ -894,12 +877,20 @@ export default function ReceiptUploadWithAssignment() {
 
               {/* Receipt Info */}
               <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-md">
-                {ocrMetadata?.merchantName && (
-                  <div>
-                    <span className="text-sm text-gray-600">Merchant:</span>
-                    <p className="font-medium">{ocrMetadata.merchantName}</p>
-                  </div>
-                )}
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Merchant:</label>
+                  <input
+                    type="text"
+                    value={ocrMetadata?.merchantName || ''}
+                    onChange={(e) => {
+                      if (ocrMetadata) {
+                        setOcrMetadata({ ...ocrMetadata, merchantName: e.target.value });
+                      }
+                    }}
+                    placeholder="Enter merchant name"
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:border-blue-500 focus:outline-none font-medium bg-white"
+                  />
+                </div>
                 {ocrMetadata?.receiptDate && (
                   <div>
                     <span className="text-sm text-gray-600">Date:</span>
@@ -1423,7 +1414,7 @@ export default function ReceiptUploadWithAssignment() {
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <span className="text-gray-600">Merchant:</span>
-                    <span className="ml-2 font-medium text-gray-900">{ocrMetadata?.merchantName || 'Unknown'}</span>
+                    <span className="ml-2 font-medium text-gray-900">{ocrMetadata?.merchantName || 'Not specified'}</span>
                   </div>
                   <div>
                     <span className="text-gray-600">Date:</span>
