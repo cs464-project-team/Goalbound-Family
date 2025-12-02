@@ -2,16 +2,20 @@ name: CD - Build & Push Backend Docker Image
 
 on:
   workflow_run:
-    workflows: [ "CI" ]          # must match your CI workflow 'name'
+    workflows: [ "CI" ]          # must match your CI workflow name
     types:
-      - completed                # 'completed' = finished in any state
+      - completed                # completed in any state
 
 jobs:
-  # 1) Only run this job if CI succeeded AND branch is main
+  # 1) Only run this job if:
+  #    - CI succeeded
+  #    - CI was triggered by a *push*
+  #    - branch is main
   check-backend-changes:
     runs-on: ubuntu-latest
     if: >
       ${{ github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
           github.event.workflow_run.head_branch == 'main' }}
     outputs:
       backend_changed: ${{ steps.changed-files.outputs.backend_changed }}
@@ -53,9 +57,6 @@ jobs:
   # 2) Build & push image, then trigger Render deploy
   build-and-push:
     needs: check-backend-changes
-    # This job only runs if:
-    #  - the previous job actually ran & succeeded
-    #  - and it detected backend changes
     if: >
       ${{ needs.check-backend-changes.result == 'success' &&
           needs.check-backend-changes.outputs.backend_changed == 'true' }}
