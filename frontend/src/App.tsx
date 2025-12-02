@@ -6,11 +6,12 @@ import Dashboard from "./pages/Dashboard";
 import Leaderboard from "./pages/Leaderboard";
 import { Layout } from "./components/layout";
 import RequireAuth from "./routes/RequireAuth";
-import { useAuthContext } from "./context/AuthProvider";
+// import { useAuthContext } from "./context/AuthProvider";
 import Navbar from "./components/Navbar";
+import AcceptInvite from "./pages/AcceptInvite";
 
 function AppRoutes() {
-  const { signOut } = useAuthContext();
+  // const { signOut } = useAuthContext();
 
   return (
     <Routes>
@@ -18,11 +19,13 @@ function AppRoutes() {
       <Route path="/" element={<Navigate to="/auth" replace />} />
       <Route path="/auth" element={<Auth />} />
 
+      <Route path="/accept-invite" element={<AcceptInvite />} />
+
       <Route
         path="/dashboard"
         element={
           <RequireAuth>
-            <Dashboard onLogout={signOut} />
+            <Dashboard />
           </RequireAuth>
         }
       />

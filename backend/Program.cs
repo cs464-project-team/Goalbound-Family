@@ -6,11 +6,10 @@ using GoalboundFamily.Api.Services;
 using GoalboundFamily.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
+var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+var contentRoot = Directory.GetCurrentDirectory();
 
-var builder = WebApplication.CreateBuilder(args);
 
-var environment = builder.Environment.EnvironmentName;
-var contentRoot = builder.Environment.ContentRootPath;
 
 // Load environment variables from .env file
 if (environment == "Development")
@@ -21,6 +20,8 @@ else if (environment == "Testing")
 {
     Env.Load(Path.Combine(contentRoot, ".env.testing"));
 }
+
+var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -75,10 +76,23 @@ builder.Services.AddCors(options =>
 // Register Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IHouseholdRepository, HouseholdRepository>();
+builder.Services.AddScoped<IHouseholdMemberRepository, HouseholdMemberRepository>();
+builder.Services.AddScoped<IInvitationRepository, InvitationRepository>();
+builder.Services.AddScoped<IBudgetCategoryRepository, BudgetCategoryRepository>();
+builder.Services.AddScoped<IHouseholdBudgetRepository, HouseholdBudgetRepository>();
+builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
 // Add more repositories here as you create them
 
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IHouseholdService, HouseholdService>();
+builder.Services.AddScoped<IHouseholdMemberService, HouseholdMemberService>();
+builder.Services.AddScoped<IInvitationService, InvitationService>();
+builder.Services.AddScoped<IBudgetCategoryService, BudgetCategoryService>();
+builder.Services.AddScoped<IHouseholdBudgetService, HouseholdBudgetService>();
+builder.Services.AddScoped<IExpenseService, ExpenseService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 // Add more services here as you create them
 
 var app = builder.Build();

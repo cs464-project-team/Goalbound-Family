@@ -7,8 +7,8 @@ public class Invitation
     [Key]
     public Guid Id { get; set; }
 
-    [Required, EmailAddress]
-    public string Email { get; set; } = string.Empty;
+    // [Required, EmailAddress]
+    // public string Email { get; set; } = string.Empty;
 
     [Required]
     public Guid HouseholdId { get; set; }
