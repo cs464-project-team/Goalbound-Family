@@ -75,7 +75,85 @@ public class ReceiptsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error uploading receipt");
-            return StatusCode(500, new { message = "Internal server error during receipt upload" });
+
+            // Show the actual error message to help with debugging
+            var errorResponse = new
+            {
+                message = ex.Message,
+                type = ex.GetType().Name,
+                innerException = ex.InnerException?.Message,
+                stackTrace = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development" ? ex.StackTrace : null
+            };
+
+            return StatusCode(500, errorResponse);
+        }
+    }
+
+    /// <summary>
+    /// Process receipt OCR without saving to database
+    /// Use this for the new workflow where receipts are only saved when confirmed
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="householdId">Optional Household ID for member list</param>
+    /// <param name="image">Receipt image file</param>
+    /// <returns>OCR results without database persistence</returns>
+    [HttpPost("process-ocr")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(ProcessReceiptOcrResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ProcessReceiptOcrResponseDto>> ProcessReceiptOcr(
+        [FromForm] Guid userId,
+        [FromForm] Guid? householdId,
+        [FromForm] IFormFile image)
+    {
+        try
+        {
+            if (image == null || image.Length == 0)
+            {
+                return BadRequest(new { message = "No image file provided" });
+            }
+
+            // Validate file type
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
+            var extension = Path.GetExtension(image.FileName).ToLower();
+            if (!allowedExtensions.Contains(extension))
+            {
+                return BadRequest(new { message = "Invalid file type. Allowed: JPG, PNG, PDF" });
+            }
+
+            // Validate file size (max 10MB)
+            if (image.Length > 10 * 1024 * 1024)
+            {
+                return BadRequest(new { message = "File size exceeds 10MB limit" });
+            }
+
+            var uploadDto = new ReceiptUploadDto
+            {
+                UserId = userId,
+                HouseholdId = householdId,
+                Image = image
+            };
+
+            var result = await _receiptService.ProcessReceiptOcrOnlyAsync(uploadDto);
+
+            _logger.LogInformation("Receipt OCR processed successfully (not saved to DB)");
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing receipt OCR");
+
+            // Show the actual error message to help with debugging
+            var errorResponse = new
+            {
+                message = ex.Message,
+                type = ex.GetType().Name,
+                innerException = ex.InnerException?.Message,
+                stackTrace = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development" ? ex.StackTrace : null
+            };
+
+            return StatusCode(500, errorResponse);
         }
     }
 
@@ -203,7 +281,17 @@ public class ReceiptsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error assigning receipt items");
-            return StatusCode(500, new { message = "Internal server error" });
+
+            // Show the actual error message to help with debugging
+            var errorResponse = new
+            {
+                message = ex.Message,
+                type = ex.GetType().Name,
+                innerException = ex.InnerException?.Message,
+                stackTrace = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development" ? ex.StackTrace : null
+            };
+
+            return StatusCode(500, errorResponse);
         }
     }
 }

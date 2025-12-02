@@ -90,13 +90,18 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IReceiptRepository, ReceiptRepository>();
+builder.Services.AddScoped<IHouseholdRepository, HouseholdRepository>();
+builder.Services.AddScoped<IHouseholdMemberRepository, HouseholdMemberRepository>();
+builder.Services.AddScoped<IBudgetCategoryRepository, BudgetCategoryRepository>();
 
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IHouseholdService, HouseholdService>();
 builder.Services.AddScoped<IImagePreprocessingService, ImagePreprocessingService>();
 builder.Services.AddScoped<IOcrService, AzureOcrService>(); // Azure Computer Vision (95-99% accuracy)
 builder.Services.AddScoped<IReceiptParserService, ReceiptParserService>();
 builder.Services.AddScoped<IReceiptService, ReceiptService>();
+builder.Services.AddScoped<IBudgetCategoryService, BudgetCategoryService>();
 
 // Configure Supabase Client for Storage
 var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL")
