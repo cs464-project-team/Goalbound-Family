@@ -19,7 +19,6 @@ public class HouseholdMemberRepository
     public async Task<IEnumerable<HouseholdMember>> GetByUserIdAsync(Guid userId)
     {
         return await _dbSet
-            .Include(m => m.User)
             .Include(m => m.Household)
             .ThenInclude(h => h.Members)
             .Where(m => m.UserId == userId)
@@ -39,18 +38,6 @@ public class HouseholdMemberRepository
     public async Task<HouseholdMember?> GetByUserAndHouseholdAsync(Guid userId, Guid householdId)
     {
         return await _dbSet
-            .Include(m => m.User)
-            .Include(m => m.Household)
             .FirstOrDefaultAsync(m => m.UserId == userId && m.HouseholdId == householdId);
     }
-
-    public async Task<IEnumerable<HouseholdMember>> FindAsync(Expression<Func<HouseholdMember, bool>> predicate)
-    {
-        return await _dbSet
-            .Include(m => m.User)                // Include User info
-            .Include(m => m.Household)
-            .Where(predicate)
-            .ToListAsync();
-    }
-
 }
