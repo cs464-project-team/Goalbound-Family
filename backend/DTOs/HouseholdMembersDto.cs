@@ -1,3 +1,5 @@
+using GoalboundFamily.Api.DTOs;
+
 public class HouseholdMemberDto
 {
     public Guid Id { get; set; }
@@ -20,4 +22,7 @@ public class HouseholdMemberDto
     public int Xp { get; set; } = 0;
     public int Streak { get; set; } = 0;
     public int QuestsCompleted { get; set; } = 0;
+
+    // Badges
+    public List<MemberBadgeDto> Badges { get; set; } = new List<MemberBadgeDto>();
 }

@@ -31,7 +31,15 @@ public class HouseholdMemberService : IHouseholdMemberService
             Avatar = m.Avatar,
             Xp = m.Xp,
             Streak = m.Streak,
-            QuestsCompleted = m.QuestsCompleted
+            QuestsCompleted = m.QuestsCompleted,
+            Badges = m.MemberBadges.Select(b => new MemberBadgeDto
+            {
+                BadgeId = b.BadgeId,
+                Name = b.Badge?.Name ?? "",
+                Description = b.Badge?.Description ?? "",
+                Icon = b.Badge?.Icon ?? "",
+                EarnedAt = b.EarnedAt
+            }).ToList()
         });
     }
 
