@@ -27,7 +27,11 @@ public class HouseholdMemberService : IHouseholdMemberService
             Email = m.User?.Email ?? "",
             UserName = $"{m.User?.FirstName ?? ""} {m.User?.LastName ?? ""}".Trim(),
             Role = m.Role,
-            JoinedAt = m.JoinedAt
+            JoinedAt = m.JoinedAt,
+            Avatar = m.Avatar,
+            Xp = m.Xp,
+            Streak = m.Streak,
+            QuestsCompleted = m.QuestsCompleted
         });
     }
 
@@ -81,5 +85,22 @@ public class HouseholdMemberService : IHouseholdMemberService
         await _memberRepo.SaveChangesAsync();
 
         return true;
+    }
+
+    public async Task<HouseholdMemberDto?> GetByUserAndHouseholdAsync(Guid userId, Guid householdId)
+    {
+        var member = await _memberRepo.GetByUserAndHouseholdAsync(userId, householdId);
+        if (member == null) return null;
+
+        return new HouseholdMemberDto
+        {
+            Id = member.Id,
+            UserId = member.UserId,
+            FirstName = member.User?.FirstName ?? "",
+            LastName = member.User?.LastName ?? "",
+            Email = member.User?.Email ?? "",
+            Role = member.Role,
+            JoinedAt = member.JoinedAt
+        };
     }
 }

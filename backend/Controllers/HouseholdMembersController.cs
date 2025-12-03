@@ -44,5 +44,14 @@ public class HouseholdMembersController : ControllerBase
         }
 
         return NoContent();
+    // GET api/householdmembers/{householdId}/user/{userId}
+    [HttpGet("{householdId:guid}/user/{userId:guid}")]
+    public async Task<ActionResult<HouseholdMemberDto?>> GetMemberByUserAndHousehold(Guid householdId, Guid userId)
+    {
+        var member = await _service.GetByUserAndHouseholdAsync(userId, householdId);
+
+        if (member == null) return NotFound();
+
+        return Ok(member);
     }
 }

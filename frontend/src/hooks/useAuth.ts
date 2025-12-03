@@ -86,10 +86,12 @@ export function useAuth() {
   const signOut = async () => {
     await authService.logout()
     setSession(null)
+    setUserId(null) // clear userId on logout
   }
 
   return {
     session,
+    userId,   
     signupError,
     loginError,
     isLoading,
