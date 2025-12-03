@@ -8,4 +8,5 @@ public interface IHouseholdMemberService
     Task<bool> AddMemberAsync(Guid householdId, Guid userId, string role);
     Task<bool> RemoveMemberAsync(Guid memberId);
     Task<IEnumerable<HouseholdDto>> GetHouseholdsForUserAsync(Guid userId);
+    Task<HouseholdMemberDto?> GetByUserAndHouseholdAsync(Guid userId, Guid householdId);
 }
