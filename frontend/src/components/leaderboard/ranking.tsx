@@ -15,13 +15,46 @@ import { useState, useEffect } from "react";
 import { useAuthContext } from "../../context/AuthProvider";
 import { getApiUrl } from '../../config/api';
 
+interface MemberBadgeDto {
+  badgeId: string;      // Guid -> string
+  name: string;
+  description: string;
+  icon: string;
+  earnedAt: string;     // DateTime -> string (ISO format)
+}
+
+interface HouseholdMemberDto {
+  id: string;              // Guid -> string
+  userId: string;          // Guid -> string
+  firstName: string;
+  lastName: string;
+  email: string;
+
+  // Combined name for UI display
+  userName: string;
+
+  role: string;            // default: "Member"
+  joinedAt: string;        // DateTime -> string (ISO format)
+
+  // Optional avatar
+  avatar: string;
+
+  // Gamification
+  xp: number;              // default: 0
+  streak: number;          // default: 0
+  questsCompleted: number; // default: 0
+
+  // Badges
+  badges: MemberBadgeDto[];
+}
+
 interface RankingProps {
   householdId: string;
 }
 
 export function Ranking({ householdId }: RankingProps) {
   const { userId } = useAuthContext();
-  const [householdMembers, setHouseholdMembers] = useState<any[]>([]);
+  const [householdMembers, setHouseholdMembers] = useState<HouseholdMemberDto[]>([]);
 
   const fetchHouseholdMembers = async () => {
     try {

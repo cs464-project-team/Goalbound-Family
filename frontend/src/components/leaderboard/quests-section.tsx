@@ -2,13 +2,34 @@
 
 import { Separator } from "@/components/ui/separator";
 
-import type { Quest } from "@/data/mockQuestsData";
 import { QuestTable } from "./quests-table";
 import { TimedQuests } from "./timed-quests-card";
 
 import { useState, useEffect } from "react";
 import { useAuthContext } from "../../context/AuthProvider";
 import { getApiUrl } from "../../config/api";
+
+interface MemberQuestDto {
+  householdMemberId: string; // Guid -> string
+  questId: string;           // Guid -> string
+
+  // MemberQuest fields
+  status: string;
+  progress: number;
+  assignedAt: string;        // DateTime -> string (ISO format)
+  startTime?: string;        // nullable DateTime
+  completedAt?: string;      // nullable DateTime
+  claimedAt?: string;        // nullable DateTime
+
+  // Quest fields
+  title: string;
+  description: string;
+  xpReward: number;
+  category: string;
+  type: string;
+  difficulty: string;
+  target: number;
+}
 
 interface QuestsProps {
   householdId: string;
@@ -19,7 +40,7 @@ export function Quests({ householdId }: QuestsProps) {
   const [householdMemberId, setHouseholdMemberId] = useState<string | null>(
     null
   );
-  const [quests, setQuests] = useState<any[]>([]);
+  const [quests, setQuests] = useState<MemberQuestDto[]>([]);
 
   const fetchHouseholdMemberId = async () => {
     try {

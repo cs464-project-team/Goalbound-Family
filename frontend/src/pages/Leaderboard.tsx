@@ -16,9 +16,20 @@ import {
 } from "@/components/ui/select";
 import { getApiUrl } from "../config/api";
 
+interface HouseholdDto {
+  id: string;          // Guid -> string
+  name: string;
+
+  // Admin user (Parent)
+  parentId: string;    // Guid -> string
+
+  // Optional: number of members
+  memberCount: number;
+}
+
 export default function Leaderboard() {
   const { userId } = useAuthContext();
-  const [households, setHouseholds] = useState<any[]>([]);
+  const [households, setHouseholds] = useState<HouseholdDto[]>([]);
   const [selectedHousehold, setSelectedHousehold] = useState<string | null>(
     null
   );
