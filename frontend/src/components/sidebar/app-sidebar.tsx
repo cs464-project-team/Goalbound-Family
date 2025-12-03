@@ -9,6 +9,7 @@ import {
   Settings2,
   PiggyBank,
   ChevronRight,
+  Receipt,
   type LucideIcon,
 } from "lucide-react";
 
@@ -48,6 +49,7 @@ interface RouteItem {
 // Define routes for your financial tracking app
 const routes: RouteItem[] = [
   { title: "Dashboard", path: "/dashboard", icon: PieChart },
+  { title: "Expenses", path: "/expenses", icon: Receipt },
   { title: "Transactions", path: "/transactions", icon: AudioWaveform },
   { title: "Receipt Scanner", path: "/scanner", icon: Bot },
   { title: "Budgets", path: "/budgets", icon: PiggyBank },

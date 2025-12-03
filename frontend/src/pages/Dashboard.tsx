@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthProvider';
 import '../styles/Dashboard.css';
 import { Navigate } from 'react-router-dom';
@@ -107,7 +106,6 @@ function Dashboard() {
             setTimeout(() => setLinkCopied(false), 2000);
         }
     };
-    const navigate = useNavigate();
     const [showAddCategory, setShowAddCategory] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [addingCategory, setAddingCategory] = useState(false);
@@ -248,12 +246,7 @@ function Dashboard() {
 
     return (
         <div className="dashboard-container">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h1 className="dashboard-title">Dashboard</h1>
-                <button className="primary-btn" onClick={() => navigate('/expenses')}>
-                    Go to Expenses
-                </button>
-            </div>
+            <h1 className="dashboard-title">Dashboard</h1>
 
             {/* Show create household form as a modal/overlay or main content if active */}
             {showCreateForm && (

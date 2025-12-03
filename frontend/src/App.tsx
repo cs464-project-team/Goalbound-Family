@@ -5,6 +5,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Leaderboard from "./pages/Leaderboard";
 import ReceiptScanner from "./pages/ReceiptScanner";
+import Expenses from "./pages/Expenses";
 import { Layout } from "./components/layout";
 import RequireAuth from "./routes/RequireAuth";
 import AcceptInvite from "./pages/AcceptInvite";
@@ -46,6 +47,17 @@ function AppRoutes() {
           <RequireAuth>
             <Layout>
               <ReceiptScanner />
+            </Layout>
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/expenses"
+        element={
+          <RequireAuth>
+            <Layout>
+              <Expenses />
             </Layout>
           </RequireAuth>
         }
