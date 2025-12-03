@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthProvider';
 import '../styles/Dashboard.css';
 import { Navigate } from 'react-router-dom';
+import { getApiUrl } from '../config/api';
 
 
 type BudgetCategory = {
@@ -80,7 +80,7 @@ function Dashboard() {
         setInviteError(null);
         setLinkCopied(false);
         try {
-            const res = await fetch('/api/invitations', {
+            const res = await fetch(getApiUrl('/api/invitations'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -107,7 +107,6 @@ function Dashboard() {
             setTimeout(() => setLinkCopied(false), 2000);
         }
     };
-    const navigate = useNavigate();
     const [showAddCategory, setShowAddCategory] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [addingCategory, setAddingCategory] = useState(false);
@@ -124,7 +123,7 @@ function Dashboard() {
         setAddingCategory(true);
         setCategoryError(null);
         try {
-            const res = await fetch('/api/budgetcategories', {
+            const res = await fetch(getApiUrl('/api/budgets/categories'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ householdId: selectedHouseholdId, name: newCategoryName })
@@ -136,7 +135,7 @@ function Dashboard() {
             const now = new Date();
             const year = now.getFullYear();
             const month = now.getMonth() + 1;
-            const dashboardData = await fetch(`/api/dashboard/${selectedHouseholdId}/${year}/${month}`).then(res => res.json());
+            const dashboardData = await fetch(getApiUrl(`/api/dashboard/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json());
             setDashboard(dashboardData);
         } catch (err: unknown) {
             setCategoryError(err instanceof Error ? err.message : 'Unknown error');
@@ -157,7 +156,7 @@ function Dashboard() {
 
     useEffect(() => {
         if (!session?.user?.id) return;
-        fetch(`/api/householdmembers/user/${session.user.id}`)
+        fetch(getApiUrl(`/api/householdmembers/user/${session.user.id}`))
             .then(res => res.json())
             .then((data: Household[]) => {
                 setHouseholds(data);
@@ -172,10 +171,10 @@ function Dashboard() {
         const month = now.getMonth() + 1;
         setLoading(true);
         Promise.all([
-            fetch(`/api/dashboard/${selectedHouseholdId}/${year}/${month}`).then(res => res.json()),
-            fetch(`/api/expenses/${selectedHouseholdId}/${year}/${month}`).then(res => res.json()),
-            fetch(`/api/householdbudgets/${selectedHouseholdId}/${year}/${month}`).then(res => res.json()),
-            fetch(`/api/budgetcategories/${selectedHouseholdId}`).then(res => res.json())
+            fetch(getApiUrl(`/api/dashboard/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json()),
+            fetch(getApiUrl(`/api/expenses/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json()),
+            fetch(getApiUrl(`/api/householdbudgets/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json()),
+            fetch(getApiUrl(`/api/budgets/categories/${selectedHouseholdId}`)).then(res => res.json())
         ]).then(([dashboardData, expensesData, budgetsData, categoriesData]) => {
             setDashboard(dashboardData);
             setExpenses(expensesData);
@@ -198,7 +197,7 @@ function Dashboard() {
         try {
             const limit = parseFloat(budgetInputs[categoryId]);
             if (isNaN(limit) || limit < 0) throw new Error('Invalid limit');
-            const res = await fetch('/api/householdbudgets', {
+            const res = await fetch(getApiUrl('/api/householdbudgets'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -211,7 +210,7 @@ function Dashboard() {
             });
             if (!res.ok) throw new Error('Failed to set budget');
             // Refresh budgets
-            const budgetsData = await fetch(`/api/householdbudgets/${selectedHouseholdId}/${year}/${month}`).then(res => res.json());
+            const budgetsData = await fetch(getApiUrl(`/api/householdbudgets/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json());
             setBudgets(budgetsData);
             setBudgetInputs(prev => ({ ...prev, [categoryId]: '' }));
         } catch (err: unknown) {
@@ -226,7 +225,7 @@ function Dashboard() {
         setCreating(true);
         setError(null);
         try {
-            const res = await fetch('/api/households', {
+            const res = await fetch(getApiUrl('/api/households'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: newHouseholdName, parentId: session.user.id })
@@ -234,7 +233,7 @@ function Dashboard() {
             if (!res.ok) throw new Error('Failed to create household');
             setShowCreateForm(false);
             setNewHouseholdName('');
-            const data: Household[] = await fetch(`/api/householdmembers/user/${session.user.id}`).then(r => r.json());
+            const data: Household[] = await fetch(getApiUrl(`/api/householdmembers/user/${session.user.id}`)).then(r => r.json());
             setHouseholds(data);
             if (data.length > 0) setSelectedHouseholdId(data[0].id);
         } catch (err: unknown) {
@@ -248,12 +247,7 @@ function Dashboard() {
 
     return (
         <div className="dashboard-container">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h1 className="dashboard-title">Dashboard</h1>
-                <button className="primary-btn" onClick={() => navigate('/expenses')}>
-                    Go to Expenses
-                </button>
-            </div>
+            <h1 className="dashboard-title">Dashboard</h1>
 
             {/* Show create household form as a modal/overlay or main content if active */}
             {showCreateForm && (

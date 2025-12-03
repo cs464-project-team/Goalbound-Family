@@ -7,6 +7,9 @@ public class HouseholdMemberDto
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
 
+    // Combined name for UI display
+    public string UserName { get; set; } = string.Empty;
+
     public string Role { get; set; } = "Member";
     public DateTime JoinedAt { get; set; }
 }

@@ -11,8 +11,20 @@ public class ExpenseRepository : Repository<Expense>, IExpenseRepository
 
     public async Task<IEnumerable<Expense>> GetByHouseholdMonthAsync(Guid householdId, int year, int month)
     {
-        return await _dbSet.Include(e => e.Category)
+        return await _dbSet
+            .Include(e => e.Category)
+            .Include(e => e.Household)
             .Where(e => e.HouseholdId == householdId && e.Date.Year == year && e.Date.Month == month)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Expense>> GetByUserMonthAsync(Guid userId, int year, int month)
+    {
+        return await _dbSet
+            .Include(e => e.Category)
+            .Include(e => e.Household)
+            .Where(e => e.UserId == userId && e.Date.Year == year && e.Date.Month == month)
+            .OrderByDescending(e => e.Date)
             .ToListAsync();
     }
 }
