@@ -4,12 +4,14 @@ public class ExpenseDto
 {
     public Guid Id { get; set; }
     public Guid HouseholdId { get; set; }
+    public string HouseholdName { get; set; } = string.Empty;
     public Guid UserId { get; set; }
     public Guid CategoryId { get; set; }
     public string CategoryName { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public DateTime Date { get; set; }
     public string? Description { get; set; }
+    public Guid? ReceiptId { get; set; }
 }
 
 public class CreateExpenseRequest
@@ -20,4 +22,20 @@ public class CreateExpenseRequest
     public decimal Amount { get; set; }
     public DateTime Date { get; set; }
     public string? Description { get; set; }
+    public Guid? ReceiptId { get; set; }
+}
+
+public class BulkExpenseItem
+{
+    public Guid UserId { get; set; }
+    public decimal Amount { get; set; }
+    public string? Description { get; set; }
+}
+
+public class CreateBulkExpensesRequest
+{
+    public Guid HouseholdId { get; set; }
+    public Guid CategoryId { get; set; }
+    public DateTime Date { get; set; }
+    public List<BulkExpenseItem> Items { get; set; } = new();
 }

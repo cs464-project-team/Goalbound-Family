@@ -12,6 +12,9 @@ public class ApplicationDbContext : DbContext
 
     // DbSets for entities
     public DbSet<User> Users { get; set; }
+    public DbSet<Receipt> Receipts { get; set; }
+    public DbSet<ReceiptItem> ReceiptItems { get; set; }
+    public DbSet<ReceiptItemAssignment> ReceiptItemAssignments { get; set; }
     public DbSet<Household> Households { get; set; }
     public DbSet<HouseholdMember> HouseholdMembers { get; set; }
     public DbSet<Invitation> Invitations { get; set; }
@@ -37,6 +40,65 @@ public class ApplicationDbContext : DbContext
                 .HasDefaultValueSql("NOW()");
         });
 
+        // Configure Receipt entity
+        modelBuilder.Entity<Receipt>(entity =>
+        {
+            entity.HasIndex(r => r.UserId);
+            entity.HasIndex(r => r.HouseholdId);
+            entity.HasIndex(r => r.Status);
+            entity.HasIndex(r => r.UploadedAt);
+
+            entity.Property(r => r.UploadedAt)
+                .HasDefaultValueSql("NOW()");
+
+            entity.HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(r => r.Household)
+                .WithMany()
+                .HasForeignKey(r => r.HouseholdId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // Configure ReceiptItem entity
+        modelBuilder.Entity<ReceiptItem>(entity =>
+        {
+            entity.HasIndex(ri => ri.ReceiptId);
+            entity.HasIndex(ri => ri.LineNumber);
+
+            entity.Property(ri => ri.CreatedAt)
+                .HasDefaultValueSql("NOW()");
+
+            entity.HasOne(ri => ri.Receipt)
+                .WithMany(r => r.Items)
+                .HasForeignKey(ri => ri.ReceiptId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure ReceiptItemAssignment entity
+        modelBuilder.Entity<ReceiptItemAssignment>(entity =>
+        {
+            entity.HasIndex(ria => ria.ReceiptItemId);
+            entity.HasIndex(ria => ria.HouseholdMemberId);
+            entity.HasIndex(ria => new { ria.ReceiptItemId, ria.HouseholdMemberId });
+
+            entity.Property(ria => ria.CreatedAt)
+                .HasDefaultValueSql("NOW()");
+
+            entity.HasOne(ria => ria.ReceiptItem)
+                .WithMany(ri => ri.Assignments)
+                .HasForeignKey(ria => ria.ReceiptItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(ria => ria.HouseholdMember)
+                .WithMany()
+                .HasForeignKey(ria => ria.HouseholdMemberId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Add more entity configurations as needed
         // Configure Household entity
         modelBuilder.Entity<Household>(entity =>
         {

@@ -22,6 +22,20 @@ public class HouseholdsController : ControllerBase
         return result == null ? NotFound() : Ok(result);
     }
 
+    [HttpGet("user/{userId:guid}")]
+    public async Task<ActionResult<IEnumerable<HouseholdDto>>> GetByUserId(Guid userId)
+    {
+        var result = await _service.GetByUserIdAsync(userId);
+        return Ok(result);
+    }
+
+    [HttpGet("{householdId:guid}/members")]
+    public async Task<ActionResult<IEnumerable<HouseholdMemberDto>>> GetMembers(Guid householdId)
+    {
+        var result = await _service.GetMembersAsync(householdId);
+        return Ok(result);
+    }
+
     [HttpPost]
     public async Task<ActionResult<HouseholdDto>> Create(CreateHouseholdRequest request)
     {

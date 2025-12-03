@@ -17,4 +17,9 @@ public class HouseholdMember
     // Roles: "Parent" or "Member"
 
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+
+    // Expenditure tracking (in the household's currency)
+    public decimal MonthlyExpenditure { get; set; } = 0;
+    public decimal LifetimeExpenditure { get; set; } = 0;
+    public DateTime? LastExpenditureUpdate { get; set; }
 }
