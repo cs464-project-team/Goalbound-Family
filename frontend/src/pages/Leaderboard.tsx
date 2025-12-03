@@ -1,7 +1,4 @@
 // Leaderboard.tsx
-import { familyUsers } from "@/data/mockFamilyData";
-import { quests } from "@/data/mockQuestsData";
-
 import { Ranking } from "@/components/leaderboard/ranking";
 import { Quests } from "@/components/leaderboard/quests-section";
 
@@ -17,6 +14,7 @@ import {
   SelectGroup,
   SelectLabel,
 } from "@/components/ui/select";
+import { getApiUrl } from "../config/api";
 
 export default function Leaderboard() {
   const { userId } = useAuthContext();
@@ -33,7 +31,7 @@ export default function Leaderboard() {
     const fetchHouseholds = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5073/api/householdmembers/user/${userId}`
+          getApiUrl(`api/householdmembers/user/${userId}`)
         );
         if (!res.ok) throw new Error("Failed to fetch households");
         const data = await res.json();

@@ -8,6 +8,7 @@ import { TimedQuests } from "./timed-quests-card";
 
 import { useState, useEffect } from "react";
 import { useAuthContext } from "../../context/AuthProvider";
+import { getApiUrl } from "../../config/api";
 
 interface QuestsProps {
   householdId: string;
@@ -23,7 +24,7 @@ export function Quests({ householdId }: QuestsProps) {
   const fetchHouseholdMemberId = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5073/api/householdmembers/${householdId}/user/${userId}`
+        getApiUrl(`api/householdmembers/${householdId}/user/${userId}`)
       );
       if (!res.ok) throw new Error("Failed to fetch households");
       const data = await res.json();
