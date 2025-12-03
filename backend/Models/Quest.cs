@@ -9,7 +9,7 @@ public class Quest
     public Guid Id { get; set; }
 
     [Required]
-    public string Type { get; set; } = "daily"; 
+    public string Type { get; set; } = "daily";
     // "daily" | "weekly" | "timed"
 
     [Required]
