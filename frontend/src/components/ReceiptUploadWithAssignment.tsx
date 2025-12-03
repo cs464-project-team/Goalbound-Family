@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuthContext } from '../context/AuthProvider';
 import { getApiUrl } from '../config/api';
 
@@ -111,21 +111,7 @@ export default function ReceiptUploadWithAssignment() {
   const [success, setSuccess] = useState<string | null>(null);
 
   // Fetch user's households when userId is available
-  useEffect(() => {
-    if (userId) {
-      fetchUserHouseholds();
-    }
-  }, [userId]);
-
-  // When household is selected, fetch members and categories
-  useEffect(() => {
-    if (selectedHousehold) {
-      fetchHouseholdMembers();
-      fetchBudgetCategories();
-    }
-  }, [selectedHousehold]);
-
-  const fetchUserHouseholds = async () => {
+  const fetchUserHouseholds = useCallback(async () => {
     try {
       // TODO: Replace with actual API endpoint
       const response = await fetch(getApiUrl(`/api/households/user/${userId}`));
@@ -136,8 +122,7 @@ export default function ReceiptUploadWithAssignment() {
           setSelectedHousehold(data[0]);
         }
       }
-    } catch (err) {
-      console.error('Failed to fetch households:', err);
+    } catch (_err) {
       // Fallback to mock data for testing
       const mockHouseholds = [
         { id: '650e8400-e29b-41d4-a716-446655440000', name: 'Smith Family' }
@@ -145,9 +130,16 @@ export default function ReceiptUploadWithAssignment() {
       setHouseholds(mockHouseholds);
       setSelectedHousehold(mockHouseholds[0]);
     }
-  };
+  }, [userId]);
 
-  const fetchHouseholdMembers = async () => {
+  useEffect(() => {
+    if (userId) {
+      fetchUserHouseholds();
+    }
+  }, [userId, fetchUserHouseholds]);
+
+  // Fetch household members
+  const fetchHouseholdMembers = useCallback(async () => {
     if (!selectedHousehold) return;
 
     try {
@@ -162,12 +154,13 @@ export default function ReceiptUploadWithAssignment() {
           ));
         }
       }
-    } catch (err) {
-      console.error('Failed to fetch household members:', err);
+    } catch (_err) {
+      // console.error('Failed to fetch household members:', err);
     }
-  };
+  }, [selectedHousehold, manualItems]);
 
-  const fetchBudgetCategories = async () => {
+  // Fetch budget categories
+  const fetchBudgetCategories = useCallback(async () => {
     if (!selectedHousehold) return;
 
     try {
@@ -179,8 +172,8 @@ export default function ReceiptUploadWithAssignment() {
           setSelectedCategory(data[0]);
         }
       }
-    } catch (err) {
-      console.error('Failed to fetch categories:', err);
+    } catch (_err) {
+      // console.error('Failed to fetch categories:', err);
       // Fallback to mock data for testing
       const mockCategories = [
         { id: '750e8400-e29b-41d4-a716-446655440000', name: 'Groceries' },
@@ -191,7 +184,15 @@ export default function ReceiptUploadWithAssignment() {
       setCategories(mockCategories);
       setSelectedCategory(mockCategories[0]);
     }
-  };
+  }, [selectedHousehold]);
+
+  // When household is selected, fetch members and categories
+  useEffect(() => {
+    if (selectedHousehold) {
+      fetchHouseholdMembers();
+      fetchBudgetCategories();
+    }
+  }, [selectedHousehold, fetchHouseholdMembers, fetchBudgetCategories]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -273,12 +274,12 @@ export default function ReceiptUploadWithAssignment() {
       });
 
       // Convert the parsed items to the format expected by the rest of the component
-      const parsedItems: ReceiptItem[] = data.items.map((item: any) => ({
+      const parsedItems: ReceiptItem[] = data.items.map((item: { tempId: string; itemName: string; quantity: number; totalPrice: number; unitPrice?: number; lineNumber: number; isManuallyAdded: boolean; ocrConfidence?: number }) => ({
         id: item.tempId, // Use tempId as the item ID
         itemName: item.itemName,
         quantity: item.quantity,
         totalPrice: item.totalPrice,
-        unitPrice: item.unitPrice,
+        unitPrice: item.unitPrice || (item.totalPrice / item.quantity),
         lineNumber: item.lineNumber,
         isManuallyAdded: item.isManuallyAdded,
         ocrConfidence: item.ocrConfidence,
@@ -463,7 +464,7 @@ export default function ReceiptUploadWithAssignment() {
 
     try {
       // Build the assignment payload with full receipt data
-      const itemAssignmentsPayload = items.map(item => ({
+      const itemAssignmentsPayload = items.map((item: ReceiptItem) => ({
         // Don't include receiptItemId since we're creating new items
         itemName: item.itemName,
         quantity: item.quantity,
@@ -560,8 +561,8 @@ export default function ReceiptUploadWithAssignment() {
 
     // Validate amounts
     for (const item of validItems) {
-      const amount = parseFloat(item.amount);
-      if (isNaN(amount) || amount <= 0) {
+      const baseAmount = 0;parseFloat(item.amount);
+      if (isNaN(baseAmount) || baseAmount <= 0) {
         setError(`Invalid amount for "${item.description}". Amount must be greater than 0.`);
         return;
       }
@@ -1464,7 +1465,7 @@ export default function ReceiptUploadWithAssignment() {
                             if (qty === 0) return null;
 
                             const unitPrice = item.totalPrice / item.quantity;
-                            let baseAmount = unitPrice * qty;
+                            const baseAmount = unitPrice * qty;
                             let withService = baseAmount;
                             if (includeServiceCharge) {
                               withService += baseAmount * 0.10;
@@ -1498,7 +1499,7 @@ export default function ReceiptUploadWithAssignment() {
                             <div className="mt-3 pt-3 border-t border-gray-100">
                               <p className="text-xs font-medium text-gray-600 mb-2">Items:</p>
                               <div className="space-y-1">
-                                {memberItems.map((item: any, idx) => (
+                                {memberItems.map((item: { name: string; qty: number; amount: number }, idx) => (
                                   <div key={idx} className="flex justify-between text-xs text-gray-600">
                                     <span>{item.name} (×{item.qty})</span>
                                     <span className="font-medium">${item.amount.toFixed(2)}</span>

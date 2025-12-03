@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuthContext } from '../context/AuthProvider';
 import { Navigate } from 'react-router-dom';
 import { Download, Receipt as ReceiptIcon, FileText, Calendar, Tag } from 'lucide-react';
@@ -76,11 +76,22 @@ function Expenses() {
             });
     }, [session]);
 
+    // Using a ref to track if the component is still mounted
+    const isMounted = useRef(true);
+
+    useEffect(() => {
+        return () => {
+            isMounted.current = false;
+        };
+    }, []);
+
     useEffect(() => {
         if (!selectedHouseholdId || !session?.user?.id) return;
-        setLoading(true);
-
+        
         const fetchData = async () => {
+            if (isMounted.current) {
+                setLoading(true);
+            }
             try {
                 // Fetch receipts for the household
                 const receiptsRes = await fetch(getApiUrl(`/api/receipts/household/${selectedHouseholdId}`));
@@ -100,8 +111,7 @@ function Expenses() {
                 setExpenses(expensesData);
 
                 setLoading(false);
-            } catch (err) {
-                console.error('Failed to fetch data:', err);
+            } catch (_err) {
                 setLoading(false);
             }
         };
