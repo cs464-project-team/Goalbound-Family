@@ -164,15 +164,34 @@ function Expenses() {
         }
     };
 
-    const handleDownloadReceipt = (imagePath: string, fileName: string) => {
-        // Create a temporary link element to trigger download
-        const link = document.createElement('a');
-        link.href = imagePath;
-        link.download = fileName || 'receipt.jpg';
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    const handleDownloadReceipt = async (imagePath: string, fileName: string) => {
+        try {
+            // Fetch the image from Supabase
+            const response = await fetch(imagePath);
+            if (!response.ok) {
+                throw new Error('Failed to fetch receipt image');
+            }
+
+            // Convert to blob
+            const blob = await response.blob();
+
+            // Create blob URL
+            const blobUrl = window.URL.createObjectURL(blob);
+
+            // Create temporary link element to trigger download
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = fileName || 'receipt.jpg';
+            document.body.appendChild(link);
+            link.click();
+
+            // Cleanup
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            console.error('Error downloading receipt:', error);
+            alert('Failed to download receipt. Please try again.');
+        }
     };
 
     const formatDate = (dateStr: string) => {
