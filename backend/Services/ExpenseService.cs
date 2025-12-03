@@ -101,12 +101,32 @@ public class ExpenseService : IExpenseService
         {
             Id = e.Id,
             HouseholdId = e.HouseholdId,
+            HouseholdName = e.Household?.Name ?? string.Empty,
             UserId = e.UserId,
             CategoryId = e.CategoryId,
             CategoryName = e.Category?.Name ?? string.Empty,
             Amount = e.Amount,
             Date = e.Date,
-            Description = e.Description
+            Description = e.Description,
+            ReceiptId = e.ReceiptId
+        });
+    }
+
+    public async Task<IEnumerable<ExpenseDto>> GetByUserMonthAsync(Guid userId, int year, int month)
+    {
+        var expenses = await _repo.GetByUserMonthAsync(userId, year, month);
+        return expenses.Select(e => new ExpenseDto
+        {
+            Id = e.Id,
+            HouseholdId = e.HouseholdId,
+            HouseholdName = e.Household?.Name ?? string.Empty,
+            UserId = e.UserId,
+            CategoryId = e.CategoryId,
+            CategoryName = e.Category?.Name ?? string.Empty,
+            Amount = e.Amount,
+            Date = e.Date,
+            Description = e.Description,
+            ReceiptId = e.ReceiptId
         });
     }
 }

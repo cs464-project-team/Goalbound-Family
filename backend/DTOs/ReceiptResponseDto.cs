@@ -17,6 +17,8 @@ public class ReceiptResponseDto
     public decimal? OcrConfidence { get; set; }
     public string? ErrorMessage { get; set; }
     public DateTime UploadedAt { get; set; }
+    public string ImagePath { get; set; } = string.Empty;
+    public string OriginalFileName { get; set; } = string.Empty;
     public List<ReceiptItemDto> Items { get; set; } = new();
     public List<HouseholdMemberSummaryDto> HouseholdMembers { get; set; } = new();
 }

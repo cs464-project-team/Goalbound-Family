@@ -207,6 +207,27 @@ public class ReceiptsController : ControllerBase
     }
 
     /// <summary>
+    /// Get all receipts for a household
+    /// </summary>
+    /// <param name="householdId">Household ID</param>
+    /// <returns>List of receipts</returns>
+    [HttpGet("household/{householdId}")]
+    [ProducesResponseType(typeof(IEnumerable<ReceiptResponseDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<ReceiptResponseDto>>> GetHouseholdReceipts(Guid householdId)
+    {
+        try
+        {
+            var receipts = await _receiptService.GetHouseholdReceiptsAsync(householdId);
+            return Ok(receipts);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting receipts for household {HouseholdId}", householdId);
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
+
+    /// <summary>
     /// Add a manual item to a receipt (user-added item)
     /// </summary>
     /// <param name="addItemDto">Item details</param>

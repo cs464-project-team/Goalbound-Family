@@ -247,6 +247,23 @@ public class ReceiptService : IReceiptService
         return receipts.Select(MapToDto);
     }
 
+    public async Task<IEnumerable<ReceiptResponseDto>> GetHouseholdReceiptsAsync(Guid householdId)
+    {
+        var receipts = await _dbContext.Receipts
+            .Include(r => r.Items)
+                .ThenInclude(i => i.Assignments)
+                    .ThenInclude(a => a.HouseholdMember)
+                        .ThenInclude(hm => hm.User)
+            .Include(r => r.Household)
+                .ThenInclude(h => h.Members)
+                    .ThenInclude(m => m.User)
+            .Where(r => r.HouseholdId == householdId)
+            .OrderByDescending(r => r.ReceiptDate ?? r.UploadedAt)
+            .ToListAsync();
+
+        return receipts.Select(MapToDto);
+    }
+
     public async Task<ReceiptItemDto> AddItemToReceiptAsync(AddReceiptItemDto addItemDto)
     {
         var receipt = await _receiptRepository.GetByIdWithItemsAsync(addItemDto.ReceiptId);
@@ -550,7 +567,7 @@ public class ReceiptService : IReceiptService
             .Include(r => r.Household)
                 .ThenInclude(h => h.Members)
                     .ThenInclude(m => m.User)
-            .FirstOrDefaultAsync(r => r.Id == assignDto.ReceiptId);
+            .FirstOrDefaultAsync(r => r.Id == receipt.Id);
 
         return MapToDto(receipt!);
     }
@@ -569,6 +586,8 @@ public class ReceiptService : IReceiptService
             OcrConfidence = receipt.OcrConfidence,
             ErrorMessage = receipt.ErrorMessage,
             UploadedAt = receipt.UploadedAt,
+            ImagePath = receipt.ImagePath,
+            OriginalFileName = receipt.OriginalFileName,
             Items = receipt.Items.Select(MapItemToDto).ToList()
         };
 

@@ -29,6 +29,11 @@ public interface IReceiptService
     Task<IEnumerable<ReceiptResponseDto>> GetUserReceiptsAsync(Guid userId);
 
     /// <summary>
+    /// Get all receipts for a household
+    /// </summary>
+    Task<IEnumerable<ReceiptResponseDto>> GetHouseholdReceiptsAsync(Guid householdId);
+
+    /// <summary>
     /// Add a manual item to a receipt
     /// </summary>
     Task<ReceiptItemDto> AddItemToReceiptAsync(AddReceiptItemDto addItemDto);

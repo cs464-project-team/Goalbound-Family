@@ -34,4 +34,10 @@ public class ExpensesController : ControllerBase
     {
         return Ok(await _service.GetByHouseholdMonthAsync(householdId, year, month));
     }
+
+    [HttpGet("user/{userId:guid}/{year:int}/{month:int}")]
+    public async Task<ActionResult<IEnumerable<ExpenseDto>>> GetByUser(Guid userId, int year, int month)
+    {
+        return Ok(await _service.GetByUserMonthAsync(userId, year, month));
+    }
 }
