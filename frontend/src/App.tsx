@@ -25,7 +25,9 @@ function AppRoutes() {
         path="/dashboard"
         element={
           <RequireAuth>
-            <Dashboard />
+            <Layout>
+              <Dashboard />
+            </Layout>
           </RequireAuth>
         }
       />
