@@ -13,6 +13,7 @@ import {
 
 import { useState, useEffect } from "react";
 import { useAuthContext } from "../../context/AuthProvider";
+import { getApiUrl } from '../../config/api';
 
 interface RankingProps {
   householdId: string;
@@ -25,7 +26,7 @@ export function Ranking({ householdId }: RankingProps) {
   const fetchHouseholdMembers = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5073/api/householdmembers/${householdId}`
+        getApiUrl(`api/householdmembers/${householdId}`)
       );
       if (!res.ok) throw new Error("Failed to fetch households");
       const data = await res.json();
