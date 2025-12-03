@@ -42,4 +42,14 @@ public class HouseholdMemberRepository
             .Where(predicate)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<HouseholdMember>> GetWithIncludesAsync(Guid householdId)
+    {
+        return await _context.HouseholdMembers
+            .Where(m => m.HouseholdId == householdId)
+            .Include(m => m.User)
+            .Include(m => m.MemberBadges)
+                .ThenInclude(mb => mb.Badge)
+            .ToListAsync();
+    }
 }

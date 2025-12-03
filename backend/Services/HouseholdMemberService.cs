@@ -16,7 +16,7 @@ public class HouseholdMemberService : IHouseholdMemberService
 
     public async Task<IEnumerable<HouseholdMemberDto>> GetMembersAsync(Guid householdId)
     {
-        var members = await _memberRepo.FindAsync(m => m.HouseholdId == householdId);
+        var members = await _memberRepo.GetWithIncludesAsync(householdId);
 
         return members.Select(m => new HouseholdMemberDto
         {
@@ -30,7 +30,15 @@ public class HouseholdMemberService : IHouseholdMemberService
             Avatar = m.Avatar,
             Xp = m.Xp,
             Streak = m.Streak,
-            QuestsCompleted = m.QuestsCompleted
+            QuestsCompleted = m.QuestsCompleted,
+            Badges = m.MemberBadges.Select(b => new MemberBadgeDto
+            {
+                BadgeId = b.BadgeId,
+                Name = b.Badge?.Name ?? "",
+                Description = b.Badge?.Description ?? "",
+                Icon = b.Badge?.Icon ?? "",
+                EarnedAt = b.EarnedAt
+            }).ToList()
         });
     }
 
