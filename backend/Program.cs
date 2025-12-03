@@ -9,8 +9,6 @@ using Microsoft.EntityFrameworkCore;
 var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 var contentRoot = Directory.GetCurrentDirectory();
 
-
-
 // Load environment variables from .env file
 if (environment == "Development")
 {
@@ -46,6 +44,7 @@ var dbPort = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
 var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "postgres";
 var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "postgres";
 var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
+
 
 string connectionString;
 if (!string.IsNullOrEmpty(dbHost) && !string.IsNullOrEmpty(dbPassword))
