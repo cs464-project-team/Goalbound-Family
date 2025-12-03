@@ -80,3 +80,7 @@ python-ocr/.pytest_cache/
 
 #Claude
 .claude
+
+# Test documentation (generated)
+TEST_SUMMARY.md
+TEST_RESULTS.md
