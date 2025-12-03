@@ -40,4 +40,5 @@ public class HouseholdMemberRepository
         return await _dbSet
             .FirstOrDefaultAsync(m => m.UserId == userId && m.HouseholdId == householdId);
     }
+
 }
