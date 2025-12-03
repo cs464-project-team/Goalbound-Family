@@ -3,6 +3,7 @@ import { useAuthContext } from '../context/AuthProvider';
 import { Navigate } from 'react-router-dom';
 import { Download, Receipt as ReceiptIcon, FileText } from 'lucide-react';
 import '../styles/Dashboard.css';
+import { getApiUrl } from '../config/api';
 
 type Household = {
     id: string;
@@ -56,7 +57,7 @@ function Expenses() {
 
     useEffect(() => {
         if (!session?.user?.id) return;
-        fetch(`/api/householdmembers/user/${session.user.id}`)
+        fetch(getApiUrl(`/api/householdmembers/user/${session.user.id}`))
             .then(res => res.json())
             .then((data: Household[]) => {
                 setHouseholds(data);
@@ -68,7 +69,7 @@ function Expenses() {
         if (!selectedHouseholdId) return;
         setLoading(true);
 
-        fetch(`/api/expenses/${selectedHouseholdId}/${selectedYear}/${selectedMonth}`)
+        fetch(getApiUrl(`/api/expenses/${selectedHouseholdId}/${selectedYear}/${selectedMonth}`))
             .then(res => res.json())
             .then(async (expensesData: ExpenseDto[]) => {
                 setExpenses(expensesData);
@@ -82,7 +83,7 @@ function Expenses() {
                 await Promise.all(
                     receiptIds.map(async (receiptId) => {
                         try {
-                            const res = await fetch(`/api/receipts/${receiptId}`);
+                            const res = await fetch(getApiUrl(`/api/receipts/${receiptId}`));
                             if (res.ok) {
                                 const receipt = await res.json();
                                 receiptsMap.set(receiptId, receipt);

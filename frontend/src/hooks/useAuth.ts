@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import supabase from '../services/supabaseClient'
+import { getApiUrl } from '../config/api'
 
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null)
@@ -21,7 +22,7 @@ export function useAuth() {
       return false
     }
     if (data?.user?.id) {
-      const response = await fetch('http://localhost:5073/api/users', {
+      const response = await fetch(getApiUrl('/api/users'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: data.user.id, firstName, lastName, email })

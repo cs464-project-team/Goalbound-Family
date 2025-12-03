@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '../context/AuthProvider';
+import { getApiUrl } from '../config/api';
 
 // Types
 interface Household {
@@ -127,7 +128,7 @@ export default function ReceiptUploadWithAssignment() {
   const fetchUserHouseholds = async () => {
     try {
       // TODO: Replace with actual API endpoint
-      const response = await fetch(`http://localhost:5001/api/households/user/${userId}`);
+      const response = await fetch(getApiUrl(`/api/households/user/${userId}`));
       if (response.ok) {
         const data = await response.json();
         setHouseholds(data);
@@ -150,7 +151,7 @@ export default function ReceiptUploadWithAssignment() {
     if (!selectedHousehold) return;
 
     try {
-      const response = await fetch(`http://localhost:5001/api/households/${selectedHousehold.id}/members`);
+      const response = await fetch(getApiUrl(`/api/households/${selectedHousehold.id}/members`));
       if (response.ok) {
         const data = await response.json();
         setHouseholdMembers(data);
@@ -170,7 +171,7 @@ export default function ReceiptUploadWithAssignment() {
     if (!selectedHousehold) return;
 
     try {
-      const response = await fetch(`http://localhost:5001/api/budgets/categories/${selectedHousehold.id}`);
+      const response = await fetch(getApiUrl(`/api/budgets/categories/${selectedHousehold.id}`));
       if (response.ok) {
         const data = await response.json();
         setCategories(data);
@@ -226,7 +227,7 @@ export default function ReceiptUploadWithAssignment() {
     formData.append('image', selectedFile);
 
     try {
-      const response = await fetch('http://localhost:5001/api/receipts/process-ocr', {
+      const response = await fetch(getApiUrl('/api/receipts/process-ocr'), {
         method: 'POST',
         body: formData,
       });
@@ -496,7 +497,7 @@ export default function ReceiptUploadWithAssignment() {
         itemAssignments: itemAssignmentsPayload
       };
 
-      const response = await fetch('http://localhost:5001/api/receipts/assign', {
+      const response = await fetch(getApiUrl('/api/receipts/assign'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -590,7 +591,7 @@ export default function ReceiptUploadWithAssignment() {
         items: bulkExpenseItems
       };
 
-      const response = await fetch('http://localhost:5001/api/expenses/bulk', {
+      const response = await fetch(getApiUrl('/api/expenses/bulk'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

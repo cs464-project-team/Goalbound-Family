@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getApiUrl } from '../config/api';
 
 interface ReceiptItem {
   id: string;
@@ -56,7 +57,7 @@ export default function ReceiptUpload() {
     formData.append('image', selectedFile);
 
     try {
-      const response = await fetch('http://localhost:5001/api/receipts/upload', {
+      const response = await fetch(getApiUrl('/api/receipts/upload'), {
         method: 'POST',
         body: formData,
       });
