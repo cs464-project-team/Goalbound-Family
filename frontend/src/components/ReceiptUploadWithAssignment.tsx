@@ -1499,7 +1499,7 @@ export default function ReceiptUploadWithAssignment() {
                             <div className="mt-3 pt-3 border-t border-gray-100">
                               <p className="text-xs font-medium text-gray-600 mb-2">Items:</p>
                               <div className="space-y-1">
-                                {memberItems.map((item: { name: string; qty: number; amount: number }, idx) => (
+                                {memberItems.filter((item): item is { name: string; qty: number; amount: number } => item !== null).map((item, idx) => (
                                   <div key={idx} className="flex justify-between text-xs text-gray-600">
                                     <span>{item.name} (×{item.qty})</span>
                                     <span className="font-medium">${item.amount.toFixed(2)}</span>

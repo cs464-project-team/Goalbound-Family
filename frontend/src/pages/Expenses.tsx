@@ -65,6 +65,8 @@ function Expenses() {
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
     const [viewMode, setViewMode] = useState<'expenses' | 'receipts'>('receipts');
     const [expandedReceipts, setExpandedReceipts] = useState<Set<string>>(new Set());
+    const [expandedExpenses, setExpandedExpenses] = useState<Set<string>>(new Set());
+    const [expenseReceiptDetails, setExpenseReceiptDetails] = useState<Map<string, ReceiptDto>>(new Map());
 
     useEffect(() => {
         if (!session?.user?.id) return;
@@ -133,6 +135,33 @@ function Expenses() {
             }
             return newSet;
         });
+    };
+
+    const toggleExpense = async (expenseId: string, receiptId: string | undefined) => {
+        if (!receiptId) return;
+
+        setExpandedExpenses(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(expenseId)) {
+                newSet.delete(expenseId);
+            } else {
+                newSet.add(expenseId);
+            }
+            return newSet;
+        });
+
+        // Fetch receipt details if not already loaded
+        if (!expenseReceiptDetails.has(receiptId)) {
+            try {
+                const res = await fetch(getApiUrl(`/api/receipts/${receiptId}`));
+                if (res.ok) {
+                    const receiptData: ReceiptDto = await res.json();
+                    setExpenseReceiptDetails(prev => new Map(prev).set(receiptId, receiptData));
+                }
+            } catch (err) {
+                console.error(`Failed to fetch receipt ${receiptId}:`, err);
+            }
+        }
     };
 
     const handleDownloadReceipt = (imagePath: string, fileName: string) => {
@@ -497,28 +526,117 @@ function Expenses() {
                                                                 }}>
                                                                     ${expense.amount.toFixed(2)}
                                                                 </div>
-                                                                {receipt && (
-                                                                    <button
-                                                                        className="secondary-btn"
-                                                                        onClick={() => handleDownloadReceipt(
-                                                                            receipt.imagePath,
-                                                                            receipt.originalFileName
+                                                                {expense.receiptId && (
+                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                                                        <button
+                                                                            className="primary-btn"
+                                                                            onClick={() => toggleExpense(expense.id, expense.receiptId)}
+                                                                            style={{
+                                                                                padding: '0.5rem 1rem',
+                                                                                fontSize: '0.85rem',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '0.5rem',
+                                                                                whiteSpace: 'nowrap'
+                                                                            }}
+                                                                        >
+                                                                            <ReceiptIcon size={16} />
+                                                                            {expandedExpenses.has(expense.id) ? 'Hide' : 'View'} Receipt
+                                                                        </button>
+                                                                        {receipt && (
+                                                                            <button
+                                                                                className="secondary-btn"
+                                                                                onClick={() => handleDownloadReceipt(
+                                                                                    receipt.imagePath,
+                                                                                    receipt.originalFileName
+                                                                                )}
+                                                                                style={{
+                                                                                    padding: '0.5rem 1rem',
+                                                                                    fontSize: '0.85rem',
+                                                                                    display: 'flex',
+                                                                                    alignItems: 'center',
+                                                                                    gap: '0.5rem',
+                                                                                    whiteSpace: 'nowrap'
+                                                                                }}
+                                                                            >
+                                                                                <Download size={16} />
+                                                                                Download
+                                                                            </button>
                                                                         )}
-                                                                        style={{
-                                                                            padding: '0.5rem 1rem',
-                                                                            fontSize: '0.85rem',
-                                                                            display: 'flex',
-                                                                            alignItems: 'center',
-                                                                            gap: '0.5rem',
-                                                                            whiteSpace: 'nowrap'
-                                                                        }}
-                                                                    >
-                                                                        <Download size={16} />
-                                                                        Download
-                                                                    </button>
+                                                                    </div>
                                                                 )}
                                                             </div>
                                                         </div>
+
+                                                        {/* Expandable Receipt Details */}
+                                                        {expense.receiptId && expandedExpenses.has(expense.id) && expenseReceiptDetails.has(expense.receiptId) && (
+                                                            <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
+                                                                {(() => {
+                                                                    const receiptDetail = expenseReceiptDetails.get(expense.receiptId!);
+                                                                    if (!receiptDetail) return null;
+
+                                                                    return (
+                                                                        <div>
+                                                                            <div style={{ marginBottom: '1rem' }}>
+                                                                                <div style={{ fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                                                                                    Receipt Details
+                                                                                </div>
+                                                                                <div style={{ fontSize: '0.85rem', color: '#666' }}>
+                                                                                    <div><strong>Merchant:</strong> {receiptDetail.merchantName || 'Unknown'}</div>
+                                                                                    <div><strong>Date:</strong> {formatDate(receiptDetail.receiptDate || receiptDetail.uploadedAt)}</div>
+                                                                                    <div><strong>Total:</strong> ${(receiptDetail.totalAmount || 0).toFixed(2)}</div>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            {receiptDetail.items && receiptDetail.items.length > 0 && (
+                                                                                <div>
+                                                                                    <strong style={{ fontSize: '0.9rem', color: '#555', marginBottom: '0.5rem', display: 'block' }}>
+                                                                                        Receipt Items:
+                                                                                    </strong>
+                                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                                                                        {receiptDetail.items.map(item => (
+                                                                                            <div
+                                                                                                key={item.id}
+                                                                                                style={{
+                                                                                                    padding: '0.75rem',
+                                                                                                    background: '#f9f9f9',
+                                                                                                    borderRadius: '4px'
+                                                                                                }}
+                                                                                            >
+                                                                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                                                                                    <div>
+                                                                                                        <div style={{ fontWeight: '500' }}>{item.itemName}</div>
+                                                                                                        <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.25rem' }}>
+                                                                                                            Qty: {item.quantity} × ${item.unitPrice.toFixed(2)}
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    <div style={{ fontWeight: '600', color: '#2563eb' }}>
+                                                                                                        ${item.totalPrice.toFixed(2)}
+                                                                                                    </div>
+                                                                                                </div>
+
+                                                                                                {item.assignments && item.assignments.length > 0 && (
+                                                                                                    <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #e5e7eb' }}>
+                                                                                                        <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '0.25rem' }}>
+                                                                                                            Assigned to:
+                                                                                                        </div>
+                                                                                                        {item.assignments.map((assignment, idx) => (
+                                                                                                            <div key={idx} style={{ fontSize: '0.8rem', color: '#555', paddingLeft: '0.5rem' }}>
+                                                                                                                • {assignment.householdMemberName}: {assignment.assignedQuantity} qty - ${assignment.totalAmount.toFixed(2)}
+                                                                                                            </div>
+                                                                                                        ))}
+                                                                                                    </div>
+                                                                                                )}
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })()}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 );
                                             })}
