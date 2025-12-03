@@ -24,7 +24,7 @@ public class HouseholdMember
     public decimal MonthlyExpenditure { get; set; } = 0;
     public decimal LifetimeExpenditure { get; set; } = 0;
     public DateTime? LastExpenditureUpdate { get; set; }
-    
+
     // URL to avatar image
     public string Avatar { get; set; } = string.Empty;
 
