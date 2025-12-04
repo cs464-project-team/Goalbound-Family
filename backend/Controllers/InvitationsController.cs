@@ -20,8 +20,15 @@ public class InvitationsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<InvitationDto>> Create(CreateInvitationRequest request)
     {
-        var result = await _service.CreateAsync(request);
-        return Ok(result);
+        try
+        {
+            var result = await _service.CreateAsync(request);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpPost("accept")]

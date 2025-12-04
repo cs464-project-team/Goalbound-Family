@@ -2,6 +2,7 @@ using GoalboundFamily.Api.DTOs;
 using GoalboundFamily.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace GoalboundFamily.Api.Controllers;
 
@@ -103,7 +104,9 @@ public class ReceiptsController : ControllerBase
 
     private Guid? GetAuthenticatedUserId()
     {
-        var userIdClaim = User.FindFirst("sub")?.Value;
+        // Use ClaimTypes.NameIdentifier instead of "sub"
+        // because .NET JWT middleware transforms the "sub" claim
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userIdClaim != null && Guid.TryParse(userIdClaim, out var userId))
         {
             return userId;
