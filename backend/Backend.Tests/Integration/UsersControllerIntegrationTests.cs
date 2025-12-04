@@ -19,7 +19,7 @@ public class UsersControllerIntegrationTests : IClassFixture<WebApplicationFacto
         });
     }
 
-    [Fact(Skip = "Integration test requires Supabase configuration (.env.testing with SUPABASE_URL)")]
+    [Fact(Skip = "Integration test requires Supabase configuration (.env.testing with VITE_SUPABASE_URL)")]
     public async Task CreateUser_Then_GetByEmail_Then_DeleteUser_WorksEndToEnd()
     {
         var client = _factory.CreateClient();
