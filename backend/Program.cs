@@ -189,6 +189,13 @@ builder.Services.AddScoped(_ =>
 
 var app = builder.Build();
 
+// Seed quests on startup
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await QuestSeeder.SeedQuests(context);
+}
+
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
