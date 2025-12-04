@@ -3,10 +3,6 @@ using GoalboundFamily.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/main
 namespace GoalboundFamily.Api.Controllers;
 
 [ApiController]
