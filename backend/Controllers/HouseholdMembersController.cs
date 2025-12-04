@@ -44,6 +44,7 @@ public class HouseholdMembersController : ControllerBase
         }
 
         return NoContent();
+    }
     // GET api/householdmembers/{householdId}/user/{userId}
     [HttpGet("{householdId:guid}/user/{userId:guid}")]
     public async Task<ActionResult<HouseholdMemberDto?>> GetMemberByUserAndHousehold(Guid householdId, Guid userId)
