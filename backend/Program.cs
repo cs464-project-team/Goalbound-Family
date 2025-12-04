@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using MediatR;
 
 var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 var contentRoot = Directory.GetCurrentDirectory();
@@ -159,10 +160,7 @@ builder.Services.AddScoped<ISupabaseStorageService, SupabaseStorageService>();
 builder.Services.AddScoped<IQuestProgressService, QuestProgressService>();
 
 // Configure MediatR for event handling
-builder.Services.AddMediatR(cfg =>
-{
-    cfg.RegisterServicesFromAssemblyContaining<Program>();
-});
+builder.Services.AddMediatR(typeof(Program).Assembly);
 
 // Configure Supabase Client for Storage
 var supabaseUrl = Environment.GetEnvironmentVariable("VITE_SUPABASE_URL")

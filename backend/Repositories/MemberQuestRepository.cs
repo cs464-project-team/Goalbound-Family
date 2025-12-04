@@ -34,7 +34,7 @@ public class MemberQuestRepository : Repository<MemberQuest>, IMemberQuestReposi
     {
         return await _dbSet
             .Include(mq => mq.Quest) // include quest template
-            .Where(mq => mq.MemberId == memberId
+            .Where(mq => mq.HouseholdMemberId == memberId
                       && mq.Quest.Category == category
                       && mq.Status == "in progress") // only active quests
             .ToListAsync();

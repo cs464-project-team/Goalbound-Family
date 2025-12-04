@@ -4,7 +4,6 @@ using GoalboundFamily.Api.Repositories.Interfaces;
 using GoalboundFamily.Api.Services.Interfaces;
 using GoalboundFamily.Api.Data;
 using Microsoft.EntityFrameworkCore;
-using MediatR;
 
 namespace GoalboundFamily.Api.Services;
 
@@ -20,7 +19,7 @@ public class ReceiptService : IReceiptService
     private readonly ApplicationDbContext _dbContext;
     private readonly IHouseholdAuthorizationService _authService;
     private readonly ILogger<ReceiptService> _logger;
-    private readonly IMediator _mediator;
+    private readonly IQuestProgressService _questService;
 
     public ReceiptService(
         IReceiptRepository receiptRepository,
@@ -30,7 +29,7 @@ public class ReceiptService : IReceiptService
         ApplicationDbContext dbContext,
         IHouseholdAuthorizationService authService,
         ILogger<ReceiptService> logger,
-        IMediator mediator)
+        IQuestProgressService _questService)
     {
         _receiptRepository = receiptRepository;
         _ocrService = ocrService;
@@ -39,7 +38,7 @@ public class ReceiptService : IReceiptService
         _dbContext = dbContext;
         _authService = authService;
         _logger = logger;
-        _mediator = mediator;
+        _questService = _questService;
     }
 
     public async Task<ReceiptResponseDto> UploadReceiptAsync(ReceiptUploadDto uploadDto, Guid requestingUserId)
@@ -130,7 +129,7 @@ public class ReceiptService : IReceiptService
             _logger.LogInformation("Receipt {ReceiptId} processed successfully with {ItemCount} items",
                 receipt.Id, items.Count);
 
-            await _mediator.Publish(new ReceiptScannedEvent(receipt.UserId, receipt.HouseholdId));
+            await _questService.HandleReceiptScanned(receipt.UserId, receipt.HouseholdId);
 
             // Reload receipt with household members for response
             var receiptWithMembers = await _dbContext.Receipts

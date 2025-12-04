@@ -16,6 +16,6 @@ public class ReceiptScannedHandler : INotificationHandler<ReceiptScannedEvent>
 
     public async Task Handle(ReceiptScannedEvent notification, CancellationToken cancellationToken)
     {
-        await _questService.HandleReceiptScanned(notification.UserId, notification.Category)
+        await _questService.HandleReceiptScanned(notification.UserId, notification.HouseholdId);
     }
 }

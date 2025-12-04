@@ -1,25 +1,24 @@
 using GoalboundFamily.Api.Events;
 using GoalboundFamily.Api.Services.Interfaces;
 using GoalboundFamily.Api.Repositories.Interfaces;
-using MediatR;
 
 namespace GoalboundFamily.Api.Services;
 
 public class QuestProgressService : IQuestProgressService
 {
-    private readonly IMediator _mediator;
     private readonly IMemberQuestService _questService;
-    private readonly IExpenseService _expenseService;
+    private readonly IExpenseRepository _expenseRepository;
     private readonly IReceiptRepository _receiptRepo;
+    private readonly IHouseholdMemberRepository _householdMemberRepo;
+    private readonly IMemberQuestRepository _memberQuestRepository;
 
-    public QuestProgressService(IMediator mediator, IExpenseService expenseService, IMemberQuestService questService, IReceiptRepository receiptRepo)
+    public QuestProgressService(IExpenseRepository expenseRepository, IMemberQuestService questService, IReceiptRepository receiptRepo, IHouseholdMemberRepository householdMemberRepo, IMemberQuestRepository memberQuestRepository)
     {
-        _mediator = mediator;
         _questService = questService;
-        _expenseService = expenseService;
+        _expenseRepository = expenseRepository;
         _receiptRepo = receiptRepo;
         _householdMemberRepo = householdMemberRepo;
-
+        _memberQuestRepository = memberQuestRepository;
     }
 
     public async Task HandleReceiptScanned(Guid userId, Guid householdId)
@@ -27,15 +26,19 @@ public class QuestProgressService : IQuestProgressService
         // 1. Get total receipts scanned
         int totalReceipts = await _receiptRepo.GetReceiptCountByUserAndHouseholdAsync(userId, householdId);
 
-        string householdMemberId = await _householdMemberRepo.GetByUserIdAsync(userId);
+        HouseholdMember? householdMember = await _householdMemberRepo.GetByUserIdAsync(userId);
+        if (householdMember == null)
+        {
+            throw new InvalidOperationException($"User {userId} is not a member of any household.");
+        }
 
         // 2. Get all active quests for this member in "receipt" category
-        var activeQuests = await _memberQuestRepository.GetActiveQuestsByMemberAndCategory(householdMemberId, "receipt");
+        var activeQuests = await _memberQuestRepository.GetActiveQuestsAsync(householdMember.Id, "receipt");
 
         // 3. Update progress
         foreach (var mq in activeQuests)
         {
-            mq.Progress = max(mq.Quest.Target, totalReceipts); // set progress to actual total
+            mq.Progress = Math.max(mq.Quest.Target, totalReceipts); // set progress to actual total
             if (mq.Progress >= mq.Quest.Target)
             {
                 mq.IsCompleted = true;
@@ -54,15 +57,19 @@ public class QuestProgressService : IQuestProgressService
         // 1. Get total expenses in this category
         int totalExpenses = await _expenseRepository.GetCountByUserMonthAsync(userId, year, month);
 
-        string householdMemberId = await _householdMemberRepo.GetByUserIdAsync(userId);
+        HouseholdMember? householdMember = await _householdMemberRepo.GetByUserIdAsync(userId);
+        if (householdMember == null)
+        {
+            throw new InvalidOperationException($"User {userId} is not a member of any household.");
+        }
 
         // 2. Get all active quests for this member in "expense" category
-        var activeQuests = await _memberQuestRepository.GetActiveQuestsByMemberAndCategory(memberId, "expense");
+        var activeQuests = await _memberQuestRepository.GetActiveQuestsAsync(householdMember.Id, "expense");
 
         // 3. Update progress
         foreach (var mq in activeQuests)
         {
-            mq.Progress = max(mq.Quest.Target, totalExpenses); // set progress to actual total
+            mq.Progress = Math.max(mq.Quest.Target, totalExpenses); // set progress to actual total
             if (mq.Progress >= mq.Quest.Target)
             {
                 mq.IsCompleted = true;
