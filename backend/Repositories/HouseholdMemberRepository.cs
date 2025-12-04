@@ -24,6 +24,14 @@ public class HouseholdMemberRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<HouseholdMember>> GetByHouseholdIdAsync(Guid householdId)
+    {
+        return await _dbSet
+            .Include(m => m.User)
+            .Where(m => m.HouseholdId == householdId)
+            .ToListAsync();
+    }
+
     public async Task<HouseholdMember?> GetByUserAndHouseholdAsync(Guid userId, Guid householdId)
     {
         return await _dbSet

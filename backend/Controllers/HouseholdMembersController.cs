@@ -28,4 +28,21 @@ public class HouseholdMembersController : ControllerBase
         var households = await _service.GetHouseholdsForUserAsync(userId);
         return Ok(households);
     }
+
+    [HttpDelete("{memberId:guid}")]
+    public async Task<ActionResult> Delete(Guid memberId, [FromQuery] Guid requestingUserId)
+    {
+        if (requestingUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Requesting user ID is required" });
+        }
+
+        var success = await _service.RemoveMemberAsync(memberId, requestingUserId);
+        if (!success)
+        {
+            return NotFound(new { message = "Member not found or unauthorized" });
+        }
+
+        return NoContent();
+    }
 }

@@ -56,13 +56,18 @@ describe("Expenses Page", () => {
     vi.clearAllMocks();
   });
 
-  it("renders without crashing", () => {
+  it("renders without crashing", async () => {
     const { container } = render(
       <BrowserRouter>
         <Expenses />
       </BrowserRouter>
     );
     expect(container).toBeTruthy();
+
+    // Wait for async operations to complete
+    await waitFor(() => {
+      expect(globalThis.fetch).toHaveBeenCalled();
+    });
   });
 
   it("displays Expense History heading", async () => {

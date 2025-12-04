@@ -33,11 +33,11 @@ describe("Auth page", () => {
     render(<Auth />);
 
     expect(
-      screen.getByRole("heading", { name: /sign up/i })
+      screen.getByRole("button", { name: /sign up/i })
     ).toBeInTheDocument();
 
     expect(
-      screen.getByRole("heading", { name: /login/i })
+      screen.getByRole("button", { name: /login/i })
     ).toBeInTheDocument();
   });
 });
