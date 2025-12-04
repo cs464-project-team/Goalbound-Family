@@ -156,6 +156,13 @@ builder.Services.AddScoped<IReceiptParserService, ReceiptParserService>();
 builder.Services.AddScoped<IReceiptService, ReceiptService>();
 builder.Services.AddScoped<IBudgetCategoryService, BudgetCategoryService>();
 builder.Services.AddScoped<ISupabaseStorageService, SupabaseStorageService>();
+builder.Services.AddScoped<IQuestProgressService, QuestProgressService>();
+
+// Configure MediatR for event handling
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssemblyContaining<Program>();
+});
 
 // Configure Supabase Client for Storage
 var supabaseUrl = Environment.GetEnvironmentVariable("VITE_SUPABASE_URL")
