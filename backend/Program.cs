@@ -119,7 +119,7 @@ builder.Services.AddScoped<ISupabaseStorageService, SupabaseStorageService>();
 // Configure Supabase Client for Storage
 var supabaseUrl = Environment.GetEnvironmentVariable("VITE_SUPABASE_URL")
     ?? throw new InvalidOperationException("VITE_SUPABASE_URL not configured in .env file");
-var supabaseKey = Environment.GetEnvironmentVariable("SUPABASE_ANON_KEY")
+var supabaseKey = Environment.GetEnvironmentVariable("VITE_SUPABASE_ANON_KEY")
     ?? throw new InvalidOperationException("VITE_SUPABASE_ANON_KEY not configured in .env file");
 
 builder.Services.AddScoped(_ =>
