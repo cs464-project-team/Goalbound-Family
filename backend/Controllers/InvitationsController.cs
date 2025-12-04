@@ -22,14 +22,14 @@ public class InvitationsController : ControllerBase
     {
         try
         {
-            // Get authenticated user ID from JWT token
+            // Extract user ID from JWT claims
             var userIdClaim = User.FindFirst("sub")?.Value;
-            if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var authenticatedUserId))
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             {
-                return Unauthorized(new { error = "User authentication failed" });
+                return Unauthorized(new { error = "User not authenticated" });
             }
 
-            var result = await _service.CreateAsync(request, authenticatedUserId);
+            var result = await _service.CreateAsync(request, userId);
             return Ok(result);
         }
         catch (InvalidOperationException ex)
