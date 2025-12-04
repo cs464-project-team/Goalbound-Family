@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import Dashboard from "../../src/pages/Dashboard";
 
@@ -44,7 +44,7 @@ describe("Dashboard page", () => {
     vi.clearAllMocks();
   });
 
-  it("renders dashboard heading", () => {
+  it("renders dashboard heading", async () => {
     render(
       <BrowserRouter>
         <Dashboard />
@@ -55,5 +55,10 @@ describe("Dashboard page", () => {
     expect(
       screen.getByRole("heading", { name: /dashboard/i })
     ).toBeInTheDocument();
+
+    // Wait for async operations to complete
+    await waitFor(() => {
+      expect(globalThis.fetch).toHaveBeenCalled();
+    });
   });
 });

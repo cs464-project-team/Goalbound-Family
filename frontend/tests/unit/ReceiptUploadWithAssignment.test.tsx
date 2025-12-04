@@ -56,13 +56,18 @@ describe("ReceiptUploadWithAssignment Component", () => {
     vi.clearAllMocks();
   });
 
-  it("renders without crashing", () => {
+  it("renders without crashing", async () => {
     const { container } = render(
       <BrowserRouter>
         <ReceiptUploadWithAssignment />
       </BrowserRouter>
     );
     expect(container).toBeTruthy();
+
+    // Wait for async operations to complete
+    await waitFor(() => {
+      expect(globalThis.fetch).toHaveBeenCalled();
+    });
   });
 
   it("displays the Expense Management title", async () => {
