@@ -147,23 +147,23 @@ function Dashboard() {
     const monthName = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
     return (
-        <div className="dashboard-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem', minHeight: '100vh' }}>
-            <div style={{ marginBottom: '2.5rem', paddingBottom: '1rem' }}>
-                <h1 className="dashboard-title" style={{ fontSize: '2.75rem', fontWeight: '700', marginBottom: '0.75rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.5px' }}>Dashboard</h1>
-                <p style={{ color: '#64748b', fontSize: '1.15rem', fontWeight: '400' }}>Welcome back! Here's your financial overview for {monthName}</p>
+        <div className="dashboard-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '1rem', minHeight: '100vh' }}>
+            <div style={{ marginBottom: '2rem', paddingBottom: '1rem' }}>
+                <h1 className="dashboard-title" style={{ fontSize: 'clamp(1.75rem, 5vw, 2.75rem)', fontWeight: '700', marginBottom: '0.75rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.5px' }}>Dashboard</h1>
+                <p style={{ color: '#64748b', fontSize: 'clamp(0.9rem, 2.5vw, 1.15rem)', fontWeight: '400' }}>Welcome back! Here's your financial overview for {monthName}</p>
             </div>
 
             {showCreateForm && (
                 <div className="create-household-section" style={{
                     marginBottom: '2rem',
-                    padding: '2rem',
+                    padding: 'clamp(1rem, 3vw, 2rem)',
                     background: 'white',
                     borderRadius: '16px',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)',
                     border: '1px solid rgba(0,0,0,0.05)',
                     transition: 'all 0.3s ease'
                 }}>
-                    <h2 style={{ marginBottom: '1rem' }}>Create New Household</h2>
+                    <h2 style={{ marginBottom: '1rem', fontSize: 'clamp(1.25rem, 3vw, 1.5rem)' }}>Create New Household</h2>
                     <form className="create-household-form" onSubmit={handleCreateHousehold}>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
                             Household Name:
@@ -176,11 +176,11 @@ function Dashboard() {
                                 style={{ display: 'block', width: '100%', marginTop: '0.5rem', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }}
                             />
                         </label>
-                        <div className="form-actions" style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                            <button type="submit" className="primary-btn" disabled={creating} style={{ padding: '0.75rem 1.5rem', borderRadius: '10px', transition: 'all 0.2s ease', boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)' }}>
+                        <div className="form-actions" style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                            <button type="submit" className="primary-btn" disabled={creating} style={{ padding: '0.75rem 1.5rem', borderRadius: '10px', transition: 'all 0.2s ease', boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)', flex: '1 1 auto', minWidth: '120px' }}>
                                 {creating ? 'Creating...' : 'Create'}
                             </button>
-                            <button type="button" className="secondary-btn" onClick={() => setShowCreateForm(false)} style={{ padding: '0.75rem 1.5rem', borderRadius: '10px', transition: 'all 0.2s ease' }}>
+                            <button type="button" className="secondary-btn" onClick={() => setShowCreateForm(false)} style={{ padding: '0.75rem 1.5rem', borderRadius: '10px', transition: 'all 0.2s ease', flex: '1 1 auto', minWidth: '120px' }}>
                                 Cancel
                             </button>
                         </div>
@@ -192,7 +192,7 @@ function Dashboard() {
             {!showCreateForm && households.length > 0 && (
                 <div className="household-selector" style={{
                     marginBottom: '2rem',
-                    padding: '1.75rem',
+                    padding: 'clamp(1rem, 3vw, 1.75rem)',
                     background: 'white',
                     borderRadius: '16px',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
@@ -204,8 +204,8 @@ function Dashboard() {
                     gap: '1rem',
                     transition: 'box-shadow 0.3s ease'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <label htmlFor="household-select" style={{ fontWeight: '600', fontSize: '1rem' }}>Select Family:</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', flex: '1 1 auto' }}>
+                        <label htmlFor="household-select" style={{ fontWeight: '600', fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>Select Family:</label>
                         <select
                             id="household-select"
                             value={selectedHouseholdId ?? ''}
@@ -214,8 +214,10 @@ function Dashboard() {
                                 padding: '0.75rem 1rem',
                                 borderRadius: '10px',
                                 border: '2px solid #e2e8f0',
-                                fontSize: '1rem',
-                                minWidth: '200px',
+                                fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+                                minWidth: '150px',
+                                flex: '1 1 auto',
+                                maxWidth: '300px',
                                 transition: 'all 0.2s ease',
                                 cursor: 'pointer',
                                 background: 'white'
@@ -230,7 +232,7 @@ function Dashboard() {
                         type="button"
                         className="primary-btn"
                         onClick={() => setShowCreateForm(true)}
-                        style={{ padding: '0.75rem 1.5rem', borderRadius: '10px', whiteSpace: 'nowrap', transition: 'all 0.2s ease', boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)' }}
+                        style={{ padding: '0.75rem 1.5rem', borderRadius: '10px', whiteSpace: 'nowrap', transition: 'all 0.2s ease', boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)', fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}
                     >
                         Create New Household
                     </button>
@@ -263,13 +265,13 @@ function Dashboard() {
                         {dashboard && (
                             <div style={{
                                 display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                                gap: '1.5rem',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))',
+                                gap: 'clamp(1rem, 2vw, 1.5rem)',
                                 marginBottom: '2rem'
                             }}>
                                 <div style={{
                                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                    padding: '2rem',
+                                    padding: 'clamp(1.25rem, 3vw, 2rem)',
                                     borderRadius: '16px',
                                     color: 'white',
                                     boxShadow: '0 8px 16px rgba(102, 126, 234, 0.25), 0 2px 4px rgba(0,0,0,0.08)',
@@ -284,14 +286,14 @@ function Dashboard() {
                                     e.currentTarget.style.transform = 'translateY(0)';
                                     e.currentTarget.style.boxShadow = '0 8px 16px rgba(102, 126, 234, 0.25), 0 2px 4px rgba(0,0,0,0.08)';
                                 }}>
-                                    <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '0.5rem' }}>Total Budget</div>
-                                    <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>${dashboard.totalBudget.toFixed(2)}</div>
-                                    <div style={{ fontSize: '0.85rem', opacity: 0.8, marginTop: '0.5rem' }}>for {monthName}</div>
+                                    <div style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)', opacity: 0.9, marginBottom: '0.5rem' }}>Total Budget</div>
+                                    <div style={{ fontSize: 'clamp(1.75rem, 5vw, 2.5rem)', fontWeight: 'bold' }}>${dashboard.totalBudget.toFixed(2)}</div>
+                                    <div style={{ fontSize: 'clamp(0.75rem, 1.5vw, 0.85rem)', opacity: 0.8, marginTop: '0.5rem' }}>for {monthName}</div>
                                 </div>
 
                                 <div style={{
                                     background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                                    padding: '2rem',
+                                    padding: 'clamp(1.25rem, 3vw, 2rem)',
                                     borderRadius: '16px',
                                     color: 'white',
                                     boxShadow: '0 8px 16px rgba(245, 87, 108, 0.25), 0 2px 4px rgba(0,0,0,0.08)',
@@ -306,16 +308,16 @@ function Dashboard() {
                                     e.currentTarget.style.transform = 'translateY(0)';
                                     e.currentTarget.style.boxShadow = '0 8px 16px rgba(245, 87, 108, 0.25), 0 2px 4px rgba(0,0,0,0.08)';
                                 }}>
-                                    <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '0.5rem' }}>Total Spent</div>
-                                    <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>${dashboard.totalSpent.toFixed(2)}</div>
-                                    <div style={{ fontSize: '0.85rem', opacity: 0.8, marginTop: '0.5rem' }}>
+                                    <div style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)', opacity: 0.9, marginBottom: '0.5rem' }}>Total Spent</div>
+                                    <div style={{ fontSize: 'clamp(1.75rem, 5vw, 2.5rem)', fontWeight: 'bold' }}>${dashboard.totalSpent.toFixed(2)}</div>
+                                    <div style={{ fontSize: 'clamp(0.75rem, 1.5vw, 0.85rem)', opacity: 0.8, marginTop: '0.5rem' }}>
                                         {dashboard.totalBudget > 0 ? `${((dashboard.totalSpent / dashboard.totalBudget) * 100).toFixed(0)}% of budget` : ''}
                                     </div>
                                 </div>
 
                                 <div style={{
                                     background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                                    padding: '2rem',
+                                    padding: 'clamp(1.25rem, 3vw, 2rem)',
                                     borderRadius: '16px',
                                     color: 'white',
                                     boxShadow: '0 8px 16px rgba(79, 172, 254, 0.25), 0 2px 4px rgba(0,0,0,0.08)',
@@ -330,11 +332,11 @@ function Dashboard() {
                                     e.currentTarget.style.transform = 'translateY(0)';
                                     e.currentTarget.style.boxShadow = '0 8px 16px rgba(79, 172, 254, 0.25), 0 2px 4px rgba(0,0,0,0.08)';
                                 }}>
-                                    <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '0.5rem' }}>Remaining</div>
-                                    <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
+                                    <div style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)', opacity: 0.9, marginBottom: '0.5rem' }}>Remaining</div>
+                                    <div style={{ fontSize: 'clamp(1.75rem, 5vw, 2.5rem)', fontWeight: 'bold' }}>
                                         ${(dashboard.totalBudget - dashboard.totalSpent).toFixed(2)}
                                     </div>
-                                    <div style={{ fontSize: '0.85rem', opacity: 0.8, marginTop: '0.5rem' }}>available to spend</div>
+                                    <div style={{ fontSize: 'clamp(0.75rem, 1.5vw, 0.85rem)', opacity: 0.8, marginTop: '0.5rem' }}>available to spend</div>
                                 </div>
                             </div>
                         )}
@@ -343,15 +345,15 @@ function Dashboard() {
                         {dashboard && dashboard.categories.length > 0 && (
                             <div style={{
                                 background: 'white',
-                                padding: '2rem',
+                                padding: 'clamp(1rem, 3vw, 2rem)',
                                 borderRadius: '16px',
                                 boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
                                 border: '1px solid rgba(0,0,0,0.05)',
                                 marginBottom: '2rem',
                                 transition: 'box-shadow 0.3s ease'
                             }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                    <h2 style={{ fontSize: '1.5rem', fontWeight: '600', margin: 0 }}>Budget Breakdown by Category</h2>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                                    <h2 style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: '600', margin: 0 }}>Budget Breakdown by Category</h2>
                                     <Link to="/budgets" style={{
                                         padding: '0.5rem 1rem',
                                         background: '#667eea',
@@ -425,15 +427,15 @@ function Dashboard() {
                         {/* Recent Expenses */}
                         <div style={{
                             background: 'white',
-                            padding: '2rem',
+                            padding: 'clamp(1rem, 3vw, 2rem)',
                             borderRadius: '16px',
                             boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
                             border: '1px solid rgba(0,0,0,0.05)',
                             marginBottom: '2rem',
                             transition: 'box-shadow 0.3s ease'
                         }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                <h2 style={{ fontSize: '1.5rem', fontWeight: '600', margin: 0 }}>Recent Expenses</h2>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                                <h2 style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: '600', margin: 0 }}>Recent Expenses</h2>
                                 <Link to="/expenses" style={{
                                     padding: '0.5rem 1rem',
                                     background: '#667eea',
@@ -481,13 +483,13 @@ function Dashboard() {
                         {/* Invite Members */}
                         <div style={{
                             background: 'white',
-                            padding: '2rem',
+                            padding: 'clamp(1rem, 3vw, 2rem)',
                             borderRadius: '16px',
                             boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
                             border: '1px solid rgba(0,0,0,0.05)',
                             transition: 'box-shadow 0.3s ease'
                         }}>
-                            <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem' }}>Invite Family Members</h2>
+                            <h2 style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: '600', marginBottom: '1rem' }}>Invite Family Members</h2>
                             <p style={{ color: '#666', marginBottom: '1.5rem' }}>Share an invite link to add members to this household.</p>
                             {!inviteLink ? (
                                 <button

@@ -79,7 +79,7 @@ const AcceptInvite: React.FC = () => {
     };
 
     return (
-        <div style={{ maxWidth: 400, margin: '80px auto', textAlign: 'center' }}>
+        <div style={{ maxWidth: 400, margin: 'clamp(2rem, 10vh, 5rem) auto', padding: '1rem', textAlign: 'center' }}>
             <h2>Accept Invitation</h2>
             {status === 'loading' && <p>Processing your invitation...</p>}
             {status === 'unauthenticated' && (

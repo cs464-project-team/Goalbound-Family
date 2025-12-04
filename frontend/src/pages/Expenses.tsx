@@ -214,21 +214,25 @@ function Expenses() {
     const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
 
     return (
-        <div className="dashboard-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem' }}>
+        <div className="dashboard-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '1rem' }}>
             <div style={{ marginBottom: '2rem', paddingBottom: '1rem' }}>
-                <h1 className="dashboard-title" style={{ fontSize: '2.75rem', fontWeight: '700', marginBottom: '0.75rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.5px' }}>Expense History</h1>
-                <p style={{ color: '#64748b', fontSize: '1.05rem', fontWeight: '400' }}>Track and manage all your household expenses</p>
+                <h1 className="dashboard-title" style={{ fontSize: 'clamp(1.75rem, 5vw, 2.75rem)', fontWeight: '700', marginBottom: '0.75rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.5px' }}>Expense History</h1>
+                <p style={{ color: '#64748b', fontSize: 'clamp(0.9rem, 2.5vw, 1.05rem)', fontWeight: '400' }}>Track and manage all your household expenses</p>
             </div>
 
             {/* Household Selector - Only show for Receipts view */}
             {viewMode === 'receipts' && households.length > 0 && (
                 <div className="household-selector" style={{
                     marginBottom: '1.5rem',
-                    padding: '1.25rem 1.5rem',
+                    padding: 'clamp(1rem, 2.5vw, 1.5rem)',
                     background: 'white',
                     borderRadius: '12px',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                    border: '1px solid rgba(0,0,0,0.05)'
+                    border: '1px solid rgba(0,0,0,0.05)',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    gap: '0.75rem'
                 }}>
                     <label htmlFor="household-select" style={{ fontWeight: '600', marginRight: '1rem' }}>
                         Select Household:
@@ -257,13 +261,13 @@ function Expenses() {
             {/* Period Selector */}
             <div style={{
                 marginBottom: '1.5rem',
-                padding: '1.25rem 1.5rem',
+                padding: 'clamp(1rem, 2.5vw, 1.5rem)',
                 background: 'white',
                 borderRadius: '12px',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                 border: '1px solid rgba(0,0,0,0.05)',
                 display: 'flex',
-                gap: '1.5rem',
+                gap: 'clamp(0.75rem, 2vw, 1.5rem)',
                 alignItems: 'center',
                 flexWrap: 'wrap'
             }}>
@@ -356,11 +360,12 @@ function Expenses() {
                         {/* Summary */}
                         <div style={{
                             marginBottom: '2rem',
-                            padding: '1.5rem 2rem',
+                            padding: 'clamp(1.25rem, 3vw, 2rem)',
                             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                             borderRadius: '12px',
                             display: 'flex',
-                            gap: '3rem',
+                            gap: 'clamp(1.5rem, 4vw, 3rem)',
+                            flexWrap: 'wrap',
                             boxShadow: '0 4px 12px rgba(102, 126, 234, 0.25)',
                             color: 'white'
                         }}>
@@ -423,8 +428,8 @@ function Expenses() {
                                                     e.currentTarget.style.transform = 'translateY(0)';
                                                 }}
                                             >
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                                                    <div style={{ flex: 1 }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexWrap: 'wrap', gap: '1rem' }}>
+                                                    <div style={{ flex: '1 1 250px', minWidth: 0 }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                                                             <ReceiptIcon size={20} />
                                                             <h3 style={{ margin: 0 }}>
@@ -441,7 +446,7 @@ function Expenses() {
                                                             {receipt.items?.length || 0} item(s)
                                                         </div>
                                                     </div>
-                                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                                                         <button
                                                             className="secondary-btn"
                                                             onClick={() => toggleReceipt(receipt.id)}
@@ -567,8 +572,8 @@ function Expenses() {
                                                             e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)';
                                                         }}
                                                     >
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                                                            <div style={{ flex: 1 }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexWrap: 'wrap', gap: '1rem' }}>
+                                                            <div style={{ flex: '1 1 250px', minWidth: 0 }}>
                                                                 {/* Category and Type Badge */}
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
