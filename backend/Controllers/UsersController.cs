@@ -8,7 +8,7 @@ namespace GoalboundFamily.Api.Controllers;
 /// Example controller - Handles User-related HTTP requests
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/users")]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;

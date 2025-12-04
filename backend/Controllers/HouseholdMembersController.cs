@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GoalboundFamily.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/householdmembers")]
 public class HouseholdMembersController : ControllerBase
 {
     private readonly IHouseholdMemberService _service;

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GoalboundFamily.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/dashboard")]
 public class DashboardController : ControllerBase
 {
     private readonly IDashboardService _service;
