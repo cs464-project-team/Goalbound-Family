@@ -137,10 +137,20 @@ function Family() {
     const isOwner = selectedHousehold?.parentId === session.user.id;
 
     return (
-        <div className="dashboard-container" style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem' }}>
-            <div style={{ marginBottom: '2rem' }}>
-                <h1 className="dashboard-title" style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Family Management</h1>
-                <p style={{ color: '#666', fontSize: '1.1rem' }}>Manage your household memberships</p>
+        <div className="dashboard-container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem', minHeight: '100vh' }}>
+            <div style={{ marginBottom: '2.5rem', paddingBottom: '1rem' }}>
+                <h1 className="dashboard-title" style={{
+                    fontSize: '2.75rem',
+                    fontWeight: '700',
+                    marginBottom: '0.75rem',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    letterSpacing: '-0.5px'
+                }}>
+                    Family Management
+                </h1>
+                <p style={{ color: '#64748b', fontSize: '1.15rem', fontWeight: '400' }}>Manage your household memberships</p>
             </div>
 
             {households.length === 0 ? (
@@ -166,10 +176,11 @@ function Family() {
                     {/* Household Selector */}
                     <div style={{
                         marginBottom: '2rem',
-                        padding: '1.5rem',
+                        padding: '1.75rem',
                         background: 'white',
-                        borderRadius: '12px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.08)'
+                        borderRadius: '16px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+                        border: '1px solid rgba(0,0,0,0.05)'
                     }}>
                         <label htmlFor="household-select" style={{ fontWeight: '600', fontSize: '1rem', marginRight: '1rem' }}>
                             Select Household:
@@ -180,10 +191,13 @@ function Family() {
                             onChange={e => setSelectedHouseholdId(e.target.value)}
                             style={{
                                 padding: '0.75rem 1rem',
-                                borderRadius: '8px',
-                                border: '1px solid #ddd',
+                                borderRadius: '10px',
+                                border: '2px solid #e2e8f0',
                                 fontSize: '1rem',
-                                minWidth: '250px'
+                                minWidth: '250px',
+                                transition: 'all 0.2s ease',
+                                cursor: 'pointer',
+                                background: 'white'
                             }}
                         >
                             {households.map(h => (
@@ -196,17 +210,34 @@ function Family() {
                     {selectedHousehold && (
                         <div style={{
                             background: 'white',
-                            padding: '2rem',
-                            borderRadius: '12px',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
+                            padding: '2.5rem',
+                            borderRadius: '16px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+                            border: '1px solid rgba(0,0,0,0.05)',
                             marginBottom: '2rem'
                         }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                                 <div>
-                                    <h2 style={{ fontSize: '1.8rem', fontWeight: '600', marginBottom: '0.5rem' }}>{selectedHousehold.name}</h2>
-                                    <p style={{ color: '#666', fontSize: '0.95rem' }}>
-                                        {isOwner ? 'You are the owner of this household' : 'You are a member of this household'}
-                                    </p>
+                                    <h2 style={{
+                                        fontSize: '2rem',
+                                        fontWeight: '700',
+                                        marginBottom: '0.75rem',
+                                        color: '#1e293b'
+                                    }}>
+                                        {selectedHousehold.name}
+                                    </h2>
+                                    <div style={{
+                                        display: 'inline-block',
+                                        padding: '0.5rem 1rem',
+                                        background: isOwner ? 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        color: 'white',
+                                        borderRadius: '20px',
+                                        fontSize: '0.9rem',
+                                        fontWeight: '600',
+                                        boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+                                    }}>
+                                        {isOwner ? '👑 Owner' : '👤 Member'}
+                                    </div>
                                 </div>
                                 {!isOwner && (
                                     <button
@@ -214,21 +245,26 @@ function Family() {
                                         onClick={() => setShowLeaveConfirm(true)}
                                         style={{
                                             padding: '0.75rem 1.5rem',
-                                            borderRadius: '8px',
-                                            border: '1px solid #e53e3e',
+                                            borderRadius: '10px',
+                                            border: '2px solid #e53e3e',
                                             background: 'white',
                                             color: '#e53e3e',
                                             fontWeight: '600',
                                             cursor: 'pointer',
-                                            transition: 'all 0.2s'
+                                            transition: 'all 0.2s',
+                                            boxShadow: '0 2px 6px rgba(229, 62, 62, 0.2)'
                                         }}
                                         onMouseOver={e => {
                                             e.currentTarget.style.background = '#e53e3e';
                                             e.currentTarget.style.color = 'white';
+                                            e.currentTarget.style.transform = 'translateY(-2px)';
+                                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(229, 62, 62, 0.3)';
                                         }}
                                         onMouseOut={e => {
                                             e.currentTarget.style.background = 'white';
                                             e.currentTarget.style.color = '#e53e3e';
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                            e.currentTarget.style.boxShadow = '0 2px 6px rgba(229, 62, 62, 0.2)';
                                         }}
                                     >
                                         Leave Household
@@ -238,10 +274,17 @@ function Family() {
 
                             {/* Members List */}
                             <div>
-                                <h3 style={{ fontSize: '1.3rem', fontWeight: '600', marginBottom: '1rem' }}>
+                                <h3 style={{
+                                    fontSize: '1.5rem',
+                                    fontWeight: '600',
+                                    marginBottom: '1.5rem',
+                                    color: '#1e293b',
+                                    paddingBottom: '0.75rem',
+                                    borderBottom: '2px solid #e2e8f0'
+                                }}>
                                     Members ({members.length})
                                 </h3>
-                                <div style={{ display: 'grid', gap: '1rem' }}>
+                                <div style={{ display: 'grid', gap: '1.25rem' }}>
                                     {loading ? (
                                         <p style={{ color: '#666' }}>Loading members...</p>
                                     ) : members.length === 0 ? (
@@ -251,26 +294,40 @@ function Family() {
                                             <div
                                                 key={member.id}
                                                 style={{
-                                                    padding: '1.5rem',
-                                                    background: '#f7fafc',
-                                                    borderRadius: '8px',
+                                                    padding: '1.75rem',
+                                                    background: 'white',
+                                                    borderRadius: '12px',
                                                     display: 'flex',
                                                     justifyContent: 'space-between',
-                                                    alignItems: 'center'
+                                                    alignItems: 'center',
+                                                    border: '2px solid #e2e8f0',
+                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                                                    transition: 'all 0.2s ease'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+                                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                                    e.currentTarget.style.borderColor = '#667eea';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.04)';
+                                                    e.currentTarget.style.transform = 'translateY(0)';
+                                                    e.currentTarget.style.borderColor = '#e2e8f0';
                                                 }}
                                             >
                                                 <div>
-                                                    <div style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.25rem' }}>
+                                                    <div style={{ fontSize: '1.15rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1e293b' }}>
                                                         {member.userName || `${member.firstName} ${member.lastName}`.trim() || member.email}
                                                         {member.userId === session.user.id && (
                                                             <span style={{
                                                                 marginLeft: '0.75rem',
                                                                 fontSize: '0.85rem',
-                                                                padding: '0.25rem 0.75rem',
-                                                                background: '#667eea',
+                                                                padding: '0.35rem 0.85rem',
+                                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                                                 color: 'white',
-                                                                borderRadius: '12px',
-                                                                fontWeight: '500'
+                                                                borderRadius: '16px',
+                                                                fontWeight: '600',
+                                                                boxShadow: '0 2px 4px rgba(102, 126, 234, 0.3)'
                                                             }}>
                                                                 You
                                                             </span>
@@ -279,25 +336,29 @@ function Family() {
                                                             <span style={{
                                                                 marginLeft: '0.75rem',
                                                                 fontSize: '0.85rem',
-                                                                padding: '0.25rem 0.75rem',
-                                                                background: '#f59e0b',
+                                                                padding: '0.35rem 0.85rem',
+                                                                background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)',
                                                                 color: 'white',
-                                                                borderRadius: '12px',
-                                                                fontWeight: '500'
+                                                                borderRadius: '16px',
+                                                                fontWeight: '600',
+                                                                boxShadow: '0 2px 4px rgba(245, 158, 11, 0.3)'
                                                             }}>
                                                                 Owner
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <div style={{ fontSize: '0.85rem', color: '#666' }}>
+                                                    <div style={{ fontSize: '0.95rem', color: '#64748b', marginBottom: '0.25rem' }}>
                                                         {member.email}
                                                     </div>
-                                                    <div style={{ fontSize: '0.85rem', color: '#999', marginTop: '0.25rem' }}>
-                                                        Joined {new Date(member.joinedAt).toLocaleDateString('en-US', {
-                                                            year: 'numeric',
-                                                            month: 'short',
-                                                            day: 'numeric'
-                                                        })}
+                                                    <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                        <span>📅</span>
+                                                        <span>
+                                                            Joined {new Date(member.joinedAt).toLocaleDateString('en-US', {
+                                                                year: 'numeric',
+                                                                month: 'short',
+                                                                day: 'numeric'
+                                                            })}
+                                                        </span>
                                                     </div>
                                                 </div>
                                                 {isOwner && member.userId !== session.user.id && (
@@ -308,23 +369,28 @@ function Family() {
                                                             setError(null);
                                                         }}
                                                         style={{
-                                                            padding: '0.5rem 1rem',
-                                                            borderRadius: '6px',
-                                                            border: '1px solid #e53e3e',
+                                                            padding: '0.6rem 1.25rem',
+                                                            borderRadius: '8px',
+                                                            border: '2px solid #e53e3e',
                                                             background: 'white',
                                                             color: '#e53e3e',
                                                             fontWeight: '600',
                                                             cursor: 'pointer',
                                                             fontSize: '0.9rem',
-                                                            transition: 'all 0.2s'
+                                                            transition: 'all 0.2s',
+                                                            boxShadow: '0 2px 4px rgba(229, 62, 62, 0.2)'
                                                         }}
                                                         onMouseOver={e => {
                                                             e.currentTarget.style.background = '#e53e3e';
                                                             e.currentTarget.style.color = 'white';
+                                                            e.currentTarget.style.transform = 'translateY(-2px)';
+                                                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(229, 62, 62, 0.3)';
                                                         }}
                                                         onMouseOut={e => {
                                                             e.currentTarget.style.background = 'white';
                                                             e.currentTarget.style.color = '#e53e3e';
+                                                            e.currentTarget.style.transform = 'translateY(0)';
+                                                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(229, 62, 62, 0.2)';
                                                         }}
                                                     >
                                                         Remove
