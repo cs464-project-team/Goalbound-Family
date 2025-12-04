@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getApiUrl } from '../config/api';
+import { authenticatedFetch } from '../services/authService';
 
 const AcceptInvite: React.FC = () => {
     const [searchParams] = useSearchParams();
@@ -42,13 +43,12 @@ const AcceptInvite: React.FC = () => {
 
         // Call backend API to accept invite
         // console.log("[AcceptInvite] Accepting invite with token:", token, "userId:", session.user.id);
-        fetch(getApiUrl(`/api/invitations/accept?token=${encodeURIComponent(token)}`), {
+        authenticatedFetch(getApiUrl(`/api/invitations/accept?token=${encodeURIComponent(token)}`), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                token: token,
                 userId: session.user.id
             })
         })

@@ -19,14 +19,41 @@ export interface SignupCredentials {
   lastName: string
 }
 
+export interface AuthResponse extends AuthUser {
+  accessToken?: string
+}
+
 /**
  * Authentication service that uses backend API endpoints
- * All tokens are managed via HttpOnly cookies
+ * Refresh tokens are managed via HttpOnly cookies
+ * Access tokens are stored in memory and sent in Authorization headers
  */
 class AuthService {
+  private accessToken: string | null = null
+
+  /**
+   * Get the current access token
+   */
+  getAccessToken(): string | null {
+    return this.accessToken
+  }
+
+  /**
+   * Set the access token
+   */
+  private setAccessToken(token: string | null): void {
+    this.accessToken = token
+  }
+
+  /**
+   * Clear the access token
+   */
+  clearAccessToken(): void {
+    this.accessToken = null
+  }
   /**
    * Login with email and password
-   * Backend sets HttpOnly cookie with refresh token
+   * Backend sets HttpOnly cookie with refresh token and returns access token
    */
   async login(credentials: LoginCredentials): Promise<AuthUser> {
     const response = await fetch(getApiUrl('/api/auth/login'), {
@@ -43,12 +70,19 @@ class AuthService {
       throw new Error(error.message || 'Login failed')
     }
 
-    return response.json()
+    const data: AuthResponse = await response.json()
+    
+    // Store access token in memory if provided
+    if (data.accessToken) {
+      this.setAccessToken(data.accessToken)
+    }
+
+    return data
   }
 
   /**
    * Sign up new user
-   * Backend sets HttpOnly cookie with refresh token
+   * Backend sets HttpOnly cookie with refresh token and returns access token
    */
   async signup(credentials: SignupCredentials): Promise<AuthUser> {
     const response = await fetch(getApiUrl('/api/auth/signup'), {
@@ -65,12 +99,19 @@ class AuthService {
       throw new Error(error.message || 'Signup failed')
     }
 
-    return response.json()
+    const data: AuthResponse = await response.json()
+    
+    // Store access token in memory if provided
+    if (data.accessToken) {
+      this.setAccessToken(data.accessToken)
+    }
+
+    return data
   }
 
   /**
    * Get current user information
-   * Backend refreshes session using HttpOnly cookie
+   * Backend refreshes session using HttpOnly cookie and returns new access token
    * Returns null if no valid session
    */
   async getCurrentUser(): Promise<AuthUser | null> {
@@ -82,17 +123,57 @@ class AuthService {
 
       // 204 No Content means no session (returns when no cookie exists)
       if (response.status === 204) {
+        this.clearAccessToken()
         return null
       }
 
       if (!response.ok) {
         // Other error - just return null
+        this.clearAccessToken()
         return null
       }
 
-      return response.json()
+      const data: AuthResponse = await response.json()
+      
+      // Store access token in memory if provided
+      if (data.accessToken) {
+        this.setAccessToken(data.accessToken)
+      }
+
+      return data
     } catch (error) {
       // Network error or JSON parse error - silently return null
+      this.clearAccessToken()
+      return null
+    }
+  }
+
+  /**
+   * Refresh the access token using the refresh token in HttpOnly cookie
+   * Returns the new access token or null if refresh fails
+   */
+  async refreshAccessToken(): Promise<string | null> {
+    try {
+      const response = await fetch(getApiUrl('/api/auth/refresh'), {
+        method: 'POST',
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        this.clearAccessToken()
+        return null
+      }
+
+      const data: AuthResponse = await response.json()
+      
+      if (data.accessToken) {
+        this.setAccessToken(data.accessToken)
+        return data.accessToken
+      }
+
+      return null
+    } catch (error) {
+      this.clearAccessToken()
       return null
     }
   }
@@ -109,8 +190,52 @@ class AuthService {
       })
     } catch (error) {
       // Silently continue with logout even if request fails
+    } finally {
+      this.clearAccessToken()
     }
   }
 }
 
 export const authService = new AuthService()
+
+/**
+ * Helper function to make authenticated API requests
+ * Automatically includes the access token in the Authorization header
+ * Handles token refresh on 401 responses
+ */
+export async function authenticatedFetch(
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const token = authService.getAccessToken()
+  
+  // Add Authorization header if we have a token
+  const headers = new Headers(options.headers)
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`)
+  }
+
+  // Always include credentials for cookie-based refresh token
+  const response = await fetch(url, {
+    ...options,
+    headers,
+    credentials: 'include',
+  })
+
+  // If we get a 401, try to refresh the token and retry once
+  if (response.status === 401) {
+    const newToken = await authService.refreshAccessToken()
+    
+    if (newToken) {
+      // Retry the request with the new token
+      headers.set('Authorization', `Bearer ${newToken}`)
+      return fetch(url, {
+        ...options,
+        headers,
+        credentials: 'include',
+      })
+    }
+  }
+
+  return response
+}

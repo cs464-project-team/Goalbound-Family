@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthContext } from '../context/AuthProvider';
 import { getApiUrl } from '../config/api';
+import { authenticatedFetch } from '../services/authService';
 
 // Types
 interface Household {
@@ -114,7 +115,7 @@ export default function ReceiptUploadWithAssignment() {
   const fetchUserHouseholds = useCallback(async () => {
     try {
       // TODO: Replace with actual API endpoint
-      const response = await fetch(getApiUrl(`/api/households/user/${userId}`));
+      const response = await authenticatedFetch(getApiUrl(`/api/households/user/${userId}`));
       if (response.ok) {
         const data = await response.json();
         setHouseholds(data);
@@ -143,7 +144,7 @@ export default function ReceiptUploadWithAssignment() {
     if (!selectedHousehold) return;
 
     try {
-      const response = await fetch(getApiUrl(`/api/households/${selectedHousehold.id}/members`));
+      const response = await authenticatedFetch(getApiUrl(`/api/households/${selectedHousehold.id}/members`));
       if (response.ok) {
         const data = await response.json();
         setHouseholdMembers(data);
@@ -164,7 +165,7 @@ export default function ReceiptUploadWithAssignment() {
     if (!selectedHousehold) return;
 
     try {
-      const response = await fetch(getApiUrl(`/api/budgets/categories/${selectedHousehold.id}`));
+      const response = await authenticatedFetch(getApiUrl(`/api/budgets/categories/${selectedHousehold.id}`));
       if (response.ok) {
         const data = await response.json();
         setCategories(data);
@@ -228,7 +229,7 @@ export default function ReceiptUploadWithAssignment() {
     formData.append('image', selectedFile);
 
     try {
-      const response = await fetch(getApiUrl('/api/receipts/process-ocr'), {
+      const response = await authenticatedFetch(getApiUrl('/api/receipts/process-ocr'), {
         method: 'POST',
         body: formData,
       });
@@ -479,116 +480,6 @@ export default function ReceiptUploadWithAssignment() {
         totalAmount: ocrMetadata.totalAmount,
         rawOcrText: ocrMetadata.rawOcrText,
         ocrConfidence: ocrMetadata.ocrConfidence,
-        applyServiceCharge: includeServiceCharge,
-        applyGst: includeGST,
-        itemAssignments: itemAssignmentsPayload
-      };
-
-      const response = await fetch(getApiUrl('/api/receipts/assign'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(assignDto)
-      });
-
-      if (!response.ok) {
-        let errorMessage = 'Assignment failed';
-        try {
-          const errorData = await response.json();
-          // Build detailed error message
-          errorMessage = errorData.message || errorMessage;
-          if (errorData.innerException) {
-            errorMessage += `\n\nInner Exception: ${errorData.innerException}`;
-          }
-          if (errorData.type) {
-            errorMessage += `\n\nError Type: ${errorData.type}`;
-          }
-        } catch (e) {
-          // If JSON parsing fails, use default message
-          errorMessage = 'Unable to create expenses. Please try again.';
-        }
-        throw new Error(errorMessage);
-      }
-
-      setSuccess('✅ Receipt confirmed! Expenses have been created for each family member.');
-      setShowConfirmModal(false);
-
-      // Reset for next receipt
-      setOcrMetadata(null);
-      setItems([]);
-      setItemAssignments({});
-      setIncludeServiceCharge(false);
-      setIncludeGST(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Confirmation failed');
-      setShowConfirmModal(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmitManualExpense = async () => {
-    // Validation
-    if (!selectedCategory || !selectedHousehold) {
-      setError('Please select a household and category');
-      return;
-    }
-
-    // Filter out empty items
-    const validItems = manualItems.filter(item =>
-      item.description.trim() && item.amount && item.assignedMemberId
-    );
-
-    if (validItems.length === 0) {
-      setError('Please add at least one item with description, amount, and assigned member');
-      return;
-    }
-
-    // Validate amounts
-    for (const item of validItems) {
-      const baseAmount = parseFloat(item.amount);
-      if (isNaN(baseAmount) || baseAmount <= 0) {
-        setError(`Invalid amount for "${item.description}". Amount must be greater than 0.`);
-        return;
-      }
-    }
-
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      // Build bulk expense request
-      const bulkExpenseItems = validItems.map(item => {
-        const member = householdMembers.find(m => m.id === item.assignedMemberId);
-        if (!member) throw new Error(`Member not found for item: ${item.description}`);
-
-        return {
-          userId: member.userId,
-          amount: parseFloat(item.amount),
-          description: item.description
-        };
-      });
-
-      const bulkRequest = {
-        householdId: selectedHousehold.id,
-        categoryId: selectedCategory.id,
-        date: new Date(manualDate).toISOString(),
-        items: bulkExpenseItems
-      };
-
-      const response = await fetch(getApiUrl('/api/expenses/bulk'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(bulkRequest)
-      });
-
-      if (!response.ok) {
-        let errorMessage = 'Failed to create expenses';
-        try {
           const errorData = await response.json();
           // Build detailed error message
           errorMessage = errorData.message || errorMessage;

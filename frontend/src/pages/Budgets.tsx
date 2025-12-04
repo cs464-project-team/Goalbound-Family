@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuthContext } from '../context/AuthProvider';
 import { Navigate } from 'react-router-dom';
 import { getApiUrl } from '../config/api';
+import { authenticatedFetch } from '../services/authService';
 import '../styles/Dashboard.css';
 
 type BudgetCategory = {
@@ -66,7 +67,7 @@ function Budgets() {
 
     useEffect(() => {
         if (!session?.user?.id) return;
-        fetch(getApiUrl(`/api/householdmembers/user/${session.user.id}`))
+        authenticatedFetch(getApiUrl(`/api/householdmembers/user/${session.user.id}`))
             .then(res => res.json())
             .then((data: Household[]) => {
                 setHouseholds(data);
@@ -81,9 +82,9 @@ function Budgets() {
         const month = now.getMonth() + 1;
         setLoading(true);
         Promise.all([
-            fetch(getApiUrl(`/api/budgets/categories/${selectedHouseholdId}`)).then(res => res.json()),
-            fetch(getApiUrl(`/api/householdbudgets/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json()),
-            fetch(getApiUrl(`/api/dashboard/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json())
+            authenticatedFetch(getApiUrl(`/api/budgets/categories/${selectedHouseholdId}`)).then(res => res.json()),
+            authenticatedFetch(getApiUrl(`/api/householdbudgets/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json()),
+            authenticatedFetch(getApiUrl(`/api/dashboard/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json())
         ]).then(([categoriesData, budgetsData, dashboardData]) => {
             setCategories(categoriesData);
             setBudgets(budgetsData);
@@ -98,7 +99,7 @@ function Budgets() {
         setAddingCategory(true);
         setCategoryError(null);
         try {
-            const res = await fetch(getApiUrl('/api/budgets/categories'), {
+            const res = await authenticatedFetch(getApiUrl('/api/budgets/categories'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ householdId: selectedHouseholdId, name: newCategoryName })
@@ -111,8 +112,8 @@ function Budgets() {
             const year = now.getFullYear();
             const month = now.getMonth() + 1;
             const [categoriesData, dashboardData] = await Promise.all([
-                fetch(getApiUrl(`/api/budgets/categories/${selectedHouseholdId}`)).then(res => res.json()),
-                fetch(getApiUrl(`/api/dashboard/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json())
+                authenticatedFetch(getApiUrl(`/api/budgets/categories/${selectedHouseholdId}`)).then(res => res.json()),
+                authenticatedFetch(getApiUrl(`/api/dashboard/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json())
             ]);
             setCategories(categoriesData);
             setDashboard(dashboardData);
@@ -133,7 +134,7 @@ function Budgets() {
         try {
             const limit = parseFloat(budgetInputs[categoryId]);
             if (isNaN(limit) || limit < 0) throw new Error('Invalid limit');
-            const res = await fetch(getApiUrl('/api/householdbudgets'), {
+            const res = await authenticatedFetch(getApiUrl('/api/householdbudgets'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -147,8 +148,8 @@ function Budgets() {
             if (!res.ok) throw new Error('Failed to set budget');
             // Refresh budgets and dashboard
             const [budgetsData, dashboardData] = await Promise.all([
-                fetch(getApiUrl(`/api/householdbudgets/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json()),
-                fetch(getApiUrl(`/api/dashboard/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json())
+                authenticatedFetch(getApiUrl(`/api/householdbudgets/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json()),
+                authenticatedFetch(getApiUrl(`/api/dashboard/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json())
             ]);
             setBudgets(budgetsData);
             setDashboard(dashboardData);
