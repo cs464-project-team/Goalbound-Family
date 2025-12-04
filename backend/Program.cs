@@ -101,6 +101,13 @@ var supabaseUrlForJwt = Environment.GetEnvironmentVariable("VITE_SUPABASE_URL")
     ?? builder.Configuration["Supabase:Url"]
     ?? throw new InvalidOperationException("VITE_SUPABASE_URL not configured");
 
+// Debug logging for production troubleshooting
+Console.WriteLine($"[JWT Config] Environment: {environment}");
+Console.WriteLine($"[JWT Config] JWT_SECRET exists: {!string.IsNullOrEmpty(jwtSecret)}");
+Console.WriteLine($"[JWT Config] JWT_SECRET length: {jwtSecret?.Length ?? 0}");
+Console.WriteLine($"[JWT Config] Expected Issuer: {supabaseUrlForJwt}/auth/v1");
+Console.WriteLine($"[JWT Config] Expected Audience: authenticated");
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
