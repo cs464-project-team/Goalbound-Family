@@ -63,7 +63,7 @@ function Expenses() {
     const [loading, setLoading] = useState(false);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-    const [viewMode, setViewMode] = useState<'expenses' | 'receipts'>('receipts');
+    const [viewMode, setViewMode] = useState<'expenses' | 'receipts'>('expenses');
     const [expandedReceipts, setExpandedReceipts] = useState<Set<string>>(new Set());
     const [expandedExpenses, setExpandedExpenses] = useState<Set<string>>(new Set());
     const [expenseReceiptDetails, setExpenseReceiptDetails] = useState<Map<string, ReceiptDto>>(new Map());
@@ -88,29 +88,33 @@ function Expenses() {
     }, []);
 
     useEffect(() => {
-        if (!selectedHouseholdId || !session?.user?.id) return;
-        
+        if (!session?.user?.id) return;
+
         const fetchData = async () => {
             if (isMounted.current) {
                 setLoading(true);
             }
             try {
-                // Fetch receipts for the household
-                const receiptsRes = await fetch(getApiUrl(`/api/receipts/household/${selectedHouseholdId}`));
-                const receiptsData: ReceiptDto[] = await receiptsRes.json();
+                // Fetch receipts only when in receipts view and a household is selected
+                if (viewMode === 'receipts' && selectedHouseholdId) {
+                    const receiptsRes = await fetch(getApiUrl(`/api/receipts/household/${selectedHouseholdId}`));
+                    const receiptsData: ReceiptDto[] = await receiptsRes.json();
 
-                // Filter receipts by the selected month/year
-                const filteredReceipts = receiptsData.filter(r => {
-                    const date = new Date(r.receiptDate || r.uploadedAt);
-                    return date.getFullYear() === selectedYear && date.getMonth() + 1 === selectedMonth;
-                });
+                    // Filter receipts by the selected month/year
+                    const filteredReceipts = receiptsData.filter(r => {
+                        const date = new Date(r.receiptDate || r.uploadedAt);
+                        return date.getFullYear() === selectedYear && date.getMonth() + 1 === selectedMonth;
+                    });
 
-                setReceipts(filteredReceipts);
+                    setReceipts(filteredReceipts);
+                }
 
-                // Fetch expenses for the current user only
-                const expensesRes = await fetch(getApiUrl(`/api/expenses/user/${session.user.id}/${selectedYear}/${selectedMonth}`));
-                const expensesData: ExpenseDto[] = await expensesRes.json();
-                setExpenses(expensesData);
+                // Fetch expenses for the current user (always fetch for expenses view)
+                if (viewMode === 'expenses') {
+                    const expensesRes = await fetch(getApiUrl(`/api/expenses/user/${session.user.id}/${selectedYear}/${selectedMonth}`));
+                    const expensesData: ExpenseDto[] = await expensesRes.json();
+                    setExpenses(expensesData);
+                }
 
                 setLoading(false);
             } catch (_err) {
@@ -119,7 +123,7 @@ function Expenses() {
         };
 
         fetchData();
-    }, [selectedHouseholdId, selectedYear, selectedMonth, session?.user?.id]);
+    }, [viewMode, selectedHouseholdId, selectedYear, selectedMonth, session?.user?.id]);
 
     if (!session) {
         return <Navigate to="/auth" replace />;
@@ -216,8 +220,8 @@ function Expenses() {
                 <p style={{ color: '#64748b', fontSize: '1.05rem', fontWeight: '400' }}>Track and manage all your household expenses</p>
             </div>
 
-            {/* Household Selector */}
-            {households.length > 0 && (
+            {/* Household Selector - Only show for Receipts view */}
+            {viewMode === 'receipts' && households.length > 0 && (
                 <div className="household-selector" style={{
                     marginBottom: '1.5rem',
                     padding: '1.25rem 1.5rem',
@@ -226,7 +230,9 @@ function Expenses() {
                     boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                     border: '1px solid rgba(0,0,0,0.05)'
                 }}>
-                    <label htmlFor="household-select" style={{ fontWeight: '600', marginRight: '1rem' }}>Select Household:</label>
+                    <label htmlFor="household-select" style={{ fontWeight: '600', marginRight: '1rem' }}>
+                        Select Household:
+                    </label>
                     <select
                         id="household-select"
                         value={selectedHouseholdId ?? ''}
@@ -315,19 +321,6 @@ function Expenses() {
                 gap: '0.5rem'
             }}>
                 <button
-                    className={viewMode === 'receipts' ? 'primary-btn' : 'secondary-btn'}
-                    onClick={() => setViewMode('receipts')}
-                    style={{
-                        padding: '0.65rem 1.5rem',
-                        borderRadius: '8px',
-                        transition: 'all 0.2s ease',
-                        fontWeight: '500',
-                        boxShadow: viewMode === 'receipts' ? '0 2px 6px rgba(102, 126, 234, 0.3)' : 'none'
-                    }}
-                >
-                    Receipts
-                </button>
-                <button
                     className={viewMode === 'expenses' ? 'primary-btn' : 'secondary-btn'}
                     onClick={() => setViewMode('expenses')}
                     style={{
@@ -340,9 +333,22 @@ function Expenses() {
                 >
                     My Expenses
                 </button>
+                <button
+                    className={viewMode === 'receipts' ? 'primary-btn' : 'secondary-btn'}
+                    onClick={() => setViewMode('receipts')}
+                    style={{
+                        padding: '0.65rem 1.5rem',
+                        borderRadius: '8px',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '500',
+                        boxShadow: viewMode === 'receipts' ? '0 2px 6px rgba(102, 126, 234, 0.3)' : 'none'
+                    }}
+                >
+                    Receipts
+                </button>
             </div>
 
-            {selectedHouseholdId && (
+            {(viewMode === 'expenses' || (viewMode === 'receipts' && selectedHouseholdId)) && (
                 loading ? (
                     <p>Loading...</p>
                 ) : (
@@ -372,7 +378,9 @@ function Expenses() {
                             ) : (
                                 <>
                                     <div>
-                                        <div style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '0.25rem' }}>My Total Expenses</div>
+                                        <div style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '0.25rem' }}>
+                                            My Total Expenses
+                                        </div>
                                         <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>${expenses.reduce((sum, e) => sum + e.amount, 0).toFixed(2)}</div>
                                     </div>
                                     <div>
@@ -386,7 +394,12 @@ function Expenses() {
                         {viewMode === 'receipts' ? (
                             /* Receipts View */
                             <div>
-                                <h2 style={{ marginBottom: '1rem' }}>Household Receipts</h2>
+                                <h2 style={{ marginBottom: '1rem' }}>
+                                    Household Receipts
+                                </h2>
+                                <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                                    Showing all receipts for {households.find(h => h.id === selectedHouseholdId)?.name || 'this household'}
+                                </p>
                                 {receipts.length > 0 ? (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                         {receipts.map(receipt => (
@@ -523,7 +536,12 @@ function Expenses() {
                         ) : (
                             /* My Expenses View */
                             <div>
-                                <h2 style={{ marginBottom: '1rem' }}>My Expenses</h2>
+                                <h2 style={{ marginBottom: '1rem' }}>
+                                    My Expenses
+                                </h2>
+                                <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                                    Showing all your expenses across all households
+                                </p>
                                 {expenses.length > 0 ? (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                         {expenses
@@ -758,7 +776,7 @@ function Expenses() {
                                     </div>
                                 ) : (
                                     <div style={{ textAlign: 'center', padding: '3rem', color: '#666' }}>
-                                        No expenses found for you in {months[selectedMonth - 1]} {selectedYear}
+                                        No expenses found in {months[selectedMonth - 1]} {selectedYear}
                                     </div>
                                 )}
                             </div>
