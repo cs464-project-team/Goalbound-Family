@@ -97,11 +97,9 @@ public class ExpensesController : ControllerBase
 
     private Guid? GetAuthenticatedUserId()
     {
-        // Try multiple common claim types
-        var userIdClaim =
-            User.FindFirst("sub")?.Value ??                    // raw JWT claim
-            User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? // mapped "sub"
-            User.FindFirst("user_id")?.Value;                  // just in case
+        // Use ClaimTypes.NameIdentifier instead of "sub"
+        // because .NET JWT middleware transforms the "sub" claim
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         if (userIdClaim != null && Guid.TryParse(userIdClaim, out var userId))
         {
