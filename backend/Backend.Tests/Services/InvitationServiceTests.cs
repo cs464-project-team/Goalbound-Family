@@ -1,0 +1,322 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using FluentAssertions;
+using GoalboundFamily.Api.DTOs;
+using GoalboundFamily.Api.Models;
+using GoalboundFamily.Api.Repositories.Interfaces;
+using GoalboundFamily.Api.Services;
+using Moq;
+using Xunit;
+
+namespace Backend.Tests.Services;
+
+public class InvitationServiceTests
+{
+    private readonly Mock<IInvitationRepository> _invitationRepositoryMock;
+    private readonly Mock<IHouseholdMemberRepository> _memberRepositoryMock;
+    private readonly InvitationService _service;
+
+    public InvitationServiceTests()
+    {
+        _invitationRepositoryMock = new Mock<IInvitationRepository>();
+        _memberRepositoryMock = new Mock<IHouseholdMemberRepository>();
+        _service = new InvitationService(
+            _invitationRepositoryMock.Object,
+            _memberRepositoryMock.Object);
+    }
+
+    #region CreateAsync Tests
+
+    [Fact]
+    public async Task CreateAsync_ValidRequest_ReturnsInvitationDto()
+    {
+        // Arrange
+        var householdId = Guid.NewGuid();
+        var invitedByUserId = Guid.NewGuid();
+
+        var request = new CreateInvitationRequest
+        {
+            HouseholdId = householdId,
+            InvitedByUserId = invitedByUserId
+        };
+
+        _invitationRepositoryMock.Setup(x => x.AddAsync(It.IsAny<Invitation>()))
+            .ReturnsAsync(new Invitation
+            {
+                Id = Guid.NewGuid(),
+                HouseholdId = householdId,
+                InvitedByUserId = invitedByUserId,
+                Token = Guid.NewGuid().ToString(),
+                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                IsAccepted = false
+            });
+
+        _invitationRepositoryMock.Setup(x => x.SaveChangesAsync())
+            .Returns(Task.FromResult(1));
+
+        // Act
+        var result = await _service.CreateAsync(request);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.HouseholdId.Should().Be(householdId);
+        result.InvitedByUserId.Should().Be(invitedByUserId);
+        result.Token.Should().NotBeNullOrEmpty();
+        result.IsAccepted.Should().BeFalse();
+        result.ExpiresAt.Should().BeAfter(DateTime.UtcNow);
+
+        _invitationRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Invitation>()), Times.Once);
+        _invitationRepositoryMock.Verify(x => x.SaveChangesAsync(), Times.Once);
+    }
+
+    #endregion
+
+    #region GetAsync Tests
+
+    [Fact]
+    public async Task GetAsync_InvitationExists_ReturnsInvitationDto()
+    {
+        // Arrange
+        var invitationId = Guid.NewGuid();
+        var invitation = new Invitation
+        {
+            Id = invitationId,
+            HouseholdId = Guid.NewGuid(),
+            InvitedByUserId = Guid.NewGuid(),
+            Token = Guid.NewGuid().ToString(),
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            IsAccepted = false
+        };
+
+        _invitationRepositoryMock.Setup(x => x.GetByIdAsync(invitationId))
+            .ReturnsAsync(invitation);
+
+        // Act
+        var result = await _service.GetAsync(invitationId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(invitationId);
+        result.HouseholdId.Should().Be(invitation.HouseholdId);
+        result.IsAccepted.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetAsync_InvitationDoesNotExist_ReturnsNull()
+    {
+        // Arrange
+        var invitationId = Guid.NewGuid();
+        _invitationRepositoryMock.Setup(x => x.GetByIdAsync(invitationId))
+            .ReturnsAsync((Invitation?)null);
+
+        // Act
+        var result = await _service.GetAsync(invitationId);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    #endregion
+
+    #region AcceptAsync Tests
+
+    [Fact]
+    public async Task AcceptAsync_ValidInvitation_ReturnsTrue()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var householdId = Guid.NewGuid();
+        var token = Guid.NewGuid().ToString();
+
+        var invitation = new Invitation
+        {
+            Id = Guid.NewGuid(),
+            HouseholdId = householdId,
+            InvitedByUserId = Guid.NewGuid(),
+            Token = token,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            IsAccepted = false
+        };
+
+        var request = new AcceptInvitationRequest
+        {
+            UserId = userId,
+            Token = token
+        };
+
+        _invitationRepositoryMock.Setup(x => x.GetByTokenAsync(token))
+            .ReturnsAsync(invitation);
+
+        _memberRepositoryMock.Setup(x => x.GetByUserAndHouseholdAsync(userId, householdId))
+            .ReturnsAsync((HouseholdMember?)null);
+
+        _memberRepositoryMock.Setup(x => x.AddAsync(It.IsAny<HouseholdMember>()))
+            .ReturnsAsync(new HouseholdMember
+            {
+                Id = Guid.NewGuid(),
+                HouseholdId = householdId,
+                UserId = userId,
+                Role = "Member"
+            });
+
+        _invitationRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<Invitation>()))
+            .Returns(Task.FromResult(1));
+
+        _memberRepositoryMock.Setup(x => x.SaveChangesAsync())
+            .Returns(Task.FromResult(1));
+
+        _invitationRepositoryMock.Setup(x => x.SaveChangesAsync())
+            .Returns(Task.FromResult(1));
+
+        // Act
+        var result = await _service.AcceptAsync(request);
+
+        // Assert
+        result.Should().BeTrue();
+        _memberRepositoryMock.Verify(x => x.AddAsync(It.IsAny<HouseholdMember>()), Times.Once);
+        _invitationRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Invitation>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AcceptAsync_InvitationNotFound_ReturnsFalse()
+    {
+        // Arrange
+        var token = Guid.NewGuid().ToString();
+        var request = new AcceptInvitationRequest
+        {
+            UserId = Guid.NewGuid(),
+            Token = token
+        };
+
+        _invitationRepositoryMock.Setup(x => x.GetByTokenAsync(token))
+            .ReturnsAsync((Invitation?)null);
+
+        // Act
+        var result = await _service.AcceptAsync(request);
+
+        // Assert
+        result.Should().BeFalse();
+        _memberRepositoryMock.Verify(x => x.AddAsync(It.IsAny<HouseholdMember>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AcceptAsync_ExpiredInvitation_ReturnsFalse()
+    {
+        // Arrange
+        var token = Guid.NewGuid().ToString();
+        var invitation = new Invitation
+        {
+            Id = Guid.NewGuid(),
+            HouseholdId = Guid.NewGuid(),
+            InvitedByUserId = Guid.NewGuid(),
+            Token = token,
+            ExpiresAt = DateTime.UtcNow.AddDays(-1), // Expired
+            IsAccepted = false
+        };
+
+        var request = new AcceptInvitationRequest
+        {
+            UserId = Guid.NewGuid(),
+            Token = token
+        };
+
+        _invitationRepositoryMock.Setup(x => x.GetByTokenAsync(token))
+            .ReturnsAsync(invitation);
+
+        // Act
+        var result = await _service.AcceptAsync(request);
+
+        // Assert
+        result.Should().BeFalse();
+        _memberRepositoryMock.Verify(x => x.AddAsync(It.IsAny<HouseholdMember>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AcceptAsync_AlreadyAccepted_ReturnsFalse()
+    {
+        // Arrange
+        var token = Guid.NewGuid().ToString();
+        var invitation = new Invitation
+        {
+            Id = Guid.NewGuid(),
+            HouseholdId = Guid.NewGuid(),
+            InvitedByUserId = Guid.NewGuid(),
+            Token = token,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            IsAccepted = true // Already accepted
+        };
+
+        var request = new AcceptInvitationRequest
+        {
+            UserId = Guid.NewGuid(),
+            Token = token
+        };
+
+        _invitationRepositoryMock.Setup(x => x.GetByTokenAsync(token))
+            .ReturnsAsync(invitation);
+
+        // Act
+        var result = await _service.AcceptAsync(request);
+
+        // Assert
+        result.Should().BeFalse();
+        _memberRepositoryMock.Verify(x => x.AddAsync(It.IsAny<HouseholdMember>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AcceptAsync_UserAlreadyMember_MarksInvitationAsAcceptedAndReturnsTrue()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var householdId = Guid.NewGuid();
+        var token = Guid.NewGuid().ToString();
+
+        var invitation = new Invitation
+        {
+            Id = Guid.NewGuid(),
+            HouseholdId = householdId,
+            InvitedByUserId = Guid.NewGuid(),
+            Token = token,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            IsAccepted = false
+        };
+
+        var existingMember = new HouseholdMember
+        {
+            Id = Guid.NewGuid(),
+            HouseholdId = householdId,
+            UserId = userId,
+            Role = "Member"
+        };
+
+        var request = new AcceptInvitationRequest
+        {
+            UserId = userId,
+            Token = token
+        };
+
+        _invitationRepositoryMock.Setup(x => x.GetByTokenAsync(token))
+            .ReturnsAsync(invitation);
+
+        _memberRepositoryMock.Setup(x => x.GetByUserAndHouseholdAsync(userId, householdId))
+            .ReturnsAsync(existingMember);
+
+        _invitationRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<Invitation>()))
+            .Returns(Task.FromResult(1));
+
+        _invitationRepositoryMock.Setup(x => x.SaveChangesAsync())
+            .Returns(Task.FromResult(1));
+
+        // Act
+        var result = await _service.AcceptAsync(request);
+
+        // Assert
+        result.Should().BeTrue();
+        _memberRepositoryMock.Verify(x => x.AddAsync(It.IsAny<HouseholdMember>()), Times.Never);
+        _invitationRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Invitation>()), Times.Once);
+    }
+
+    #endregion
+}
