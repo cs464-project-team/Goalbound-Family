@@ -12,10 +12,10 @@ function Profile() {
     const user = session.user;
 
     return (
-        <div className="dashboard-container" style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem', minHeight: '100vh' }}>
-            <div style={{ marginBottom: '2.5rem', paddingBottom: '1rem', textAlign: 'center' }}>
+        <div className="dashboard-container" style={{ maxWidth: '900px', margin: '0 auto', padding: '1rem', minHeight: '100vh' }}>
+            <div style={{ marginBottom: '2rem', paddingBottom: '1rem', textAlign: 'center' }}>
                 <h1 className="dashboard-title" style={{
-                    fontSize: '2.75rem',
+                    fontSize: 'clamp(1.75rem, 5vw, 2.75rem)',
                     fontWeight: '700',
                     marginBottom: '0.75rem',
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -25,12 +25,12 @@ function Profile() {
                 }}>
                     Profile
                 </h1>
-                <p style={{ color: '#64748b', fontSize: '1.15rem', fontWeight: '400' }}>Manage your account information</p>
+                <p style={{ color: '#64748b', fontSize: 'clamp(0.9rem, 2.5vw, 1.15rem)', fontWeight: '400' }}>Manage your account information</p>
             </div>
 
             <div style={{
                 background: 'white',
-                padding: '2.5rem',
+                padding: 'clamp(1.25rem, 3vw, 2.5rem)',
                 borderRadius: '16px',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)',
                 border: '1px solid rgba(0,0,0,0.05)'
@@ -61,7 +61,7 @@ function Profile() {
                     </div>
 
                     <h2 style={{
-                        fontSize: '1.75rem',
+                        fontSize: 'clamp(1.25rem, 3.5vw, 1.75rem)',
                         fontWeight: '600',
                         marginBottom: '2rem',
                         color: '#1e293b',

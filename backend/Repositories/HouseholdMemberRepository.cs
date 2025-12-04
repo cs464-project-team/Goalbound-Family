@@ -2,6 +2,7 @@ using GoalboundFamily.Api.Data;
 using GoalboundFamily.Api.Models;
 using GoalboundFamily.Api.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace GoalboundFamily.Api.Repositories;
 
@@ -26,9 +27,11 @@ public class HouseholdMemberRepository
 
     public async Task<IEnumerable<HouseholdMember>> GetByHouseholdIdAsync(Guid householdId)
     {
-        return await _dbSet
-            .Include(m => m.User)
+        return await _context.HouseholdMembers
             .Where(m => m.HouseholdId == householdId)
+            .Include(m => m.User)
+            .Include(m => m.MemberBadges)
+                .ThenInclude(mb => mb.Badge)
             .ToListAsync();
     }
 
@@ -37,4 +40,5 @@ public class HouseholdMemberRepository
         return await _dbSet
             .FirstOrDefaultAsync(m => m.UserId == userId && m.HouseholdId == householdId);
     }
+
 }

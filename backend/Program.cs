@@ -127,6 +127,9 @@ builder.Services.AddScoped<IInvitationRepository, InvitationRepository>();
 builder.Services.AddScoped<IBudgetCategoryRepository, BudgetCategoryRepository>();
 builder.Services.AddScoped<IHouseholdBudgetRepository, HouseholdBudgetRepository>();
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
+builder.Services.AddScoped<IMemberQuestRepository, MemberQuestRepository>();
+builder.Services.AddScoped<IQuestRepository, QuestRepository>();
+// Add more repositories here as you create them
 
 // Register Services
 builder.Services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
@@ -138,6 +141,7 @@ builder.Services.AddScoped<IBudgetCategoryService, BudgetCategoryService>();
 builder.Services.AddScoped<IHouseholdBudgetService, HouseholdBudgetService>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IMemberQuestService, MemberQuestService>();
 builder.Services.AddScoped<IImagePreprocessingService, ImagePreprocessingService>();
 builder.Services.AddScoped<IOcrService, AzureOcrService>(); // Azure Computer Vision (95-99% accuracy)
 builder.Services.AddScoped<IReceiptParserService, ReceiptParserService>();

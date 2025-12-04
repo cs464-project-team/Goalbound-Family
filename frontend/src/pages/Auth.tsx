@@ -65,7 +65,7 @@ function Auth() {
       alignItems: 'center',
       justifyContent: 'center',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '2rem'
+      padding: '1rem'
     }}>
       <div style={{
         width: '100%',
@@ -75,13 +75,13 @@ function Auth() {
         boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
         overflow: 'hidden',
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))',
         minHeight: '600px'
       }}>
         {/* Left Panel - Branding */}
         <div style={{
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          padding: '3rem',
+          padding: 'clamp(2rem, 4vw, 3rem)',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
@@ -138,7 +138,7 @@ function Auth() {
 
         {/* Right Panel - Auth Forms */}
         <div style={{
-          padding: '3rem',
+          padding: 'clamp(2rem, 4vw, 3rem)',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center'
