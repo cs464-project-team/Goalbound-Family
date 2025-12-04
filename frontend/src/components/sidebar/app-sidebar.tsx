@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import {
-  AudioWaveform,
   Bot,
   Trophy,
   PieChart,
@@ -50,7 +49,6 @@ interface RouteItem {
 const routes: RouteItem[] = [
   { title: "Dashboard", path: "/dashboard", icon: PieChart },
   { title: "Expenses", path: "/expenses", icon: Receipt },
-  { title: "Transactions", path: "/transactions", icon: AudioWaveform },
   { title: "Receipt Scanner", path: "/scanner", icon: Bot },
   { title: "Budgets", path: "/budgets", icon: PiggyBank },
   { title: "Leaderboard", path: "/leaderboard", icon: Trophy },
@@ -60,7 +58,7 @@ const routes: RouteItem[] = [
     icon: Settings2,
     subItems: [
       { title: "Profile", path: "/settings/profile" },
-      { title: "Family", path: "/settings/family" },
+      { title: "Households", path: "/settings/family" },
     ],
   },
 ];
