@@ -2,6 +2,7 @@ using GoalboundFamily.Api.DTOs;
 using GoalboundFamily.Api.Models;
 using GoalboundFamily.Api.Repositories.Interfaces;
 using GoalboundFamily.Api.Services.Interfaces;
+using MediatR;
 
 namespace GoalboundFamily.Api.Services;
 
@@ -10,14 +11,17 @@ public class ExpenseService : IExpenseService
     private readonly IExpenseRepository _repo;
     private readonly IBudgetCategoryRepository _categoryRepo;
     private readonly IHouseholdAuthorizationService _authService;
+    private readonly IMediator _mediator;
+
 
     public ExpenseService(
         IExpenseRepository repo,
         IBudgetCategoryRepository categoryRepo,
-        IHouseholdAuthorizationService authService)
+        IHouseholdAuthorizationService authService, IMediator mediator)
     {
         _repo = repo;
         _categoryRepo = categoryRepo;
+        _mediator = mediator;
         _authService = authService;
     }
 
@@ -48,6 +52,9 @@ public class ExpenseService : IExpenseService
         await _repo.SaveChangesAsync();
 
         var cat = await _categoryRepo.GetByIdAsync(expense.CategoryId);
+
+        // **Trigger quest progress event**
+        await _mediator.Publish(new ExpenseLoggedEvent(expense.UserId, expense.HouseholdId, expense.CategoryId));
 
         return new ExpenseDto
         {
@@ -100,6 +107,12 @@ public class ExpenseService : IExpenseService
 
         var cat = await _categoryRepo.GetByIdAsync(request.CategoryId);
         var categoryName = cat?.Name ?? string.Empty;
+
+        // **Trigger quest progress events for each user**
+        foreach (var expense in expenses)
+        {
+            await _mediator.Publish(new ExpenseLoggedEvent(expense.UserId, expense.HouseholdId, expense.CategoryId));
+        }
 
         return expenses.Select(e => new ExpenseDto
         {

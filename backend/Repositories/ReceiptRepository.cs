@@ -51,4 +51,12 @@ public class ReceiptRepository : Repository<Receipt>, IReceiptRepository
 
         await _context.SaveChangesAsync();
     }
+
+    // Count receipts for progress calculation
+    public async Task<int> GetReceiptCountByUserAndHouseholdAsync(Guid memberId, Guid householdId)
+    {
+        return await _context.Receipts
+            .Where(r => r.MemberId == memberId && r.HouseholdId == householdId)
+            .CountAsync();
+    }
 }
