@@ -21,6 +21,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<BudgetCategory> BudgetCategories { get; set; }
     public DbSet<HouseholdBudget> HouseholdBudgets { get; set; }
     public DbSet<Expense> Expenses { get; set; }
+    public DbSet<Quest> Quests { get; set; }
+    public DbSet<MemberQuest> MemberQuests { get; set; }
+    public DbSet<Badge> Badges { get; set; }
+    public DbSet<MemberBadge> MemberBadges { get; set; }
 
     // Add more DbSets as needed
     // Example: public DbSet<Family> Families { get; set; }
@@ -131,5 +135,33 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(i => i.Token)
                 .IsUnique();
         });
+
+        // MemberQuest composite key + relationships
+        modelBuilder.Entity<MemberQuest>()
+            .HasKey(mq => new { mq.HouseholdMemberId, mq.QuestId });
+
+        modelBuilder.Entity<MemberQuest>()
+            .HasOne(mq => mq.HouseholdMember)
+            .WithMany(hm => hm.MemberQuests)
+            .HasForeignKey(mq => mq.HouseholdMemberId);
+
+        modelBuilder.Entity<MemberQuest>()
+            .HasOne(mq => mq.Quest)
+            .WithMany(q => q.MemberQuests)
+            .HasForeignKey(mq => mq.QuestId);
+
+        // MemberBadge composite key + relationships
+        modelBuilder.Entity<MemberBadge>()
+            .HasKey(mb => new { mb.HouseholdMemberId, mb.BadgeId });
+
+        modelBuilder.Entity<MemberBadge>()
+            .HasOne(mb => mb.HouseholdMember)
+            .WithMany(hm => hm.MemberBadges)
+            .HasForeignKey(mb => mb.HouseholdMemberId);
+
+        modelBuilder.Entity<MemberBadge>()
+            .HasOne(mb => mb.Badge)
+            .WithMany(b => b.MemberBadges)
+            .HasForeignKey(mb => mb.BadgeId);
     }
 }
