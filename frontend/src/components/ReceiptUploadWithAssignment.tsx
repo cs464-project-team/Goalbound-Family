@@ -292,12 +292,10 @@ export default function ReceiptUploadWithAssignment() {
       const householdMembersData: HouseholdMember[] = data.householdMembers || [];
       setHouseholdMembers(householdMembersData);
 
-      // Initialize assignments: assign all quantity to first member by default
+      // Initialize assignments: start with 0 for all members (no preloading)
       const initialAssignments: ItemAssignment = {};
       parsedItems.forEach(item => {
-        initialAssignments[item.id] = {
-          [householdMembersData[0]?.id || '']: item.quantity
-        };
+        initialAssignments[item.id] = {};
       });
       setItemAssignments(initialAssignments);
 
@@ -309,60 +307,48 @@ export default function ReceiptUploadWithAssignment() {
     }
   };
 
-  const handleQuantityChange = (itemId: string, memberId: string, value: string) => {
-    // Handle empty string - set to 0
-    if (value === '' || value === null || value === undefined) {
-      setItemAssignments(prev => ({
-        ...prev,
-        [itemId]: {
-          ...prev[itemId],
-          [memberId]: 0
-        }
-      }));
-      return;
-    }
-
-    // Parse as integer to avoid decimal issues and leading zeros
-    const numValue = parseInt(value, 10);
-
-    // If parsing fails or negative, set to 0
-    if (isNaN(numValue) || numValue < 0) {
-      setItemAssignments(prev => ({
-        ...prev,
-        [itemId]: {
-          ...prev[itemId],
-          [memberId]: 0
-        }
-      }));
-      return;
-    }
-
+  const handleIncrementQuantity = (itemId: string, memberId: string) => {
     // Get the item to check total quantity
     const item = items.find(i => i.id === itemId);
     if (!item) return;
 
     // Calculate current total assigned (excluding this member)
     const currentAssignments = itemAssignments[itemId] || {};
+    const currentMemberQty = currentAssignments[memberId] || 0;
     const otherMembersTotal = Object.entries(currentAssignments)
       .filter(([mId]) => mId !== memberId)
       .reduce((sum, [, qty]) => sum + qty, 0);
 
-    // Ensure total doesn't exceed item quantity
+    // Check if we can increment
     const maxAllowedForMember = item.quantity - otherMembersTotal;
 
-    // Show error if trying to exceed
-    if (numValue > maxAllowedForMember) {
-      setError(`Cannot allocate more than ${maxAllowedForMember} to this member (${item.quantity - otherMembersTotal} remaining)`);
+    if (currentMemberQty >= maxAllowedForMember) {
+      setError(`Cannot allocate more than ${maxAllowedForMember} to this member (${item.quantity - otherMembersTotal - currentMemberQty} remaining)`);
       setTimeout(() => setError(null), 3000);
+      return;
     }
-
-    const finalValue = Math.min(numValue, maxAllowedForMember);
 
     setItemAssignments(prev => ({
       ...prev,
       [itemId]: {
         ...prev[itemId],
-        [memberId]: finalValue
+        [memberId]: currentMemberQty + 1
+      }
+    }));
+  };
+
+  const handleDecrementQuantity = (itemId: string, memberId: string) => {
+    const currentAssignments = itemAssignments[itemId] || {};
+    const currentMemberQty = currentAssignments[memberId] || 0;
+
+    // Don't go below 0
+    if (currentMemberQty <= 0) return;
+
+    setItemAssignments(prev => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        [memberId]: currentMemberQty - 1
       }
     }));
   };
@@ -701,15 +687,11 @@ export default function ReceiptUploadWithAssignment() {
     // Add to items list
     setItems(prev => [...prev, newItem]);
 
-    // Initialize assignment for this item (assign all to first member by default)
-    if (householdMembers.length > 0) {
-      setItemAssignments(prev => ({
-        ...prev,
-        [newItem.id]: {
-          [householdMembers[0].id]: quantity
-        }
-      }));
-    }
+    // Initialize assignment for this item (start with 0 for all members)
+    setItemAssignments(prev => ({
+      ...prev,
+      [newItem.id]: {}
+    }));
 
     // Reset form
     setNewItemName('');
@@ -1088,27 +1070,36 @@ export default function ReceiptUploadWithAssignment() {
                                     {member.userName}
                                     <span className="text-xs font-normal text-gray-500 ml-1">({member.role})</span>
                                   </label>
-                                  <div className="relative">
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      step="1"
-                                      max={item.quantity}
-                                      value={assignedQty || ''}
-                                      onChange={(e) => handleQuantityChange(item.id, member.id, e.target.value)}
-                                      className={`w-full px-3 py-2 border-2 rounded-lg text-sm font-medium outline-none transition-all ${
-                                        assignedQty === maxForMember && maxForMember > 0
-                                          ? 'border-green-400 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
-                                          : 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                                      }`}
-                                      placeholder="0"
-                                    />
-                                    {maxForMember > 0 && maxForMember < item.quantity && (
-                                      <span className="absolute right-12 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-                                        max: {maxForMember}
-                                      </span>
-                                    )}
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => handleDecrementQuantity(item.id, member.id)}
+                                      disabled={assignedQty === 0}
+                                      className="w-10 h-10 flex items-center justify-center bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-bold text-lg"
+                                      title="Decrease quantity"
+                                    >
+                                      −
+                                    </button>
+                                    <div className={`flex-1 px-4 py-2 border-2 rounded-lg text-center font-bold text-lg outline-none transition-all ${
+                                      assignedQty === maxForMember && maxForMember > 0
+                                        ? 'border-green-400 bg-green-50'
+                                        : 'border-gray-300 bg-white'
+                                    }`}>
+                                      {assignedQty || 0}
+                                    </div>
+                                    <button
+                                      onClick={() => handleIncrementQuantity(item.id, member.id)}
+                                      disabled={assignedQty >= maxForMember}
+                                      className="w-10 h-10 flex items-center justify-center bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-bold text-lg"
+                                      title="Increase quantity"
+                                    >
+                                      +
+                                    </button>
                                   </div>
+                                  {maxForMember > 0 && maxForMember < item.quantity && (
+                                    <p className="text-xs text-gray-500 mt-1 text-center">
+                                      max: {maxForMember}
+                                    </p>
+                                  )}
                                   <div className="flex items-center justify-between mt-2">
                                     <p className="text-xs text-gray-500">
                                       Amount:
