@@ -1,6 +1,7 @@
 using GoalboundFamily.Api.DTOs;
 using GoalboundFamily.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GoalboundFamily.Api.Controllers;
 
@@ -9,6 +10,7 @@ namespace GoalboundFamily.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/receipts")]
+[Authorize]
 public class ReceiptsController : ControllerBase
 {
     private readonly IReceiptService _receiptService;

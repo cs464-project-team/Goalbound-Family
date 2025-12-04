@@ -1,11 +1,13 @@
 using GoalboundFamily.Api.DTOs;
 using GoalboundFamily.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GoalboundFamily.Api.Controllers;
 
 [ApiController]
 [Route("api/invitations")]
+[Authorize]
 public class InvitationsController : ControllerBase
 {
     private readonly IInvitationService _service;
@@ -23,6 +25,7 @@ public class InvitationsController : ControllerBase
     }
 
     [HttpPost("accept")]
+    [AllowAnonymous]
     public async Task<ActionResult> Accept(AcceptInvitationRequest request)
     {
         var result = await _service.AcceptAsync(request);
