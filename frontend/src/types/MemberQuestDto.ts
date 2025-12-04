@@ -1,3 +1,5 @@
+import type { QuestCategory } from './QuestCategory';
+
 export interface MemberQuestDto {
     householdMemberId: string; // Guid -> string
     questId: string; // Guid -> string
@@ -14,8 +16,11 @@ export interface MemberQuestDto {
     title: string;
     description: string;
     xpReward: number;
-    category: string;
+    category: QuestCategory;
     type: string;
     difficulty: string;
     target: number;
+
+    timeLimitSeconds?: number | null;
   }
+

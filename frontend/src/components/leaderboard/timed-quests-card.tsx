@@ -3,27 +3,27 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
-import type { Quest } from "@/data/mockQuestsData";
 import { Timer } from "lucide-react";
+import type { MemberQuestDto } from '../../types/MemberQuestDto';
 
-export function TimedQuests({ quest }: { quest: Quest }) {
+export function TimedQuests({ quest }: { quest: MemberQuestDto }) {
   const [timeLeft, setTimeLeft] = useState<number>(() => {
-    if (!quest.timeLimit || !quest.startTime) return 0;
+    if (!quest.timeLimitSeconds || !quest.startTime) return 0;
     const now = new Date().getTime();
     const endTime =
-      new Date(quest.startTime).getTime() + quest.timeLimit * 1000;
+      new Date(quest.startTime).getTime() + quest.timeLimitSeconds * 1000;
     return Math.max(Math.floor((endTime - now) / 1000), 0);
   });
 
   useEffect(() => {
-    if (!quest.timeLimit || timeLeft <= 0) return;
+    if (!quest.timeLimitSeconds || timeLeft <= 0) return;
 
     const interval = setInterval(() => {
       setTimeLeft((prev) => Math.max(prev - 1, 0));
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [quest.timeLimit, timeLeft]);
+  }, [quest.timeLimitSeconds, timeLeft]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

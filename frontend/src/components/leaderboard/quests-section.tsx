@@ -11,11 +11,10 @@ interface QuestsProps {
   householdMemberId: string | null;
   quests: MemberQuestDto[];
   setQuests: React.Dispatch<React.SetStateAction<MemberQuestDto[]>>;
-  householdMembers: HouseholdMemberDto[];
   setHouseholdMembers: React.Dispatch<React.SetStateAction<HouseholdMemberDto[]>>;
 }
 
-export function Quests({ householdMemberId, quests, setQuests, householdMembers, setHouseholdMembers }: QuestsProps) {
+export function Quests({ householdMemberId, quests, setQuests, setHouseholdMembers }: QuestsProps) {
   if (!householdMemberId) return <p>Loading...</p>;
   if (!quests || quests.length === 0) return <p>No quests available</p>;
 

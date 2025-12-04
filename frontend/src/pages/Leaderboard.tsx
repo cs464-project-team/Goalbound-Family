@@ -149,7 +149,6 @@ export default function Leaderboard() {
             householdMemberId={householdMemberId}
             quests={quests}
             setQuests={setQuests}
-            householdMembers={householdMembers}
             setHouseholdMembers={setHouseholdMembers}
           />
         </>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 
 import { getApiUrl } from '../../config/api';
 import type { MemberQuestDto } from '../../types/MemberQuestDto';
+import { categoryIcons } from '../../types/QuestCategory';
 
 interface QuestRequest {
   memberId: string;
@@ -17,13 +18,6 @@ interface QuestRowProps {
 }
 
 export const QuestTable: React.FC<QuestRowProps> = ({ quests, householdMemberId, onClaim }) => {
-    const categoryIcons = {
-      finance: "💰",
-      food: "🍎",
-      health: "💪",
-      productivity: "🎯",
-    };
-
     async function handleClaim(questId: string) {
       const reqBody: QuestRequest = { memberId: householdMemberId, questId };
     
@@ -51,7 +45,7 @@ export const QuestTable: React.FC<QuestRowProps> = ({ quests, householdMemberId,
           <div key={quest.questId}>
             <div className="flex justify-between items-center text-sm">
               <div className="flex items-center gap-3">
-                <span className="text-5xl">{categoryIcons[quest.category]}</span>
+                <span className="text-5xl">{categoryIcons[quest.category] ?? categoryIcons["others"]}</span>
                 <div className="flex flex-col leading-tight">
                   <p className="font-bold text-lg">{quest.title}</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
