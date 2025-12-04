@@ -91,8 +91,8 @@ builder.Services.AddCors(options =>
 });
 
 // ✅ ADD THIS: Configure JWT Authentication
-var jwtSecret = builder.Configuration["Supabase:JwtSecret"]
-    ?? throw new InvalidOperationException("JWT Secret not configured");
+var jwtSecret = builder.Configuration["JWT_SECRET"]
+    ?? throw new InvalidOperationException("JWT_SECRET not configured");
 
 builder.Services.AddAuthentication(options =>
 {
