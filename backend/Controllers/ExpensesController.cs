@@ -2,7 +2,7 @@ using GoalboundFamily.Api.DTOs;
 using GoalboundFamily.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-
+using System.Security.Claims;
 namespace GoalboundFamily.Api.Controllers;
 
 [ApiController]
@@ -97,11 +97,17 @@ public class ExpensesController : ControllerBase
 
     private Guid? GetAuthenticatedUserId()
     {
-        var userIdClaim = User.FindFirst("sub")?.Value;
+        // Try multiple common claim types
+        var userIdClaim =
+            User.FindFirst("sub")?.Value ??                    // raw JWT claim
+            User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? // mapped "sub"
+            User.FindFirst("user_id")?.Value;                  // just in case
+
         if (userIdClaim != null && Guid.TryParse(userIdClaim, out var userId))
         {
             return userId;
         }
+
         return null;
     }
 }
