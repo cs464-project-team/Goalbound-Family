@@ -95,7 +95,10 @@ describe("ReceiptUploadWithAssignment Component", () => {
 
     await waitFor(() => {
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/households/user/")
+        expect.stringContaining("/api/households/user/"),
+        expect.objectContaining({
+          credentials: 'include'
+        })
       );
     });
   });
