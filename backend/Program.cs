@@ -91,8 +91,15 @@ builder.Services.AddCors(options =>
 });
 
 // ✅ ADD THIS: Configure JWT Authentication
-var jwtSecret = builder.Configuration["JWT_SECRET"]
-    ?? throw new InvalidOperationException("JWT_SECRET not configured");
+// Try multiple configuration keys for flexibility (environment variables take precedence)
+var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET")
+    ?? builder.Configuration["Supabase:JwtSecret"]
+    ?? builder.Configuration["JWT_SECRET"]
+    ?? throw new InvalidOperationException("JWT_SECRET not configured. Set JWT_SECRET environment variable.");
+
+var supabaseUrlForJwt = Environment.GetEnvironmentVariable("VITE_SUPABASE_URL")
+    ?? builder.Configuration["Supabase:Url"]
+    ?? throw new InvalidOperationException("VITE_SUPABASE_URL not configured");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -106,7 +113,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
         ValidateIssuer = true,
-        ValidIssuer = builder.Configuration["Supabase:Url"] + "/auth/v1",
+        ValidIssuer = supabaseUrlForJwt + "/auth/v1",
         ValidateAudience = true,
         ValidAudience = "authenticated", // Supabase uses "authenticated" as audience
         ValidateLifetime = true,
@@ -136,6 +143,7 @@ builder.Services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IHouseholdService, HouseholdService>();
 builder.Services.AddScoped<IHouseholdMemberService, HouseholdMemberService>();
+builder.Services.AddScoped<IHouseholdAuthorizationService, HouseholdAuthorizationService>();
 builder.Services.AddScoped<IInvitationService, InvitationService>();
 builder.Services.AddScoped<IBudgetCategoryService, BudgetCategoryService>();
 builder.Services.AddScoped<IHouseholdBudgetService, HouseholdBudgetService>();
