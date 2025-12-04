@@ -210,7 +210,13 @@ export async function authenticatedFetch(
   url: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  const token = authService.getAccessToken()
+  let token = authService.getAccessToken()
+
+  // If no token, try to refresh first
+  if (!token) {
+    console.log('[Auth Debug] No access token, attempting refresh before request...')
+    token = await authService.refreshAccessToken()
+  }
 
   // Add Authorization header if we have a token
   const headers = new Headers(options.headers)

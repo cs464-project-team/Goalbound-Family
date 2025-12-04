@@ -7,7 +7,7 @@ namespace GoalboundFamily.Api.Controllers;
 
 [ApiController]
 [Route("api/invitations")]
-[Authorize]
+// [Authorize]
 public class InvitationsController : ControllerBase
 {
     private readonly IInvitationService _service;
