@@ -1,6 +1,7 @@
 using GoalboundFamily.Api.DTOs;
 using GoalboundFamily.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GoalboundFamily.Api.Controllers;
 
@@ -24,6 +25,7 @@ public class UsersController : ControllerBase
     /// Get all users
     /// </summary>
     [HttpGet]
+    [Authorize]
     public async Task<ActionResult<IEnumerable<UserDto>>> GetAllUsers()
     {
         try
@@ -42,6 +44,7 @@ public class UsersController : ControllerBase
     /// Get user by ID
     /// </summary>
     [HttpGet("{id:guid}")]
+    [Authorize]
     public async Task<ActionResult<UserDto>> GetUserById(Guid id)
     {
         try
@@ -64,6 +67,7 @@ public class UsersController : ControllerBase
     /// Get user by email
     /// </summary>
     [HttpGet("email/{email}")]
+    [Authorize]
     public async Task<ActionResult<UserDto>> GetUserByEmail(string email)
     {
         try
@@ -108,10 +112,23 @@ public class UsersController : ControllerBase
     /// Update an existing user
     /// </summary>
     [HttpPut("{id:guid}")]
+    [Authorize]
     public async Task<ActionResult<UserDto>> UpdateUser(Guid id, [FromBody] UpdateUserRequest request)
     {
         try
         {
+            // Verify user can only update their own profile
+            var userIdClaim = User.FindFirst("sub")?.Value;
+            if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var authenticatedUserId))
+            {
+                return Unauthorized("Invalid user token");
+            }
+
+            if (authenticatedUserId != id)
+            {
+                return Forbid(); // 403 Forbidden - authenticated but not authorized to update this user
+            }
+
             var user = await _userService.UpdateUserAsync(id, request);
             if (user == null)
             {
@@ -134,10 +151,23 @@ public class UsersController : ControllerBase
     /// Delete a user
     /// </summary>
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<ActionResult> DeleteUser(Guid id)
     {
         try
         {
+            // Verify user can only delete their own account
+            var userIdClaim = User.FindFirst("sub")?.Value;
+            if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var authenticatedUserId))
+            {
+                return Unauthorized("Invalid user token");
+            }
+
+            if (authenticatedUserId != id)
+            {
+                return Forbid(); // 403 Forbidden - authenticated but not authorized to delete this user
+            }
+
             var result = await _userService.DeleteUserAsync(id);
             if (!result)
             {

@@ -1,11 +1,13 @@
 using GoalboundFamily.Api.DTOs;
 using GoalboundFamily.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GoalboundFamily.Api.Controllers;
 
 [ApiController]
 [Route("api/budgets/categories")]
+[Authorize]
 public class BudgetCategoriesController : ControllerBase
 {
     private readonly IBudgetCategoryService _service;

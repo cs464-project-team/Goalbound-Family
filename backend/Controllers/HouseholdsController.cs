@@ -1,11 +1,13 @@
 using GoalboundFamily.Api.DTOs;
 using GoalboundFamily.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GoalboundFamily.Api.Controllers;
 
 [ApiController]
 [Route("api/households")]
+[Authorize]
 public class HouseholdsController : ControllerBase
 {
     private readonly IHouseholdService _service;
