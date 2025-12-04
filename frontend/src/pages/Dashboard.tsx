@@ -3,6 +3,7 @@ import { useAuthContext } from '../context/AuthProvider';
 import '../styles/Dashboard.css';
 import { Navigate, Link } from 'react-router-dom';
 import { getApiUrl } from '../config/api';
+import { authenticatedFetch } from '../services/authService';
 
 type Household = {
     id: string;
@@ -59,7 +60,7 @@ function Dashboard() {
 
     useEffect(() => {
         if (!session?.user?.id) return;
-        fetch(getApiUrl(`/api/householdmembers/user/${session.user.id}`))
+        authenticatedFetch(getApiUrl(`/api/householdmembers/user/${session.user.id}`))
             .then(res => res.json())
             .then((data: Household[]) => {
                 setHouseholds(data);
@@ -74,8 +75,8 @@ function Dashboard() {
         const month = now.getMonth() + 1;
         setLoading(true);
         Promise.all([
-            fetch(getApiUrl(`/api/dashboard/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json()),
-            fetch(getApiUrl(`/api/expenses/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json())
+            authenticatedFetch(getApiUrl(`/api/dashboard/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json()),
+            authenticatedFetch(getApiUrl(`/api/expenses/${selectedHouseholdId}/${year}/${month}`)).then(res => res.json())
         ]).then(([dashboardData, expensesData]) => {
             setDashboard(dashboardData);
             setExpenses(expensesData);
@@ -89,12 +90,12 @@ function Dashboard() {
         setInviteError(null);
         setLinkCopied(false);
         try {
-            const res = await fetch(getApiUrl('/api/invitations'), {
+            const res = await authenticatedFetch(getApiUrl('/api/invitations'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     householdId: selectedHouseholdId,
-                    invitedByUserId: session.user.id
+                    expiresInDays: 7
                 })
             });
             if (!res.ok) throw new Error('Failed to generate invite');
@@ -121,7 +122,7 @@ function Dashboard() {
         setCreating(true);
         setError(null);
         try {
-            const res = await fetch(getApiUrl('/api/households'), {
+            const res = await authenticatedFetch(getApiUrl('/api/households'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: newHouseholdName, parentId: session?.user.id })
@@ -129,7 +130,7 @@ function Dashboard() {
             if (!res.ok) throw new Error('Failed to create household');
             setShowCreateForm(false);
             setNewHouseholdName('');
-            const data: Household[] = await fetch(getApiUrl(`/api/householdmembers/user/${session?.user.id}`)).then(r => r.json());
+            const data: Household[] = await authenticatedFetch(getApiUrl(`/api/householdmembers/user/${session?.user.id}`)).then(r => r.json());
             setHouseholds(data);
             if (data.length > 0) setSelectedHouseholdId(data[0].id);
         } catch (err: unknown) {

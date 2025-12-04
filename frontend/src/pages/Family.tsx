@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuthContext } from '../context/AuthProvider';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { getApiUrl } from '../config/api';
+import { authenticatedFetch } from '../services/authService';
 import '../styles/Dashboard.css';
 
 type Household = {
@@ -38,7 +39,7 @@ function Family() {
     useEffect(() => {
         if (!session?.user?.id) return;
         setLoading(true);
-        fetch(getApiUrl(`/api/householdmembers/user/${session.user.id}`))
+        authenticatedFetch(getApiUrl(`/api/householdmembers/user/${session.user.id}`))
             .then(res => res.json())
             .then((data: Household[]) => {
                 setHouseholds(data);
@@ -50,7 +51,7 @@ function Family() {
 
     useEffect(() => {
         if (!selectedHouseholdId) return;
-        fetch(getApiUrl(`/api/householdmembers/${selectedHouseholdId}`))
+        authenticatedFetch(getApiUrl(`/api/householdmembers/${selectedHouseholdId}`))
             .then(res => res.json())
             .then((data: HouseholdMember[]) => setMembers(data))
             .catch(() => setMembers([]));
@@ -69,7 +70,7 @@ function Family() {
                 throw new Error('Membership not found');
             }
 
-            const res = await fetch(getApiUrl(`/api/householdmembers/${membership.id}?requestingUserId=${session.user.id}`), {
+            const res = await authenticatedFetch(getApiUrl(`/api/householdmembers/${membership.id}?requestingUserId=${session.user.id}`), {
                 method: 'DELETE'
             });
 
@@ -79,7 +80,7 @@ function Family() {
             }
 
             // Refresh households list
-            const updatedHouseholds = await fetch(getApiUrl(`/api/householdmembers/user/${session.user.id}`))
+            const updatedHouseholds = await authenticatedFetch(getApiUrl(`/api/householdmembers/user/${session.user.id}`))
                 .then(r => r.json());
 
             setHouseholds(updatedHouseholds);
@@ -107,7 +108,7 @@ function Family() {
         setError(null);
 
         try {
-            const res = await fetch(getApiUrl(`/api/householdmembers/${memberToRemove.id}?requestingUserId=${session.user.id}`), {
+            const res = await authenticatedFetch(getApiUrl(`/api/householdmembers/${memberToRemove.id}?requestingUserId=${session.user.id}`), {
                 method: 'DELETE'
             });
 
@@ -117,7 +118,7 @@ function Family() {
             }
 
             // Refresh members list
-            const updatedMembers = await fetch(getApiUrl(`/api/householdmembers/${selectedHouseholdId}`))
+            const updatedMembers = await authenticatedFetch(getApiUrl(`/api/householdmembers/${selectedHouseholdId}`))
                 .then(r => r.json());
 
             setMembers(updatedMembers);

@@ -4,6 +4,7 @@ import { Navigate } from 'react-router-dom';
 import { Download, Receipt as ReceiptIcon, FileText, Calendar, Tag } from 'lucide-react';
 import '../styles/Dashboard.css';
 import { getApiUrl } from '../config/api';
+import { authenticatedFetch } from '../services/authService';
 
 type Household = {
     id: string;
@@ -70,7 +71,7 @@ function Expenses() {
 
     useEffect(() => {
         if (!session?.user?.id) return;
-        fetch(getApiUrl(`/api/householdmembers/user/${session.user.id}`))
+        authenticatedFetch(getApiUrl(`/api/householdmembers/user/${session.user.id}`))
             .then(res => res.json())
             .then((data: Household[]) => {
                 setHouseholds(data);
@@ -97,7 +98,7 @@ function Expenses() {
             try {
                 // Fetch receipts only when in receipts view and a household is selected
                 if (viewMode === 'receipts' && selectedHouseholdId) {
-                    const receiptsRes = await fetch(getApiUrl(`/api/receipts/household/${selectedHouseholdId}`));
+                    const receiptsRes = await authenticatedFetch(getApiUrl(`/api/receipts/household/${selectedHouseholdId}`));
                     const receiptsData: ReceiptDto[] = await receiptsRes.json();
 
                     // Filter receipts by the selected month/year
@@ -111,7 +112,7 @@ function Expenses() {
 
                 // Fetch expenses for the current user (always fetch for expenses view)
                 if (viewMode === 'expenses') {
-                    const expensesRes = await fetch(getApiUrl(`/api/expenses/user/${session.user.id}/${selectedYear}/${selectedMonth}`));
+                    const expensesRes = await authenticatedFetch(getApiUrl(`/api/expenses/user/${session.user.id}/${selectedYear}/${selectedMonth}`));
                     const expensesData: ExpenseDto[] = await expensesRes.json();
                     setExpenses(expensesData);
                 }
@@ -157,7 +158,7 @@ function Expenses() {
         // Fetch receipt details if not already loaded
         if (!expenseReceiptDetails.has(receiptId)) {
             try {
-                const res = await fetch(getApiUrl(`/api/receipts/${receiptId}`));
+                const res = await authenticatedFetch(getApiUrl(`/api/receipts/${receiptId}`));
                 if (res.ok) {
                     const receiptData: ReceiptDto = await res.json();
                     setExpenseReceiptDetails(prev => new Map(prev).set(receiptId, receiptData));
