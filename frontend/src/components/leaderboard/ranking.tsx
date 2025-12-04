@@ -34,11 +34,11 @@ export function Ranking({ familyUsers }: RankingProps) {
   return (
     <>
       {/* Top 3 Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {top3.map((user) => (
           <div
             key={user.id}
-            className={`p-6 rounded-lg shadow flex flex-col items-center ${
+            className={`p-4 sm:p-6 rounded-lg shadow flex flex-col items-center ${
               user.id === currentUserId
                 ? "border-2 border-blue-500 bg-blue-50"
                 : "bg-white"

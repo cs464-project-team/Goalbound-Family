@@ -18,14 +18,14 @@ export function Quests({ quests }: QuestsProps) {
   return (
     <>
       {timedQuest && <TimedQuests quest={timedQuest} />}
-      <div className="p-6 rounded-md shadow">
+      <div className="p-4 sm:p-6 rounded-md shadow">
         {/* Daily Quests */}
-        <h3 className="text-xl font-bold mb-4">📅 Daily Quests</h3>
+        <h3 className="text-lg sm:text-xl font-bold mb-4">📅 Daily Quests</h3>
         <Separator className="mb-4" />
         <QuestTable quests={dailyQuests} />
 
         {/* Weekly Quests */}
-        <h3 className="text-xl font-bold mb-4">📅 Weekly Quests</h3>
+        <h3 className="text-lg sm:text-xl font-bold mb-4">📅 Weekly Quests</h3>
         <Separator className="mb-4" />
         <QuestTable quests={weeklyQuests} />
       </div>

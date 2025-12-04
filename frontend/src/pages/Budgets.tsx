@@ -165,23 +165,27 @@ function Budgets() {
     }
 
     return (
-        <div className="dashboard-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem', minHeight: '100vh' }}>
-            <div style={{ marginBottom: '2.5rem', paddingBottom: '1rem' }}>
-                <h1 className="dashboard-title" style={{ fontSize: '2.75rem', fontWeight: '700', marginBottom: '0.75rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.5px' }}>Budget Management</h1>
-                <p style={{ color: '#64748b', fontSize: '1.15rem', fontWeight: '400' }}>Set and monitor your household budget limits</p>
+        <div className="dashboard-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '1rem', minHeight: '100vh' }}>
+            <div style={{ marginBottom: '2rem', paddingBottom: '1rem' }}>
+                <h1 className="dashboard-title" style={{ fontSize: 'clamp(1.75rem, 5vw, 2.75rem)', fontWeight: '700', marginBottom: '0.75rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.5px' }}>Budget Management</h1>
+                <p style={{ color: '#64748b', fontSize: 'clamp(0.9rem, 2.5vw, 1.15rem)', fontWeight: '400' }}>Set and monitor your household budget limits</p>
             </div>
 
             {/* Household Selector */}
             {households.length > 0 && (
                 <div className="household-selector" style={{
                     marginBottom: '2rem',
-                    padding: '1.75rem',
+                    padding: 'clamp(1rem, 3vw, 1.75rem)',
                     background: 'white',
                     borderRadius: '16px',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
-                    border: '1px solid rgba(0,0,0,0.05)'
+                    border: '1px solid rgba(0,0,0,0.05)',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    gap: '1rem'
                 }}>
-                    <label htmlFor="household-select" style={{ fontWeight: '600', fontSize: '1rem', marginRight: '1rem' }}>Select Family:</label>
+                    <label htmlFor="household-select" style={{ fontWeight: '600', fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>Select Family:</label>
                     <select
                         id="household-select"
                         value={selectedHouseholdId ?? ''}
@@ -190,8 +194,10 @@ function Budgets() {
                             padding: '0.75rem 1rem',
                             borderRadius: '10px',
                             border: '2px solid #e2e8f0',
-                            fontSize: '1rem',
-                            minWidth: '250px',
+                            fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+                            minWidth: '150px',
+                            flex: '1 1 auto',
+                            maxWidth: '300px',
                             transition: 'all 0.2s ease',
                             cursor: 'pointer',
                             background: 'white'
@@ -215,7 +221,7 @@ function Budgets() {
                     {/* Add Category Section */}
                     <div style={{
                         marginBottom: '2rem',
-                        padding: '1.5rem',
+                        padding: 'clamp(1rem, 3vw, 1.5rem)',
                         background: 'white',
                         borderRadius: '16px',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
@@ -271,8 +277,8 @@ function Budgets() {
 
                     {/* Budget Categories List */}
                     <div className="categories-section" style={{ marginBottom: '2.5rem' }}>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1e293b' }}>Budget Categories</h2>
-                        <div className="categories-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.25rem', marginTop: '1rem' }}>
+                        <h2 style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: '600', marginBottom: '1.5rem', color: '#1e293b' }}>Budget Categories</h2>
+                        <div className="categories-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: 'clamp(1rem, 2vw, 1.25rem)', marginTop: '1rem' }}>
                             {categories.length === 0 ? (
                                 <div>No categories yet. Add one to get started!</div>
                             ) : (
@@ -348,13 +354,13 @@ function Budgets() {
                     {dashboard && dashboard.categories.length > 0 && (
                         <div style={{
                             marginTop: '3rem',
-                            padding: '2rem',
+                            padding: 'clamp(1rem, 3vw, 2rem)',
                             background: 'white',
                             borderRadius: '16px',
                             boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
                             border: '1px solid rgba(0,0,0,0.05)'
                         }}>
-                            <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1e293b' }}>Budget Overview</h2>
+                            <h2 style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: '600', marginBottom: '1.5rem', color: '#1e293b' }}>Budget Overview</h2>
                             <div style={{ overflowX: 'auto' }}>
                                 <table className="dashboard-categories-table" style={{ width: '100%', marginTop: '1rem', borderCollapse: 'collapse' }}>
                                 <thead>
