@@ -6,7 +6,7 @@ import { getApiUrl } from '../config/api';
 const AcceptInvite: React.FC = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { session } = useAuth();
+    const { session, isLoading } = useAuth();
     const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'unauthenticated'>('loading');
     const [message, setMessage] = useState('');
     const hasAttemptedRef = useRef(false);
@@ -19,6 +19,11 @@ const AcceptInvite: React.FC = () => {
                 setMessage('Invalid or missing invitation token.');
             }, 0);
             localStorage.removeItem('pendingInviteToken');
+            return;
+        }
+
+        // Wait for auth check to complete
+        if (isLoading) {
             return;
         }
 
@@ -67,7 +72,7 @@ const AcceptInvite: React.FC = () => {
                 // Clear the pending token on error
                 localStorage.removeItem('pendingInviteToken');
             });
-    }, [searchParams, session]);
+    }, [searchParams, session, isLoading]);
 
     const handleLogin = () => {
         navigate('/auth');

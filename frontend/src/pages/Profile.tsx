@@ -128,36 +128,6 @@ function Profile() {
                             </div>
                         </div>
 
-                        <div style={{
-                            padding: '1.5rem',
-                            background: 'linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%)',
-                            borderRadius: '12px',
-                            border: '2px solid #e2e8f0',
-                            transition: 'all 0.2s ease'
-                        }}>
-                            <label style={{
-                                display: 'block',
-                                fontSize: '0.85rem',
-                                fontWeight: '700',
-                                color: '#64748b',
-                                marginBottom: '0.75rem',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px'
-                            }}>
-                                Account Created
-                            </label>
-                            <div style={{
-                                fontSize: '1.1rem',
-                                fontWeight: '500',
-                                color: '#1e293b'
-                            }}>
-                                {user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                }) : 'N/A'}
-                            </div>
-                        </div>
                     </div>
                 </div>
 
