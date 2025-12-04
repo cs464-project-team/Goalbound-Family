@@ -4,6 +4,7 @@ import { Quests } from "@/components/leaderboard/quests-section";
 
 import { useAuth } from '../hooks/useAuth'
 import { useState, useEffect } from "react";
+import { Link } from 'react-router-dom';
 
 import {
   Select,
@@ -113,7 +114,57 @@ export default function Leaderboard() {
   }, [householdMemberId]);
 
   if (loading) return <p>Loading...</p>;
-  if (!households.length) return <p>You are not part of any household yet.</p>;
+
+  if (!households.length) {
+    return (
+      <div className="px-6 py-8">
+        <div style={{
+          maxWidth: '600px',
+          margin: '0 auto',
+          padding: '3rem 2rem',
+          background: 'white',
+          borderRadius: '16px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+          border: '1px solid rgba(0,0,0,0.05)',
+          textAlign: 'center'
+        }}>
+          <h2 style={{
+            fontSize: '1.5rem',
+            fontWeight: '700',
+            marginBottom: '1rem',
+            color: '#1e293b'
+          }}>
+            No Household Found
+          </h2>
+          <p style={{
+            fontSize: '1.1rem',
+            marginBottom: '1.5rem',
+            color: '#64748b',
+            lineHeight: '1.6'
+          }}>
+            You need to be part of a household to view the leaderboard and quests.
+          </p>
+          <Link
+            to="/dashboard"
+            style={{
+              display: 'inline-block',
+              padding: '0.75rem 2rem',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              borderRadius: '10px',
+              textDecoration: 'none',
+              fontWeight: '600',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)',
+              fontSize: '1rem'
+            }}
+          >
+            Go to Dashboard to Create a Household
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-6">
