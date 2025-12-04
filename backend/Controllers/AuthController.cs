@@ -59,7 +59,8 @@ public class AuthController : ControllerBase
                 UserId = user.Id,
                 Email = user.Email,
                 FirstName = user.FirstName,
-                LastName = user.LastName
+                LastName = user.LastName,
+                AccessToken = authResponse.AccessToken
             });
         }
         catch (InvalidOperationException ex)
@@ -130,7 +131,8 @@ public class AuthController : ControllerBase
                 UserId = user.Id,
                 Email = user.Email,
                 FirstName = user.FirstName,
-                LastName = user.LastName
+                LastName = user.LastName,
+                AccessToken = authResponse.AccessToken
             });
         }
         catch (InvalidOperationException ex)
@@ -183,7 +185,8 @@ public class AuthController : ControllerBase
                 UserId = user.Id,
                 Email = user.Email,
                 FirstName = user.FirstName,
-                LastName = user.LastName
+                LastName = user.LastName,
+                AccessToken = authResponse.AccessToken
             });
         }
         catch (InvalidOperationException ex)
@@ -198,6 +201,55 @@ public class AuthController : ControllerBase
             _logger.LogError(ex, "Unexpected error during session refresh");
             ClearRefreshTokenCookie();
             return StatusCode(500, new { message = "An error occurred while validating session" });
+        }
+    }
+
+    /// <summary>
+    /// Refresh access token using HttpOnly cookie
+    /// Returns new access token without rotating refresh token
+    /// </summary>
+    [HttpPost("refresh")]
+    public async Task<ActionResult<AuthResponse>> Refresh()
+    {
+        try
+        {
+            // Get refresh token from cookie
+            if (!Request.Cookies.TryGetValue(RefreshTokenCookie, out var refreshToken) ||
+                string.IsNullOrEmpty(refreshToken))
+            {
+                return Unauthorized(new { message = "No refresh token found" });
+            }
+
+            // Refresh the session
+            var authResponse = await _authService.RefreshTokenAsync(refreshToken);
+
+            // Validate auth response
+            if (authResponse.User == null)
+            {
+                throw new InvalidOperationException("Failed to get user information from authentication service");
+            }
+
+            // Get user profile from database
+            var user = await _userService.GetUserByIdAsync(Guid.Parse(authResponse.User.Id));
+
+            return Ok(new AuthResponse
+            {
+                UserId = user.Id,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                AccessToken = authResponse.AccessToken
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Failed to refresh access token");
+            return Unauthorized(new { message = "Invalid or expired refresh token" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error during token refresh");
+            return StatusCode(500, new { message = "An error occurred while refreshing token" });
         }
     }
 

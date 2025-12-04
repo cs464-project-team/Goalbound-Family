@@ -43,6 +43,9 @@ class AuthService {
    */
   private setAccessToken(token: string | null): void {
     this.accessToken = token
+    if (token) {
+      console.log('[Auth Debug] Access token stored in memory:', token.substring(0, 20) + '...')
+    }
   }
 
   /**
@@ -208,11 +211,18 @@ export async function authenticatedFetch(
   options: RequestInit = {}
 ): Promise<Response> {
   const token = authService.getAccessToken()
-  
+
   // Add Authorization header if we have a token
   const headers = new Headers(options.headers)
   if (token) {
     headers.set('Authorization', `Bearer ${token}`)
+    console.log('[Auth Debug] Sending request with Authorization header:', {
+      url,
+      hasToken: !!token,
+      tokenPreview: token.substring(0, 20) + '...',
+    })
+  } else {
+    console.warn('[Auth Debug] No access token available for request:', url)
   }
 
   // Always include credentials for cookie-based refresh token
@@ -224,9 +234,11 @@ export async function authenticatedFetch(
 
   // If we get a 401, try to refresh the token and retry once
   if (response.status === 401) {
+    console.log('[Auth Debug] Received 401, attempting token refresh...')
     const newToken = await authService.refreshAccessToken()
-    
+
     if (newToken) {
+      console.log('[Auth Debug] Token refreshed successfully, retrying request')
       // Retry the request with the new token
       headers.set('Authorization', `Bearer ${newToken}`)
       return fetch(url, {
@@ -234,6 +246,8 @@ export async function authenticatedFetch(
         headers,
         credentials: 'include',
       })
+    } else {
+      console.warn('[Auth Debug] Token refresh failed')
     }
   }
 

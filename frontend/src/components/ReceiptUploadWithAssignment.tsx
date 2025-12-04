@@ -480,6 +480,20 @@ export default function ReceiptUploadWithAssignment() {
         totalAmount: ocrMetadata.totalAmount,
         rawOcrText: ocrMetadata.rawOcrText,
         ocrConfidence: ocrMetadata.ocrConfidence,
+        items: itemAssignmentsPayload
+      };
+
+      const response = await authenticatedFetch(getApiUrl('/api/receipts/assign'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(assignDto),
+      });
+
+      if (!response.ok) {
+        let errorMessage = 'Unable to create expenses';
+        try {
           const errorData = await response.json();
           // Build detailed error message
           errorMessage = errorData.message || errorMessage;
@@ -498,6 +512,75 @@ export default function ReceiptUploadWithAssignment() {
 
       const createdExpenses = await response.json();
       setSuccess(`✅ Successfully created ${createdExpenses.length} expense(s)!`);
+
+      // Reset form
+      setTimeout(() => {
+        setManualItems([
+          { id: crypto.randomUUID(), description: '', amount: '', assignedMemberId: householdMembers[0]?.id || '' }
+        ]);
+        setManualDate(new Date().toISOString().split('T')[0]);
+        setSuccess(null);
+      }, 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create expenses');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle manual expense submission
+  const handleSubmitManualExpense = async () => {
+    if (!selectedCategory || !selectedHousehold || !userId) return;
+
+    // Validate all items have required fields
+    const validItems = manualItems.filter(i => i.description && i.amount && i.assignedMemberId);
+    if (validItems.length === 0) {
+      setError('Please fill in all fields for at least one expense item');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const expensesPayload = validItems.map(item => ({
+        userId: userId,
+        householdId: selectedHousehold.id,
+        categoryId: selectedCategory.id,
+        description: item.description,
+        amount: parseFloat(item.amount),
+        expenseDate: manualDate,
+        assignedMemberId: item.assignedMemberId
+      }));
+
+      const response = await authenticatedFetch(getApiUrl('/api/expenses/bulk'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(expensesPayload),
+      });
+
+      if (!response.ok) {
+        let errorMessage = 'Unable to create expenses';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+          if (errorData.innerException) {
+            errorMessage += `\n\nInner Exception: ${errorData.innerException}`;
+          }
+          if (errorData.type) {
+            errorMessage += `\n\nError Type: ${errorData.type}`;
+          }
+        } catch (e) {
+          errorMessage = 'Unable to create expenses. Please try again.';
+        }
+        throw new Error(errorMessage);
+      }
+
+      const createdExpenses = await response.json();
+      setSuccess(`Successfully created ${createdExpenses.length} expense(s)!`);
 
       // Reset form
       setTimeout(() => {
