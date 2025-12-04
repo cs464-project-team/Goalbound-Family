@@ -12,7 +12,7 @@ public class MemberQuestService : IMemberQuestService
     private readonly IQuestRepository _questRepo;
 
     public MemberQuestService(
-        IMemberQuestRepository repo, 
+        IMemberQuestRepository repo,
         IHouseholdMemberRepository memberRepo,
         IQuestRepository questRepo)
     {
