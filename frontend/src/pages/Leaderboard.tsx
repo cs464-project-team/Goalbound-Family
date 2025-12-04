@@ -2,7 +2,7 @@
 import { Ranking } from "@/components/leaderboard/ranking";
 import { Quests } from "@/components/leaderboard/quests-section";
 
-import { useAuthContext } from "../context/AuthProvider";
+import { useAuth } from '../hooks/useAuth'
 import { useState, useEffect } from "react";
 
 import {
@@ -20,7 +20,8 @@ import type { HouseholdMemberDto } from "../types/HouseholdMemberDto";
 import type { MemberQuestDto } from "../types/MemberQuestDto";
 
 export default function Leaderboard() {
-  const { userId } = useAuthContext();
+  const { session } = useAuth()
+  const userId = session?.user.id || null;
   const [households, setHouseholds] = useState<HouseholdDto[]>([]);
   const [selectedHousehold, setSelectedHousehold] = useState<string | null>(
     null

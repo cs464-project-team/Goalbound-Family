@@ -11,11 +11,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { useAuthContext } from "../../context/AuthProvider";
+import { useAuth } from '../../hooks/useAuth'
 import type { HouseholdMemberDto } from "../../types/HouseholdMemberDto";
 
 export function Ranking({ householdMembers }: { householdMembers: HouseholdMemberDto[] }) {
-  const { userId } = useAuthContext();
+  const { session } = useAuth();
+  const userId = session?.user.id || null;
 
   // Sort members by XP descending
   const sortedMembers = [...householdMembers].sort((a, b) => b.xp - a.xp);
