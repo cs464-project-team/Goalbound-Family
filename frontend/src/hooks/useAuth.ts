@@ -1,54 +1,90 @@
 import { useState, useEffect } from 'react'
-import type { Session } from '@supabase/supabase-js'
-import supabase from '../services/supabaseClient'
-import { getApiUrl } from '../config/api'
+import { authService } from '../services/authService'
+
+// Session interface to maintain compatibility with existing components
+export interface AuthSession {
+  user: {
+    id: string
+    email: string
+  }
+}
 
 export function useAuth() {
-  const [session, setSession] = useState<Session | null>(null)
+  const [session, setSession] = useState<AuthSession | null>(null)
   const [signupError, setSignupError] = useState('')
   const [loginError, setLoginError] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
 
+  // Restore session on mount from HttpOnly cookie
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setSession(session))
-    return () => listener.subscription.unsubscribe()
+    const restoreSession = async () => {
+      try {
+        const user = await authService.getCurrentUser()
+        if (user) {
+          setSession({
+            user: {
+              id: user.userId,
+              email: user.email,
+            },
+          })
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    restoreSession()
   }, [])
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     setSignupError('')
-    const { data, error } = await supabase.auth.signUp({ email, password })
-    if (error) {
-      setSignupError(error.message)
+    try {
+      const user = await authService.signup({
+        email,
+        password,
+        firstName,
+        lastName,
+      })
+
+      // Set session
+      setSession({
+        user: {
+          id: user.userId,
+          email: user.email,
+        },
+      })
+
+      return true
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Signup failed'
+      setSignupError(message)
       return false
     }
-    if (data?.user?.id) {
-      const response = await fetch(getApiUrl('/api/users'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: data.user.id, firstName, lastName, email })
-      })
-      if (!response.ok) {
-        await supabase.auth.admin.deleteUser(data.user.id) // use Supabase Admin SDK
-        const errorData = await response.json()
-        setSignupError(errorData.message || 'Failed to create user profile.')
-        return false
-      }
-    }
-    return true
   }
 
   const signIn = async (email: string, password: string) => {
     setLoginError('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setLoginError(error.message)
+    try {
+      const user = await authService.login({ email, password })
+
+      // Set session
+      setSession({
+        user: {
+          id: user.userId,
+          email: user.email,
+        },
+      })
+
+      return true
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Login failed'
+      setLoginError(message)
       return false
     }
-    return true
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    await authService.logout()
     setSession(null)
   }
 
@@ -56,10 +92,11 @@ export function useAuth() {
     session,
     signupError,
     loginError,
+    isLoading,
     signUp,
     signIn,
     signOut,
     setSignupError,
-    setLoginError
+    setLoginError,
   }
 }

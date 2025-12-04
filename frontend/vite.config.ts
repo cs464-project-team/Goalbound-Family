@@ -18,6 +18,9 @@ export default defineConfig({
         target: "http://localhost:5073", // <-- your backend URL
         changeOrigin: true,
         secure: false,
+        cookieDomainRewrite: {
+          "*": ""
+        },
       },
     },
   },

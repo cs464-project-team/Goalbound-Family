@@ -101,6 +101,7 @@ builder.Services.AddScoped<IHouseholdBudgetRepository, HouseholdBudgetRepository
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
 
 // Register Services
+builder.Services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IHouseholdService, HouseholdService>();
 builder.Services.AddScoped<IHouseholdMemberService, HouseholdMemberService>();
