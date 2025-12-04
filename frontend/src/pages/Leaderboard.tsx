@@ -15,17 +15,9 @@ import {
   SelectLabel,
 } from "@/components/ui/select";
 import { getApiUrl } from "../config/api";
-
-interface HouseholdDto {
-  id: string;          // Guid -> string
-  name: string;
-
-  // Admin user (Parent)
-  parentId: string;    // Guid -> string
-
-  // Optional: number of members
-  memberCount: number;
-}
+import type { HouseholdDto } from "../types/HouseholdDto";
+import type { HouseholdMemberDto } from "../types/HouseholdMemberDto";
+import type { MemberQuestDto } from "../types/MemberQuestDto";
 
 export default function Leaderboard() {
   const { userId } = useAuthContext();
@@ -34,11 +26,19 @@ export default function Leaderboard() {
     null
   );
   const [loading, setLoading] = useState(true);
-  console.log("Current User ID:", userId);
 
+  // Shared state
+  const [householdMemberId, setHouseholdMemberId] = useState<string | null>(
+    null
+  );
+  const [householdMembers, setHouseholdMembers] = useState<
+    HouseholdMemberDto[]
+  >([]);
+  const [quests, setQuests] = useState<MemberQuestDto[]>([]);
+
+  // Fetch households
   useEffect(() => {
-    if (!userId) return; // wait until userId is available
-
+    if (!userId) return;
     const fetchHouseholds = async () => {
       try {
         const res = await fetch(
@@ -47,7 +47,6 @@ export default function Leaderboard() {
         if (!res.ok) throw new Error("Failed to fetch households");
         const data = await res.json();
         setHouseholds(data);
-        // Default to first household if available
         if (data.length > 0) setSelectedHousehold(data[0].id);
       } catch (error) {
         console.error(error);
@@ -55,17 +54,65 @@ export default function Leaderboard() {
         setLoading(false);
       }
     };
-
     fetchHouseholds();
   }, [userId]);
 
+  // Fetch household member ID
+  useEffect(() => {
+    if (!selectedHousehold || !userId) return;
+    const fetchMemberId = async () => {
+      try {
+        const res = await fetch(
+          getApiUrl(`api/householdmembers/${selectedHousehold}/user/${userId}`)
+        );
+        if (!res.ok) throw new Error("Failed to fetch household member ID");
+        const data = await res.json();
+        setHouseholdMemberId(data?.id ?? null);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchMemberId();
+  }, [selectedHousehold, userId]);
+
+  // Fetch household members
+  useEffect(() => {
+    if (!selectedHousehold) return;
+    const fetchMembers = async () => {
+      try {
+        const res = await fetch(
+          getApiUrl(`api/householdmembers/${selectedHousehold}`)
+        );
+        if (!res.ok) throw new Error("Failed to fetch members");
+        const data = await res.json();
+        setHouseholdMembers(data || []);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchMembers();
+  }, [selectedHousehold]);
+
+  // Fetch quests
+  useEffect(() => {
+    if (!householdMemberId) return;
+    const fetchQuests = async () => {
+      try {
+        const res = await fetch(
+          getApiUrl(`api/memberquests/${householdMemberId}`)
+        );
+        if (!res.ok) throw new Error("Failed to fetch quests");
+        const data = await res.json();
+        setQuests(data ?? []);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchQuests();
+  }, [householdMemberId]);
+
   if (loading) return <p>Loading...</p>;
-
-  // If no households, don't show leaderboard
-  if (households.length === 0)
-    return <p>You are not part of any household yet.</p>;
-
-  console.log("Households for user:", households);
+  if (!households.length) return <p>You are not part of any household yet.</p>;
 
   return (
     <div className="px-6">
@@ -81,23 +128,32 @@ export default function Leaderboard() {
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Households</SelectLabel>
-              {households.map((household) => (
-                <SelectItem key={household.id} value={household.id}>
-                  {household.name}
+              {households.map((h) => (
+                <SelectItem key={h.id} value={h.id}>
+                  {h.name}
                 </SelectItem>
               ))}
             </SelectGroup>
           </SelectContent>
         </Select>
       </div>
-      {selectedHousehold && (
-        <Ranking householdId={selectedHousehold} />
+
+      {selectedHousehold && householdMemberId && (
+        <>
+          <Ranking householdMembers={householdMembers} />
+          <h2 className="text-2xl font-bold mt-4">Quests</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Complete quests to earn rewards!
+          </p>
+          <Quests
+            householdMemberId={householdMemberId}
+            quests={quests}
+            setQuests={setQuests}
+            householdMembers={householdMembers}
+            setHouseholdMembers={setHouseholdMembers}
+          />
+        </>
       )}
-      <h2 className="text-2xl font-bold mt-4">Quests</h2>
-      <h2 className="text-sm text-gray-600 mb-4">
-        Complete quests to earn rewards!
-      </h2>
-      <Quests householdId={selectedHousehold} />
     </div>
   );
 }

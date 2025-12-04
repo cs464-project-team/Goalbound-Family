@@ -8,10 +8,17 @@ namespace GoalboundFamily.Api.Services;
 public class MemberQuestService : IMemberQuestService
 {
     private readonly IMemberQuestRepository _repo;
+    private readonly IHouseholdMemberRepository _memberRepo;
+    private readonly IQuestRepository _questRepo;
 
-    public MemberQuestService(IMemberQuestRepository repo)
+    public MemberQuestService(
+        IMemberQuestRepository repo, 
+        IHouseholdMemberRepository memberRepo,
+        IQuestRepository questRepo)
     {
         _repo = repo;
+        _memberRepo = memberRepo;
+        _questRepo = questRepo;
     }
 
     private static MemberQuestDto ToDto(MemberQuest mq)
@@ -110,7 +117,25 @@ public class MemberQuestService : IMemberQuestService
         mq.Status = "claimed";
         mq.ClaimedAt = DateTime.UtcNow;
 
+        // Add XP to household member
+        var member = await _memberRepo.GetByIdAsync(memberId);
+
+        if (member == null)
+            throw new InvalidOperationException("Household member not found.");
+
+        // Ensure the quest info is loaded (if not eager loaded)
+        if (mq.Quest == null)
+        {
+            mq.Quest = await _questRepo.GetByIdAsync(questId);
+            if (mq.Quest == null)
+                throw new InvalidOperationException("Quest not found.");
+        }
+
+        member.Xp += mq.Quest.XpReward;
+
+        // Update repo
         await _repo.UpdateAsync(mq);
+        await _memberRepo.UpdateAsync(member);
         await _repo.SaveChangesAsync();
 
         return true;

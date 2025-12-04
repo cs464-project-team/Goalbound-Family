@@ -4,93 +4,42 @@ import { Separator } from "@/components/ui/separator";
 
 import { QuestTable } from "./quests-table";
 import { TimedQuests } from "./timed-quests-card";
-
-import { useState, useEffect } from "react";
-import { useAuthContext } from "../../context/AuthProvider";
-import { getApiUrl } from "../../config/api";
-
-interface MemberQuestDto {
-  householdMemberId: string; // Guid -> string
-  questId: string;           // Guid -> string
-
-  // MemberQuest fields
-  status: string;
-  progress: number;
-  assignedAt: string;        // DateTime -> string (ISO format)
-  startTime?: string;        // nullable DateTime
-  completedAt?: string;      // nullable DateTime
-  claimedAt?: string;        // nullable DateTime
-
-  // Quest fields
-  title: string;
-  description: string;
-  xpReward: number;
-  category: string;
-  type: string;
-  difficulty: string;
-  target: number;
-}
+import type { MemberQuestDto } from '../../types/MemberQuestDto';
+import type { HouseholdMemberDto } from '../../types/HouseholdMemberDto';
 
 interface QuestsProps {
-  householdId: string;
+  householdMemberId: string | null;
+  quests: MemberQuestDto[];
+  setQuests: React.Dispatch<React.SetStateAction<MemberQuestDto[]>>;
+  householdMembers: HouseholdMemberDto[];
+  setHouseholdMembers: React.Dispatch<React.SetStateAction<HouseholdMemberDto[]>>;
 }
 
-export function Quests({ householdId }: QuestsProps) {
-  const { userId } = useAuthContext();
-  const [householdMemberId, setHouseholdMemberId] = useState<string | null>(
-    null
-  );
-  const [quests, setQuests] = useState<MemberQuestDto[]>([]);
+export function Quests({ householdMemberId, quests, setQuests, householdMembers, setHouseholdMembers }: QuestsProps) {
+  if (!householdMemberId) return <p>Loading...</p>;
+  if (!quests || quests.length === 0) return <p>No quests available</p>;
 
-  const fetchHouseholdMemberId = async () => {
-    try {
-      const res = await fetch(
-        getApiUrl(`api/householdmembers/${householdId}/user/${userId}`)
-      );
-      if (!res.ok) throw new Error("Failed to fetch households");
-      const data = await res.json();
-      setHouseholdMemberId(data?.id ?? null);
-    } catch (error) {
-      console.error(error);
-      setHouseholdMemberId(null); // fallback on error
-    }
+  const dailyQuests = quests.filter(q => q.type === "daily");
+  const weeklyQuests = quests.filter(q => q.type === "weekly");
+  const timedQuest = quests.find(q => q.type === "timed") || null;
+
+  // Update quest status + XP optimistically
+  const markQuestClaimed = (questId: string) => {
+    const quest = quests.find(q => q.questId === questId);
+    if (!quest) return;
+
+    // Update quest status
+    setQuests(prev => prev.map(q => q.questId === questId ? { ...q, status: "claimed" } : q));
+
+    // Update household member XP
+    setHouseholdMembers(prev =>
+      prev.map(member =>
+        member.id === householdMemberId
+          ? { ...member, xp: member.xp + quest.xpReward, questsCompleted: member.questsCompleted + 1 }
+          : member
+      )
+    );
   };
-
-  const fetchQuests = async () => {
-    if (!householdMemberId) return;
-    try {
-      const res = await fetch(
-        `http://localhost:5073/api/memberquests/${householdMemberId}`
-      );
-      if (!res.ok) throw new Error("Failed to fetch quests");
-      const data = await res.json();
-      console.log("Fetched quests data:", data);
-      setQuests(data ?? []);
-    } catch (error) {
-      console.error(error);
-      setQuests([]); // fallback on error
-    }
-  };
-
-  // Fetch household member ID when householdId or userId changes
-  useEffect(() => {
-    if (!householdId || !userId) return;
-    fetchHouseholdMemberId();
-  }, [householdId, userId]);
-
-  // Fetch quests when householdMemberId is available
-  useEffect(() => {
-    if (!householdMemberId) return;
-    fetchQuests();
-  }, [householdMemberId]);
-
-  console.log("HouseholdMemberId:", householdMemberId);
-  console.log("Quests:", quests);
-
-  const dailyQuests = quests.filter((q) => q.type === "daily");
-  const weeklyQuests = quests.filter((q) => q.type === "weekly");
-  const timedQuest: Quest | null =
-    quests.find((q) => q.type === "timed") || null;
 
   return (
     <>
@@ -103,12 +52,12 @@ export function Quests({ householdId }: QuestsProps) {
             {/* Daily Quests */}
             <h3 className="text-xl font-bold mb-4">📅 Daily Quests</h3>
             <Separator className="mb-4" />
-            <QuestTable quests={dailyQuests} />
+            <QuestTable quests={dailyQuests} householdMemberId={householdMemberId} onClaim={markQuestClaimed} />
 
             {/* Weekly Quests */}
             <h3 className="text-xl font-bold mb-4">📅 Weekly Quests</h3>
             <Separator className="mb-4" />
-            <QuestTable quests={weeklyQuests} />
+            <QuestTable quests={weeklyQuests} householdMemberId={householdMemberId} onClaim={markQuestClaimed} />
           </div>
         </>
       )}

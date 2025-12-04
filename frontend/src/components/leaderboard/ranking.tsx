@@ -11,71 +11,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { useState, useEffect } from "react";
 import { useAuthContext } from "../../context/AuthProvider";
-import { getApiUrl } from '../../config/api';
+import type { HouseholdMemberDto } from "../../types/HouseholdMemberDto";
 
-interface MemberBadgeDto {
-  badgeId: string;      // Guid -> string
-  name: string;
-  description: string;
-  icon: string;
-  earnedAt: string;     // DateTime -> string (ISO format)
-}
-
-interface HouseholdMemberDto {
-  id: string;              // Guid -> string
-  userId: string;          // Guid -> string
-  firstName: string;
-  lastName: string;
-  email: string;
-
-  // Combined name for UI display
-  userName: string;
-
-  role: string;            // default: "Member"
-  joinedAt: string;        // DateTime -> string (ISO format)
-
-  // Optional avatar
-  avatar: string;
-
-  // Gamification
-  xp: number;              // default: 0
-  streak: number;          // default: 0
-  questsCompleted: number; // default: 0
-
-  // Badges
-  badges: MemberBadgeDto[];
-}
-
-interface RankingProps {
-  householdId: string;
-}
-
-export function Ranking({ householdId }: RankingProps) {
+export function Ranking({ householdMembers }: { householdMembers: HouseholdMemberDto[] }) {
   const { userId } = useAuthContext();
-  const [householdMembers, setHouseholdMembers] = useState<HouseholdMemberDto[]>([]);
-
-  const fetchHouseholdMembers = async () => {
-    try {
-      const res = await fetch(
-        getApiUrl(`api/householdmembers/${householdId}`)
-      );
-      if (!res.ok) throw new Error("Failed to fetch households");
-      const data = await res.json();
-      setHouseholdMembers(data || []); // fallback to empty array
-    } catch (error) {
-      console.error(error);
-      setHouseholdMembers([]); // fallback on error
-    }
-  };
-
-  useEffect(() => {
-    if (!householdId) return;
-    fetchHouseholdMembers();
-  }, [householdId]);
-
-  console.log("Household Members:", householdMembers);
 
   // Sort members by XP descending
   const sortedMembers = [...householdMembers].sort((a, b) => b.xp - a.xp);
