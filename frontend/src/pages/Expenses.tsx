@@ -210,18 +210,36 @@ function Expenses() {
     const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
 
     return (
-        <div className="dashboard-container">
-            <h1 className="dashboard-title">Expense History</h1>
+        <div className="dashboard-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem' }}>
+            <div style={{ marginBottom: '2rem', paddingBottom: '1rem' }}>
+                <h1 className="dashboard-title" style={{ fontSize: '2.75rem', fontWeight: '700', marginBottom: '0.75rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.5px' }}>Expense History</h1>
+                <p style={{ color: '#64748b', fontSize: '1.05rem', fontWeight: '400' }}>Track and manage all your household expenses</p>
+            </div>
 
             {/* Household Selector */}
             {households.length > 0 && (
-                <div className="household-selector" style={{ marginBottom: '1rem' }}>
-                    <label htmlFor="household-select"><strong>Select Household:</strong></label>
+                <div className="household-selector" style={{
+                    marginBottom: '1.5rem',
+                    padding: '1.25rem 1.5rem',
+                    background: 'white',
+                    borderRadius: '12px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                    border: '1px solid rgba(0,0,0,0.05)'
+                }}>
+                    <label htmlFor="household-select" style={{ fontWeight: '600', marginRight: '1rem' }}>Select Household:</label>
                     <select
                         id="household-select"
                         value={selectedHouseholdId ?? ''}
                         onChange={e => setSelectedHouseholdId(e.target.value)}
-                        style={{ marginLeft: '0.5rem', padding: '0.5rem', borderRadius: '4px' }}
+                        style={{
+                            marginLeft: '0.5rem',
+                            padding: '0.6rem 1rem',
+                            borderRadius: '8px',
+                            border: '2px solid #e2e8f0',
+                            fontSize: '0.95rem',
+                            transition: 'all 0.2s ease',
+                            cursor: 'pointer'
+                        }}
                     >
                         {households.map(h => (
                             <option key={h.id} value={h.id}>{h.name}</option>
@@ -231,14 +249,32 @@ function Expenses() {
             )}
 
             {/* Period Selector */}
-            <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <div style={{
+                marginBottom: '1.5rem',
+                padding: '1.25rem 1.5rem',
+                background: 'white',
+                borderRadius: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                border: '1px solid rgba(0,0,0,0.05)',
+                display: 'flex',
+                gap: '1.5rem',
+                alignItems: 'center',
+                flexWrap: 'wrap'
+            }}>
                 <div>
-                    <label htmlFor="month-select"><strong>Month:</strong></label>
+                    <label htmlFor="month-select" style={{ fontWeight: '600', marginRight: '0.75rem' }}>Month:</label>
                     <select
                         id="month-select"
                         value={selectedMonth}
                         onChange={e => setSelectedMonth(Number(e.target.value))}
-                        style={{ marginLeft: '0.5rem', padding: '0.5rem', borderRadius: '4px' }}
+                        style={{
+                            padding: '0.6rem 1rem',
+                            borderRadius: '8px',
+                            border: '2px solid #e2e8f0',
+                            fontSize: '0.95rem',
+                            transition: 'all 0.2s ease',
+                            cursor: 'pointer'
+                        }}
                     >
                         {months.map((month, idx) => (
                             <option key={idx} value={idx + 1}>{month}</option>
@@ -246,12 +282,19 @@ function Expenses() {
                     </select>
                 </div>
                 <div>
-                    <label htmlFor="year-select"><strong>Year:</strong></label>
+                    <label htmlFor="year-select" style={{ fontWeight: '600', marginRight: '0.75rem' }}>Year:</label>
                     <select
                         id="year-select"
                         value={selectedYear}
                         onChange={e => setSelectedYear(Number(e.target.value))}
-                        style={{ marginLeft: '0.5rem', padding: '0.5rem', borderRadius: '4px' }}
+                        style={{
+                            padding: '0.6rem 1rem',
+                            borderRadius: '8px',
+                            border: '2px solid #e2e8f0',
+                            fontSize: '0.95rem',
+                            transition: 'all 0.2s ease',
+                            cursor: 'pointer'
+                        }}
                     >
                         {years.map(year => (
                             <option key={year} value={year}>{year}</option>
@@ -261,17 +304,39 @@ function Expenses() {
             </div>
 
             {/* View Mode Toggle */}
-            <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{
+                marginBottom: '1.5rem',
+                padding: '0.5rem',
+                background: 'white',
+                borderRadius: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                border: '1px solid rgba(0,0,0,0.05)',
+                display: 'inline-flex',
+                gap: '0.5rem'
+            }}>
                 <button
                     className={viewMode === 'receipts' ? 'primary-btn' : 'secondary-btn'}
                     onClick={() => setViewMode('receipts')}
-                    style={{ marginRight: '0.5rem' }}
+                    style={{
+                        padding: '0.65rem 1.5rem',
+                        borderRadius: '8px',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '500',
+                        boxShadow: viewMode === 'receipts' ? '0 2px 6px rgba(102, 126, 234, 0.3)' : 'none'
+                    }}
                 >
                     Receipts
                 </button>
                 <button
                     className={viewMode === 'expenses' ? 'primary-btn' : 'secondary-btn'}
                     onClick={() => setViewMode('expenses')}
+                    style={{
+                        padding: '0.65rem 1.5rem',
+                        borderRadius: '8px',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '500',
+                        boxShadow: viewMode === 'expenses' ? '0 2px 6px rgba(102, 126, 234, 0.3)' : 'none'
+                    }}
                 >
                     My Expenses
                 </button>
@@ -285,28 +350,34 @@ function Expenses() {
                         {/* Summary */}
                         <div style={{
                             marginBottom: '2rem',
-                            padding: '1rem',
-                            background: '#f0f4f8',
-                            borderRadius: '8px',
+                            padding: '1.5rem 2rem',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            borderRadius: '12px',
                             display: 'flex',
-                            gap: '2rem'
+                            gap: '3rem',
+                            boxShadow: '0 4px 12px rgba(102, 126, 234, 0.25)',
+                            color: 'white'
                         }}>
                             {viewMode === 'receipts' ? (
                                 <>
                                     <div>
-                                        <strong>Total Receipts:</strong> {receipts.length}
+                                        <div style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '0.25rem' }}>Total Receipts</div>
+                                        <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>{receipts.length}</div>
                                     </div>
                                     <div>
-                                        <strong>Total Amount:</strong> ${receipts.reduce((sum, r) => sum + (r.totalAmount || 0), 0).toFixed(2)}
+                                        <div style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '0.25rem' }}>Total Amount</div>
+                                        <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>${receipts.reduce((sum, r) => sum + (r.totalAmount || 0), 0).toFixed(2)}</div>
                                     </div>
                                 </>
                             ) : (
                                 <>
                                     <div>
-                                        <strong>My Total Expenses:</strong> ${expenses.reduce((sum, e) => sum + e.amount, 0).toFixed(2)}
+                                        <div style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '0.25rem' }}>My Total Expenses</div>
+                                        <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>${expenses.reduce((sum, e) => sum + e.amount, 0).toFixed(2)}</div>
                                     </div>
                                     <div>
-                                        <strong>Number of Expenses:</strong> {expenses.length}
+                                        <div style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '0.25rem' }}>Number of Expenses</div>
+                                        <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>{expenses.length}</div>
                                     </div>
                                 </>
                             )}
@@ -322,11 +393,21 @@ function Expenses() {
                                             <div
                                                 key={receipt.id}
                                                 style={{
-                                                    border: '1px solid #ddd',
-                                                    borderRadius: '8px',
-                                                    padding: '1.5rem',
+                                                    border: '1px solid rgba(0,0,0,0.08)',
+                                                    borderRadius: '12px',
+                                                    padding: '1.75rem',
                                                     background: '#fff',
-                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                                    boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+                                                    transition: 'all 0.2s ease',
+                                                    cursor: 'default'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.06)';
+                                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)';
+                                                    e.currentTarget.style.transform = 'translateY(0)';
                                                 }}
                                             >
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
@@ -351,7 +432,14 @@ function Expenses() {
                                                         <button
                                                             className="secondary-btn"
                                                             onClick={() => toggleReceipt(receipt.id)}
-                                                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '0.5rem',
+                                                                borderRadius: '8px',
+                                                                transition: 'all 0.2s ease',
+                                                                padding: '0.6rem 1rem'
+                                                            }}
                                                         >
                                                             {expandedReceipts.has(receipt.id) ? 'Hide' : 'Show'} Items
                                                         </button>
@@ -361,7 +449,15 @@ function Expenses() {
                                                                 receipt.imagePath,
                                                                 receipt.originalFileName
                                                             )}
-                                                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '0.5rem',
+                                                                borderRadius: '8px',
+                                                                transition: 'all 0.2s ease',
+                                                                padding: '0.6rem 1rem',
+                                                                boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)'
+                                                            }}
                                                         >
                                                             <Download size={16} />
                                                             Download
