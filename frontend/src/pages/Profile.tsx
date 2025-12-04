@@ -130,36 +130,6 @@ function Profile() {
 
                     </div>
                 </div>
-
-                <div style={{
-                    marginTop: '2.5rem',
-                    paddingTop: '2rem',
-                    borderTop: '2px solid #e2e8f0'
-                }}>
-                    <h3 style={{
-                        fontSize: '1.4rem',
-                        fontWeight: '600',
-                        marginBottom: '1.25rem',
-                        color: '#1e293b'
-                    }}>
-                        Profile Settings
-                    </h3>
-                    <div style={{
-                        padding: '1.5rem',
-                        background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-                        borderRadius: '12px',
-                        border: '2px solid #bae6fd'
-                    }}>
-                        <p style={{
-                            color: '#0c4a6e',
-                            fontSize: '1rem',
-                            lineHeight: '1.6',
-                            margin: 0
-                        }}>
-                            Additional profile settings and customization options will be available here in future updates.
-                        </p>
-                    </div>
-                </div>
             </div>
         </div>
     );
