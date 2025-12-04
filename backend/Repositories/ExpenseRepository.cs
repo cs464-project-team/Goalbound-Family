@@ -41,7 +41,7 @@ public class ExpenseRepository : Repository<Expense>, IExpenseRepository
             .OrderByDescending(e => e.Date)
             .ToListAsync();
     }
-    
+
     public async Task<int> GetCountByUserMonthAsync(Guid userId, int year, int month, string? category = null)
     {
         var query = _dbSet
