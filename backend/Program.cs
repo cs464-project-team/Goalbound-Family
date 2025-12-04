@@ -76,7 +76,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // Default Vite dev server port
+        policy.WithOrigins(
+                  "http://localhost:5173", // Default Vite dev server port
+                  "https://goalbound-family.vercel.app" // Production frontend
+              )
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
