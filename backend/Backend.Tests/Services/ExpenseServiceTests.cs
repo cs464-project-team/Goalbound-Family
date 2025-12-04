@@ -7,6 +7,7 @@ using GoalboundFamily.Api.DTOs;
 using GoalboundFamily.Api.Models;
 using GoalboundFamily.Api.Repositories.Interfaces;
 using GoalboundFamily.Api.Services;
+using GoalboundFamily.Api.Services.Interfaces;
 using Moq;
 using Xunit;
 
@@ -16,13 +17,25 @@ public class ExpenseServiceTests
 {
     private readonly Mock<IExpenseRepository> _expenseRepositoryMock;
     private readonly Mock<IBudgetCategoryRepository> _categoryRepositoryMock;
+    private readonly Mock<IHouseholdAuthorizationService> _authServiceMock;
     private readonly ExpenseService _service;
 
     public ExpenseServiceTests()
     {
         _expenseRepositoryMock = new Mock<IExpenseRepository>();
         _categoryRepositoryMock = new Mock<IBudgetCategoryRepository>();
-        _service = new ExpenseService(_expenseRepositoryMock.Object, _categoryRepositoryMock.Object);
+        _authServiceMock = new Mock<IHouseholdAuthorizationService>();
+
+        // Setup auth service to allow all validations by default
+        _authServiceMock
+            .Setup(a => a.ValidateHouseholdAccessAsync(It.IsAny<Guid>(), It.IsAny<Guid>()))
+            .Returns(Task.CompletedTask);
+
+        _authServiceMock
+            .Setup(a => a.GetUserHouseholdIdsAsync(It.IsAny<Guid>()))
+            .ReturnsAsync(new List<Guid>());
+
+        _service = new ExpenseService(_expenseRepositoryMock.Object, _categoryRepositoryMock.Object, _authServiceMock.Object);
     }
 
     [Fact]
@@ -62,7 +75,7 @@ public class ExpenseServiceTests
             .ReturnsAsync(category);
 
         // Act
-        var result = await _service.CreateAsync(request);
+        var result = await _service.CreateAsync(request, userId);
 
         // Assert
         result.Should().NotBeNull();
@@ -94,7 +107,7 @@ public class ExpenseServiceTests
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(async () =>
         {
-            await _service.CreateAsync(request);
+            await _service.CreateAsync(request, Guid.NewGuid());
         });
 
         _expenseRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Expense>()), Times.Never);
@@ -117,7 +130,7 @@ public class ExpenseServiceTests
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(async () =>
         {
-            await _service.CreateAsync(request);
+            await _service.CreateAsync(request, Guid.NewGuid());
         });
 
         _expenseRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Expense>()), Times.Never);
@@ -163,7 +176,7 @@ public class ExpenseServiceTests
             .ReturnsAsync(category);
 
         // Act
-        var result = await _service.CreateBulkAsync(request);
+        var result = await _service.CreateBulkAsync(request, user1Id);
 
         // Assert
         result.Should().HaveCount(2);
@@ -198,7 +211,7 @@ public class ExpenseServiceTests
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(async () =>
         {
-            await _service.CreateBulkAsync(request);
+            await _service.CreateBulkAsync(request, Guid.NewGuid());
         });
 
         _expenseRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Expense>()), Times.Never);
@@ -219,7 +232,7 @@ public class ExpenseServiceTests
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(async () =>
         {
-            await _service.CreateBulkAsync(request);
+            await _service.CreateBulkAsync(request, Guid.NewGuid());
         });
 
         _expenseRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Expense>()), Times.Never);
@@ -244,7 +257,7 @@ public class ExpenseServiceTests
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(async () =>
         {
-            await _service.CreateBulkAsync(request);
+            await _service.CreateBulkAsync(request, Guid.NewGuid());
         });
 
         _expenseRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Expense>()), Times.Never);
@@ -269,7 +282,7 @@ public class ExpenseServiceTests
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(async () =>
         {
-            await _service.CreateBulkAsync(request);
+            await _service.CreateBulkAsync(request, Guid.NewGuid());
         });
 
         _expenseRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Expense>()), Times.Never);
@@ -316,7 +329,8 @@ public class ExpenseServiceTests
             .ReturnsAsync(expenses);
 
         // Act
-        var result = await _service.GetByHouseholdMonthAsync(householdId, year, month);
+        var requestingUserId = Guid.NewGuid();
+        var result = await _service.GetByHouseholdMonthAsync(householdId, year, month, requestingUserId);
 
         // Assert
         result.Should().HaveCount(2);
@@ -343,7 +357,7 @@ public class ExpenseServiceTests
             .ReturnsAsync(new List<Expense>());
 
         // Act
-        var result = await _service.GetByHouseholdMonthAsync(householdId, year, month);
+        var result = await _service.GetByHouseholdMonthAsync(householdId, year, month, Guid.NewGuid());
 
         // Assert
         result.Should().BeEmpty();
@@ -356,6 +370,8 @@ public class ExpenseServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
+        var householdId1 = Guid.NewGuid();
+        var householdId2 = Guid.NewGuid();
         var year = 2024;
         var month = 1;
 
@@ -364,7 +380,7 @@ public class ExpenseServiceTests
             new()
             {
                 Id = Guid.NewGuid(),
-                HouseholdId = Guid.NewGuid(),
+                HouseholdId = householdId1,
                 UserId = userId,
                 CategoryId = Guid.NewGuid(),
                 Amount = 30.00m,
@@ -376,7 +392,7 @@ public class ExpenseServiceTests
             new()
             {
                 Id = Guid.NewGuid(),
-                HouseholdId = Guid.NewGuid(),
+                HouseholdId = householdId2,
                 UserId = userId,
                 CategoryId = Guid.NewGuid(),
                 Amount = 45.00m,
@@ -387,12 +403,18 @@ public class ExpenseServiceTests
             }
         };
 
+        var householdIds = new List<Guid> { householdId1, householdId2 };
+
+        _authServiceMock
+            .Setup(a => a.GetUserHouseholdIdsAsync(userId))
+            .ReturnsAsync(householdIds);
+
         _expenseRepositoryMock
-            .Setup(r => r.GetByUserMonthAsync(userId, year, month))
+            .Setup(r => r.GetByUserMonthFilteredAsync(userId, year, month, householdIds))
             .ReturnsAsync(expenses);
 
         // Act
-        var result = await _service.GetByUserMonthAsync(userId, year, month);
+        var result = await _service.GetByUserMonthAsync(userId, year, month, userId);
 
         // Assert
         result.Should().HaveCount(2);
@@ -404,7 +426,7 @@ public class ExpenseServiceTests
         resultList[1].Amount.Should().Be(45.00m);
         resultList[1].CategoryName.Should().Be("Entertainment");
 
-        _expenseRepositoryMock.Verify(r => r.GetByUserMonthAsync(userId, year, month), Times.Once);
+        _expenseRepositoryMock.Verify(r => r.GetByUserMonthFilteredAsync(userId, year, month, householdIds), Times.Once);
     }
 
     [Fact]
@@ -414,18 +436,23 @@ public class ExpenseServiceTests
         var userId = Guid.NewGuid();
         var year = 2024;
         var month = 1;
+        var householdIds = new List<Guid> { Guid.NewGuid() };
+
+        _authServiceMock
+            .Setup(a => a.GetUserHouseholdIdsAsync(userId))
+            .ReturnsAsync(householdIds);
 
         _expenseRepositoryMock
-            .Setup(r => r.GetByUserMonthAsync(userId, year, month))
+            .Setup(r => r.GetByUserMonthFilteredAsync(userId, year, month, householdIds))
             .ReturnsAsync(new List<Expense>());
 
         // Act
-        var result = await _service.GetByUserMonthAsync(userId, year, month);
+        var result = await _service.GetByUserMonthAsync(userId, year, month, userId);
 
         // Assert
         result.Should().BeEmpty();
 
-        _expenseRepositoryMock.Verify(r => r.GetByUserMonthAsync(userId, year, month), Times.Once);
+        _expenseRepositoryMock.Verify(r => r.GetByUserMonthFilteredAsync(userId, year, month, householdIds), Times.Once);
     }
 
     [Fact]
@@ -455,7 +482,7 @@ public class ExpenseServiceTests
             .ReturnsAsync((BudgetCategory?)null);
 
         // Act
-        var result = await _service.CreateAsync(request);
+        var result = await _service.CreateAsync(request, Guid.NewGuid());
 
         // Assert
         result.Should().NotBeNull();
@@ -500,7 +527,7 @@ public class ExpenseServiceTests
             .ReturnsAsync(category);
 
         // Act
-        var result = await _service.CreateBulkAsync(request);
+        var result = await _service.CreateBulkAsync(request, userId);
 
         // Assert
         result.Should().HaveCount(1);
