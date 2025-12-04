@@ -16,7 +16,7 @@ public class HouseholdMemberService : IHouseholdMemberService
 
     public async Task<IEnumerable<HouseholdMemberDto>> GetMembersAsync(Guid householdId)
     {
-        var members = await _memberRepo.FindAsync(m => m.HouseholdId == householdId);
+        var members = await _memberRepo.GetByHouseholdIdAsync(householdId);
 
         return members.Select(m => new HouseholdMemberDto
         {
@@ -25,6 +25,7 @@ public class HouseholdMemberService : IHouseholdMemberService
             FirstName = m.User?.FirstName ?? "",
             LastName = m.User?.LastName ?? "",
             Email = m.User?.Email ?? "",
+            UserName = $"{m.User?.FirstName ?? ""} {m.User?.LastName ?? ""}".Trim(),
             Role = m.Role,
             JoinedAt = m.JoinedAt
         });
@@ -62,10 +63,19 @@ public class HouseholdMemberService : IHouseholdMemberService
         return true;
     }
 
-    public async Task<bool> RemoveMemberAsync(Guid memberId)
+    public async Task<bool> RemoveMemberAsync(Guid memberId, Guid requestingUserId)
     {
         var member = await _memberRepo.GetByIdAsync(memberId);
         if (member == null) return false;
+
+        // Users can remove themselves, or the household owner can remove any member
+        bool isSelfRemoval = member.UserId == requestingUserId;
+        bool isOwnerRemoval = member.Household?.ParentId == requestingUserId;
+
+        if (!isSelfRemoval && !isOwnerRemoval)
+        {
+            return false; // Unauthorized
+        }
 
         await _memberRepo.DeleteAsync(member);
         await _memberRepo.SaveChangesAsync();
