@@ -561,7 +561,7 @@ export default function ReceiptUploadWithAssignment() {
 
     // Validate amounts
     for (const item of validItems) {
-      const baseAmount = 0;parseFloat(item.amount);
+      const baseAmount = parseFloat(item.amount);
       if (isNaN(baseAmount) || baseAmount <= 0) {
         setError(`Invalid amount for "${item.description}". Amount must be greater than 0.`);
         return;
