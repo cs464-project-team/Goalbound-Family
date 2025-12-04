@@ -100,6 +100,7 @@ builder.Services.AddScoped<IBudgetCategoryRepository, BudgetCategoryRepository>(
 builder.Services.AddScoped<IHouseholdBudgetRepository, HouseholdBudgetRepository>();
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
 builder.Services.AddScoped<IMemberQuestRepository, MemberQuestRepository>();
+builder.Services.AddScoped<IQuestRepository, QuestRepository>();
 // Add more repositories here as you create them
 
 // Register Services
