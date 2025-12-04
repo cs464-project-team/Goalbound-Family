@@ -26,14 +26,15 @@ vi.mock("../../src/config/api", () => ({
 describe("ReceiptUploadWithAssignment Component", () => {
   beforeEach(() => {
     // Mock fetch
-    global.fetch = vi.fn((url: string) => {
-      if (url.includes("/api/households/user/")) {
+    globalThis.fetch = vi.fn((url: RequestInfo | URL) => {
+      const urlString = url.toString();
+      if (urlString.includes("/api/households/user/")) {
         return Promise.resolve({
           ok: true,
           json: async () => [{ id: "household-1", name: "Test Household" }],
         } as Response);
       }
-      if (url.includes("/api/households/") && url.includes("/members")) {
+      if (urlString.includes("/api/households/") && urlString.includes("/members")) {
         return Promise.resolve({
           ok: true,
           json: async () => [
@@ -41,7 +42,7 @@ describe("ReceiptUploadWithAssignment Component", () => {
           ],
         } as Response);
       }
-      if (url.includes("/api/budgets/categories/")) {
+      if (urlString.includes("/api/budgets/categories/")) {
         return Promise.resolve({
           ok: true,
           json: async () => [{ id: "category-1", name: "Groceries" }],
@@ -88,7 +89,7 @@ describe("ReceiptUploadWithAssignment Component", () => {
     );
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(globalThis.fetch).toHaveBeenCalledWith(
         expect.stringContaining("/api/households/user/")
       );
     });

@@ -26,8 +26,9 @@ vi.mock("../../src/config/api", () => ({
 describe("Expenses Page", () => {
   beforeEach(() => {
     // Mock fetch
-    global.fetch = vi.fn((url: string) => {
-      if (url.includes("/api/householdmembers/user/")) {
+    globalThis.fetch = vi.fn((url: RequestInfo | URL) => {
+      const urlString = url.toString();
+      if (urlString.includes("/api/householdmembers/user/")) {
         return Promise.resolve({
           ok: true,
           json: async () => [
@@ -35,13 +36,13 @@ describe("Expenses Page", () => {
           ],
         } as Response);
       }
-      if (url.includes("/api/receipts/household/")) {
+      if (urlString.includes("/api/receipts/household/")) {
         return Promise.resolve({
           ok: true,
           json: async () => [],
         } as Response);
       }
-      if (url.includes("/api/expenses/user/")) {
+      if (urlString.includes("/api/expenses/user/")) {
         return Promise.resolve({
           ok: true,
           json: async () => [],
@@ -88,7 +89,7 @@ describe("Expenses Page", () => {
     );
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalled();
+      expect(globalThis.fetch).toHaveBeenCalled();
     });
   });
 });
