@@ -86,7 +86,7 @@ export function Ranking({ householdMembers }: { householdMembers: HouseholdMembe
                   <span>🎯 {user.questsCompleted} quests</span>
                   <span>🔥 {user.streak} days</span>
                 </div>
-                <div className="flex space-x-1 mt-3">
+                {/* <div className="flex space-x-1 mt-3">
                 {user.badges.map((badge, i) => (
                   <span
                     key={i}
@@ -95,7 +95,7 @@ export function Ranking({ householdMembers }: { householdMembers: HouseholdMembe
                     {badge.name}
                   </span>
                 ))}
-              </div>
+              </div> */}
               </div>
             </div>
           ))}
@@ -111,7 +111,7 @@ export function Ranking({ householdMembers }: { householdMembers: HouseholdMembe
               <TableHead className="text-center">XP</TableHead>
               <TableHead className="text-center">Streaks</TableHead>
               <TableHead className="text-center">Quests</TableHead>
-              <TableHead>Badge</TableHead>
+              {/* <TableHead>Badge</TableHead> */}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -144,7 +144,7 @@ export function Ranking({ householdMembers }: { householdMembers: HouseholdMembe
                 <TableCell className="text-center">
                   {user.questsCompleted} completed
                 </TableCell>
-                <TableCell>
+                {/* <TableCell>
                 <div className="flex gap-1">
                   {user.badges.map((badge, i) => (
                     <span
@@ -155,7 +155,7 @@ export function Ranking({ householdMembers }: { householdMembers: HouseholdMembe
                     </span>
                   ))}
                 </div>
-              </TableCell>
+              </TableCell> */}
               </TableRow>
             ))}
           </TableBody>

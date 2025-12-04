@@ -26,4 +26,18 @@ public class MemberQuestRepository : Repository<MemberQuest>, IMemberQuestReposi
                 mq.QuestId == questId
             );
     }
+
+    /// <summary>
+    /// Get all active quests for a member and household filtered by category
+    /// </summary>
+    public async Task<IEnumerable<MemberQuest>> GetActiveQuestsAsync(Guid memberId, string category)
+    {
+        return await _dbSet
+            .Include(mq => mq.Quest) // include quest template
+            .Where(mq => mq.HouseholdMemberId == memberId
+                      && mq.Quest.Category == category
+                      && mq.Status == "in progress") // only active quests
+            .ToListAsync();
+    }
+
 }

@@ -9,25 +9,47 @@ public class InvitationService : IInvitationService
 {
     private readonly IInvitationRepository _inviteRepo;
     private readonly IHouseholdMemberRepository _memberRepo;
+    private readonly IHouseholdRepository _householdRepo;
+    private readonly IUserRepository _userRepo;
 
     public InvitationService(
         IInvitationRepository inviteRepo,
-        IHouseholdMemberRepository memberRepo)
+        IHouseholdMemberRepository memberRepo,
+        IHouseholdRepository householdRepo,
+        IUserRepository userRepo)
     {
         _inviteRepo = inviteRepo;
         _memberRepo = memberRepo;
+        _householdRepo = householdRepo;
+        _userRepo = userRepo;
     }
 
-    public async Task<InvitationDto> CreateAsync(CreateInvitationRequest request)
+    public async Task<InvitationDto> CreateAsync(CreateInvitationRequest request, Guid invitedByUserId)
     {
+        // Validate household exists
+        var household = await _householdRepo.GetByIdAsync(request.HouseholdId);
+        if (household == null)
+        {
+            throw new InvalidOperationException($"Household with ID {request.HouseholdId} does not exist");
+        }
+
+        // Validate user exists
+        var user = await _userRepo.GetByIdAsync(invitedByUserId);
+        if (user == null)
+        {
+            throw new InvalidOperationException($"User with ID {invitedByUserId} does not exist");
+        }
+
         var token = Guid.NewGuid().ToString();
+        var expiresInDays = request.ExpiresInDays ?? 7;
 
         var invitation = new Invitation
         {
             // Email = request.Email,
             HouseholdId = request.HouseholdId,
-            InvitedByUserId = request.InvitedByUserId,
-            Token = token
+            InvitedByUserId = invitedByUserId,
+            Token = token,
+            ExpiresAt = DateTime.UtcNow.AddDays(expiresInDays)
         };
 
         await _inviteRepo.AddAsync(invitation);

@@ -10,14 +10,17 @@ public class ExpenseService : IExpenseService
     private readonly IExpenseRepository _repo;
     private readonly IBudgetCategoryRepository _categoryRepo;
     private readonly IHouseholdAuthorizationService _authService;
+    private readonly IQuestProgressService _questService;
+
 
     public ExpenseService(
         IExpenseRepository repo,
         IBudgetCategoryRepository categoryRepo,
-        IHouseholdAuthorizationService authService)
+        IHouseholdAuthorizationService authService, IQuestProgressService questService)
     {
         _repo = repo;
         _categoryRepo = categoryRepo;
+        _questService = questService;
         _authService = authService;
     }
 
@@ -48,6 +51,9 @@ public class ExpenseService : IExpenseService
         await _repo.SaveChangesAsync();
 
         var cat = await _categoryRepo.GetByIdAsync(expense.CategoryId);
+
+        // **Trigger quest progress event**
+        await _questService.HandleExpenseLogged(expense.UserId, expense.HouseholdId, cat?.Name ?? string.Empty);
 
         return new ExpenseDto
         {
@@ -100,6 +106,12 @@ public class ExpenseService : IExpenseService
 
         var cat = await _categoryRepo.GetByIdAsync(request.CategoryId);
         var categoryName = cat?.Name ?? string.Empty;
+
+        // **Trigger quest progress events for each user**
+        foreach (var expense in expenses)
+        {
+            await _questService.HandleExpenseLogged(expense.UserId, expense.HouseholdId, cat?.Name ?? string.Empty);
+        }
 
         return expenses.Select(e => new ExpenseDto
         {

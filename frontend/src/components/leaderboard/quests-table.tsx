@@ -1,82 +1,115 @@
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-
-import { getApiUrl } from '../../config/api';
+import { Badge } from "@/components/ui/badge";
+import { authenticatedFetch } from '../../services/authService';
+import { getApiUrl } from "../../config/api";
 import type { MemberQuestDto } from '../../types/MemberQuestDto';
-import { categoryIcons } from '../../types/QuestCategory';
 
-interface QuestRequest {
-  memberId: string;
-  questId: string;
-}
-
-interface QuestRowProps {
+interface QuestTableProps {
   quests: MemberQuestDto[];
   householdMemberId: string;
-  onClaim: (questId: string) => void;  // <--- this is the type
+  onClaim: (questId: string) => void;
 }
 
-export const QuestTable: React.FC<QuestRowProps> = ({ quests, householdMemberId, onClaim }) => {
-    async function handleClaim(questId: string) {
-      const reqBody: QuestRequest = { memberId: householdMemberId, questId };
-    
-      const response = await fetch(getApiUrl("/api/memberquests/claim"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(reqBody),
+export function QuestTable({ quests, householdMemberId, onClaim }: QuestTableProps) {
+  const handleClaim = async (questId: string) => {
+    try {
+      const res = await authenticatedFetch(getApiUrl('/api/memberquests/claim'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberId: householdMemberId,
+          questId: questId
+        })
       });
-    
-      if (response.ok) {
-        onClaim(questId);
-        console.log("Quest claimed successfully!");
-      } else if (response.status === 404) {
-        console.log("Quest not found or not eligible to claim.");
-      } else {
-        console.error("Failed to claim quest:", response.statusText);
-      }
-    }
 
-    return (
-      <div className="flex flex-col">
-        {quests.map((quest) => (
-          <div key={quest.questId}>
-            <div className="flex justify-between items-center text-sm">
-              <div className="flex items-center gap-3">
-                <span className="text-5xl">{categoryIcons[quest.category] ?? categoryIcons["others"]}</span>
-                <div className="flex flex-col leading-tight">
-                  <p className="font-bold text-lg">{quest.title}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {quest.description}
-                  </p>
-                </div>
-              </div>
-              <Button
-                disabled={quest.status !== "completed"} // disabled if not "completed"
-                className="justify-end"
-                onClick={() => handleClaim(quest.questId)}
-              >
-                {quest.status === "claimed"
-                  ? "Reward Claimed" // show this if already claimed
-                  : `Claim ${quest.xpReward} XP`}{" "}
-              </Button>
-            </div>
-  
-            <div className="relative w-full my-4">
-              <Progress
-                value={(quest.progress / quest.target) * 100}
-                className="h-6 rounded-md bg-gray-100 *:bg-gray-200 shadow"
-              />
-              <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">
-                {quest.progress} / {quest.target}
-              </span>
-            </div>
-  
-            <Separator className="my-8" />
-          </div>
-        ))}
-      </div>
-    );
+      if (!res.ok) throw new Error('Failed to claim quest');
+      onClaim(questId);
+    } catch (error) {
+      console.error('Error claiming quest:', error);
+    }
+  };
+
+  if (!quests || quests.length === 0) {
+    return <p className="text-gray-500 text-center py-4">No quests available</p>;
   }
+
+  return (
+    <div className="space-y-4">
+      {quests.map((quest) => {
+        const progressPercent = quest.target > 0 ? (quest.progress / quest.target) * 100 : 0;
+        const isCompleted = quest.status === 'completed';
+        const isClaimed = quest.status === 'claimed';
+
+        return (
+          <div
+            key={quest.questId}
+            className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+          >
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="font-semibold text-lg">{quest.title}</h4>
+                  <Badge
+                    variant={
+                      quest.difficulty === 'easy'
+                        ? 'default'
+                        : quest.difficulty === 'medium'
+                        ? 'secondary'
+                        : 'destructive'
+                    }
+                  >
+                    {quest.difficulty}
+                  </Badge>
+                  {isClaimed && (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+                      Claimed
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600">{quest.description}</p>
+              </div>
+              <div className="text-right ml-4">
+                <div className="text-xl font-bold text-purple-600">{quest.xpReward} XP</div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Progress</span>
+                <span>
+                  {quest.progress} / {quest.target}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="h-2 rounded-full transition-all"
+                  style={{ 
+                    width: Math.min(progressPercent, 100) + '%',
+                    backgroundColor: isCompleted ? 'rgb(34, 197, 94)' : 'rgb(147, 51, 234)'
+                  }}
+                />
+              </div>
+            </div>
+
+            {isCompleted && !isClaimed && (
+              <div className="mt-3">
+                <Button
+                  onClick={() => handleClaim(quest.questId)}
+                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                >
+                  Claim Reward (+{quest.xpReward} XP)
+                </Button>
+              </div>
+            )}
+
+            {isClaimed && (
+              <div className="mt-3 text-center text-sm text-green-600 font-medium">
+                Quest completed and claimed!
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}

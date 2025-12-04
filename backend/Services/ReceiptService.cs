@@ -19,6 +19,7 @@ public class ReceiptService : IReceiptService
     private readonly ApplicationDbContext _dbContext;
     private readonly IHouseholdAuthorizationService _authService;
     private readonly ILogger<ReceiptService> _logger;
+    private readonly IQuestProgressService _questService;
 
     public ReceiptService(
         IReceiptRepository receiptRepository,
@@ -27,7 +28,8 @@ public class ReceiptService : IReceiptService
         ISupabaseStorageService storageService,
         ApplicationDbContext dbContext,
         IHouseholdAuthorizationService authService,
-        ILogger<ReceiptService> logger)
+        ILogger<ReceiptService> logger,
+        IQuestProgressService questService)
     {
         _receiptRepository = receiptRepository;
         _ocrService = ocrService;
@@ -36,6 +38,7 @@ public class ReceiptService : IReceiptService
         _dbContext = dbContext;
         _authService = authService;
         _logger = logger;
+        _questService = questService;
     }
 
     public async Task<ReceiptResponseDto> UploadReceiptAsync(ReceiptUploadDto uploadDto, Guid requestingUserId)
@@ -125,6 +128,11 @@ public class ReceiptService : IReceiptService
 
             _logger.LogInformation("Receipt {ReceiptId} processed successfully with {ItemCount} items",
                 receipt.Id, items.Count);
+
+            if (receipt.HouseholdId.HasValue)
+            {
+                await _questService.HandleReceiptScanned(receipt.UserId, receipt.HouseholdId.Value);
+            }
 
             // Reload receipt with household members for response
             var receiptWithMembers = await _dbContext.Receipts

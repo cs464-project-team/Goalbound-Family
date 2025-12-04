@@ -19,7 +19,7 @@ public class CreateInvitationRequest
 {
     // public string Email { get; set; } = string.Empty;
     public Guid HouseholdId { get; set; }
-    public Guid InvitedByUserId { get; set; }
+    public int? ExpiresInDays { get; set; } = 7; // Optional, defaults to 7 days
 }
 
 public class AcceptInvitationRequest

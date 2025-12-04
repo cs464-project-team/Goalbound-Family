@@ -26,4 +26,6 @@ public interface IReceiptRepository : IRepository<Receipt>
     /// Update multiple items for a receipt
     /// </summary>
     Task UpdateReceiptItemsAsync(Guid receiptId, List<ReceiptItem> items);
+
+    Task<int> GetReceiptCountByUserAndHouseholdAsync(Guid userId, Guid householdId);
 }

@@ -7,7 +7,7 @@ namespace GoalboundFamily.Api.Controllers;
 
 [ApiController]
 [Route("api/invitations")]
-[Authorize]
+// [Authorize]
 public class InvitationsController : ControllerBase
 {
     private readonly IInvitationService _service;
@@ -22,7 +22,14 @@ public class InvitationsController : ControllerBase
     {
         try
         {
-            var result = await _service.CreateAsync(request);
+            // Extract user ID from JWT claims
+            var userIdClaim = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { error = "User not authenticated" });
+            }
+
+            var result = await _service.CreateAsync(request, userId);
             return Ok(result);
         }
         catch (InvalidOperationException ex)
