@@ -8,7 +8,7 @@ namespace GoalboundFamily.Api.Controllers;
 /// Controller for receipt OCR and management
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/receipts")]
 public class ReceiptsController : ControllerBase
 {
     private readonly IReceiptService _receiptService;

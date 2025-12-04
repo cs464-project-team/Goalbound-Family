@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GoalboundFamily.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/invitations")]
 public class InvitationsController : ControllerBase
 {
     private readonly IInvitationService _service;
