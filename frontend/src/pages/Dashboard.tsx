@@ -60,7 +60,7 @@ function Dashboard() {
 
     useEffect(() => {
         if (!session?.user?.id) return;
-        authenticatedFetch(getApiUrl(`/api/householdmembers/user/${session.user.id}`))
+        authenticatedFetch(getApiUrl(`/api/households/user/${session.user.id}`))
             .then(res => res.json())
             .then((data: Household[]) => {
                 setHouseholds(data);
@@ -130,7 +130,7 @@ function Dashboard() {
             if (!res.ok) throw new Error('Failed to create household');
             setShowCreateForm(false);
             setNewHouseholdName('');
-            const data: Household[] = await authenticatedFetch(getApiUrl(`/api/householdmembers/user/${session?.user.id}`)).then(r => r.json());
+            const data: Household[] = await authenticatedFetch(getApiUrl(`/api/households/user/${session?.user.id}`)).then(r => r.json());
             setHouseholds(data);
             if (data.length > 0) setSelectedHouseholdId(data[0].id);
         } catch (err: unknown) {

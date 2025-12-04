@@ -28,7 +28,7 @@ describe("Expenses Page", () => {
     // Mock fetch
     globalThis.fetch = vi.fn((url: RequestInfo | URL) => {
       const urlString = url.toString();
-      if (urlString.includes("/api/householdmembers/user/")) {
+      if (urlString.includes("/api/households/user/")) {
         return Promise.resolve({
           ok: true,
           json: async () => [

@@ -16,15 +16,21 @@ public class InvitationServiceTests
 {
     private readonly Mock<IInvitationRepository> _invitationRepositoryMock;
     private readonly Mock<IHouseholdMemberRepository> _memberRepositoryMock;
+    private readonly Mock<IHouseholdRepository> _householdRepositoryMock;
+    private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly InvitationService _service;
 
     public InvitationServiceTests()
     {
         _invitationRepositoryMock = new Mock<IInvitationRepository>();
         _memberRepositoryMock = new Mock<IHouseholdMemberRepository>();
+        _householdRepositoryMock = new Mock<IHouseholdRepository>();
+        _userRepositoryMock = new Mock<IUserRepository>();
         _service = new InvitationService(
             _invitationRepositoryMock.Object,
-            _memberRepositoryMock.Object);
+            _memberRepositoryMock.Object,
+            _householdRepositoryMock.Object,
+            _userRepositoryMock.Object);
     }
 
     #region CreateAsync Tests
@@ -38,9 +44,14 @@ public class InvitationServiceTests
 
         var request = new CreateInvitationRequest
         {
-            HouseholdId = householdId,
-            InvitedByUserId = invitedByUserId
+            HouseholdId = householdId
         };
+
+        _householdRepositoryMock.Setup(x => x.GetByIdAsync(householdId))
+            .ReturnsAsync(new Household { Id = householdId, Name = "Test Household" });
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(invitedByUserId))
+            .ReturnsAsync(new User { Id = invitedByUserId, Email = "test@example.com" });
 
         _invitationRepositoryMock.Setup(x => x.AddAsync(It.IsAny<Invitation>()))
             .ReturnsAsync(new Invitation
@@ -57,7 +68,7 @@ public class InvitationServiceTests
             .Returns(Task.FromResult(1));
 
         // Act
-        var result = await _service.CreateAsync(request);
+        var result = await _service.CreateAsync(request, invitedByUserId);
 
         // Assert
         result.Should().NotBeNull();
@@ -69,6 +80,49 @@ public class InvitationServiceTests
 
         _invitationRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Invitation>()), Times.Once);
         _invitationRepositoryMock.Verify(x => x.SaveChangesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAsync_HouseholdDoesNotExist_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var householdId = Guid.NewGuid();
+        var invitedByUserId = Guid.NewGuid();
+
+        var request = new CreateInvitationRequest
+        {
+            HouseholdId = householdId
+        };
+
+        _householdRepositoryMock.Setup(x => x.GetByIdAsync(householdId))
+            .ReturnsAsync((Household?)null);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.CreateAsync(request, invitedByUserId));
+        exception.Message.Should().Contain(householdId.ToString());
+    }
+
+    [Fact]
+    public async Task CreateAsync_UserDoesNotExist_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var householdId = Guid.NewGuid();
+        var invitedByUserId = Guid.NewGuid();
+
+        var request = new CreateInvitationRequest
+        {
+            HouseholdId = householdId
+        };
+
+        _householdRepositoryMock.Setup(x => x.GetByIdAsync(householdId))
+            .ReturnsAsync(new Household { Id = householdId, Name = "Test Household" });
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(invitedByUserId))
+            .ReturnsAsync((User?)null);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.CreateAsync(request, invitedByUserId));
+        exception.Message.Should().Contain(invitedByUserId.ToString());
     }
 
     #endregion

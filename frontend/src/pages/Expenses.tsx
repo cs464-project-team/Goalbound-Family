@@ -71,7 +71,7 @@ function Expenses() {
 
     useEffect(() => {
         if (!session?.user?.id) return;
-        authenticatedFetch(getApiUrl(`/api/householdmembers/user/${session.user.id}`))
+        authenticatedFetch(getApiUrl(`/api/households/user/${session.user.id}`))
             .then(res => res.json())
             .then((data: Household[]) => {
                 setHouseholds(data);

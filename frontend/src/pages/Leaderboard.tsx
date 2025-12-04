@@ -16,6 +16,7 @@ import {
   SelectLabel,
 } from "@/components/ui/select";
 import { getApiUrl } from "../config/api";
+import { authenticatedFetch } from '../services/authService';
 import type { HouseholdDto } from "../types/HouseholdDto";
 import type { HouseholdMemberDto } from "../types/HouseholdMemberDto";
 import type { MemberQuestDto } from "../types/MemberQuestDto";
@@ -43,8 +44,8 @@ export default function Leaderboard() {
     if (!userId) return;
     const fetchHouseholds = async () => {
       try {
-        const res = await fetch(
-          getApiUrl(`api/householdmembers/user/${userId}`)
+        const res = await authenticatedFetch(
+          getApiUrl(`api/households/user/${userId}`)
         );
         if (!res.ok) throw new Error("Failed to fetch households");
         const data = await res.json();
@@ -64,7 +65,7 @@ export default function Leaderboard() {
     if (!selectedHousehold || !userId) return;
     const fetchMemberId = async () => {
       try {
-        const res = await fetch(
+        const res = await authenticatedFetch(
           getApiUrl(`api/householdmembers/${selectedHousehold}/user/${userId}`)
         );
         if (!res.ok) throw new Error("Failed to fetch household member ID");
@@ -82,8 +83,8 @@ export default function Leaderboard() {
     if (!selectedHousehold) return;
     const fetchMembers = async () => {
       try {
-        const res = await fetch(
-          getApiUrl(`api/householdmembers/${selectedHousehold}`)
+        const res = await authenticatedFetch(
+          getApiUrl(`api/households/${selectedHousehold}/members`)
         );
         if (!res.ok) throw new Error("Failed to fetch members");
         const data = await res.json();
@@ -100,7 +101,7 @@ export default function Leaderboard() {
     if (!householdMemberId) return;
     const fetchQuests = async () => {
       try {
-        const res = await fetch(
+        const res = await authenticatedFetch(
           getApiUrl(`api/memberquests/${householdMemberId}`)
         );
         if (!res.ok) throw new Error("Failed to fetch quests");

@@ -1,6 +1,7 @@
 using GoalboundFamily.Api.Events;
 using GoalboundFamily.Api.Services.Interfaces;
 using GoalboundFamily.Api.Repositories.Interfaces;
+using GoalboundFamily.Api.Models;
 
 namespace GoalboundFamily.Api.Services;
 
@@ -26,10 +27,10 @@ public class QuestProgressService : IQuestProgressService
         // 1. Get total receipts scanned
         int totalReceipts = await _receiptRepo.GetReceiptCountByUserAndHouseholdAsync(userId, householdId);
 
-        HouseholdMember? householdMember = await _householdMemberRepo.GetByUserIdAsync(userId);
+        HouseholdMember? householdMember = await _householdMemberRepo.GetByUserAndHouseholdAsync(userId, householdId);
         if (householdMember == null)
         {
-            throw new InvalidOperationException($"User {userId} is not a member of any household.");
+            throw new InvalidOperationException($"User {userId} is not a member of household {householdId}.");
         }
 
         // 2. Get all active quests for this member in "receipt" category
@@ -38,10 +39,10 @@ public class QuestProgressService : IQuestProgressService
         // 3. Update progress
         foreach (var mq in activeQuests)
         {
-            mq.Progress = Math.max(mq.Quest.Target, totalReceipts); // set progress to actual total
+            mq.Progress = Math.Min(mq.Quest.Target, totalReceipts); // set progress to actual total
             if (mq.Progress >= mq.Quest.Target)
             {
-                mq.IsCompleted = true;
+                mq.Status = "completed";
                 mq.CompletedAt = DateTime.UtcNow;
             }
 
@@ -57,10 +58,10 @@ public class QuestProgressService : IQuestProgressService
         // 1. Get total expenses in this category
         int totalExpenses = await _expenseRepository.GetCountByUserMonthAsync(userId, year, month);
 
-        HouseholdMember? householdMember = await _householdMemberRepo.GetByUserIdAsync(userId);
+        HouseholdMember? householdMember = await _householdMemberRepo.GetByUserAndHouseholdAsync(userId, householdId);
         if (householdMember == null)
         {
-            throw new InvalidOperationException($"User {userId} is not a member of any household.");
+            throw new InvalidOperationException($"User {userId} is not a member of household {householdId}.");
         }
 
         // 2. Get all active quests for this member in "expense" category
@@ -69,10 +70,10 @@ public class QuestProgressService : IQuestProgressService
         // 3. Update progress
         foreach (var mq in activeQuests)
         {
-            mq.Progress = Math.max(mq.Quest.Target, totalExpenses); // set progress to actual total
+            mq.Progress = Math.Min(mq.Quest.Target, totalExpenses); // set progress to actual total
             if (mq.Progress >= mq.Quest.Target)
             {
-                mq.IsCompleted = true;
+                mq.Status = "completed";
                 mq.CompletedAt = DateTime.UtcNow;
             }
 

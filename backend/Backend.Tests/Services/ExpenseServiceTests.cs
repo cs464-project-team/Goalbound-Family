@@ -18,6 +18,7 @@ public class ExpenseServiceTests
     private readonly Mock<IExpenseRepository> _expenseRepositoryMock;
     private readonly Mock<IBudgetCategoryRepository> _categoryRepositoryMock;
     private readonly Mock<IHouseholdAuthorizationService> _authServiceMock;
+    private readonly Mock<IQuestProgressService> _questProgressServiceMock;
     private readonly ExpenseService _service;
 
     public ExpenseServiceTests()
@@ -25,6 +26,7 @@ public class ExpenseServiceTests
         _expenseRepositoryMock = new Mock<IExpenseRepository>();
         _categoryRepositoryMock = new Mock<IBudgetCategoryRepository>();
         _authServiceMock = new Mock<IHouseholdAuthorizationService>();
+        _questProgressServiceMock = new Mock<IQuestProgressService>();
 
         // Setup auth service to allow all validations by default
         _authServiceMock
@@ -35,7 +37,7 @@ public class ExpenseServiceTests
             .Setup(a => a.GetUserHouseholdIdsAsync(It.IsAny<Guid>()))
             .ReturnsAsync(new List<Guid>());
 
-        _service = new ExpenseService(_expenseRepositoryMock.Object, _categoryRepositoryMock.Object, _authServiceMock.Object);
+        _service = new ExpenseService(_expenseRepositoryMock.Object, _categoryRepositoryMock.Object, _authServiceMock.Object, _questProgressServiceMock.Object);
     }
 
     [Fact]

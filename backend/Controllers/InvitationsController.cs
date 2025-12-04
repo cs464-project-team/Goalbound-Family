@@ -20,8 +20,22 @@ public class InvitationsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<InvitationDto>> Create(CreateInvitationRequest request)
     {
-        var result = await _service.CreateAsync(request);
-        return Ok(result);
+        try
+        {
+            // Get authenticated user ID from JWT token
+            var userIdClaim = User.FindFirst("sub")?.Value;
+            if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var authenticatedUserId))
+            {
+                return Unauthorized(new { error = "User authentication failed" });
+            }
+
+            var result = await _service.CreateAsync(request, authenticatedUserId);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpPost("accept")]
