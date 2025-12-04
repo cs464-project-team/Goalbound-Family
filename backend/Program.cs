@@ -5,6 +5,9 @@ using GoalboundFamily.Api.Repositories.Interfaces;
 using GoalboundFamily.Api.Services;
 using GoalboundFamily.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 var contentRoot = Directory.GetCurrentDirectory();
@@ -36,6 +39,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
+builder.Services.AddAuthorization();
 
 // Configure Database (Supabase PostgreSQL)
 // Build connection string from individual environment variables
@@ -84,6 +88,30 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod()
               .AllowCredentials();
     });
+});
+
+// ✅ ADD THIS: Configure JWT Authentication
+var jwtSecret = builder.Configuration["Supabase:JwtSecret"] 
+    ?? throw new InvalidOperationException("JWT Secret not configured");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+        ValidateIssuer = true,
+        ValidIssuer = builder.Configuration["Supabase:Url"] + "/auth/v1",
+        ValidateAudience = true,
+        ValidAudience = "authenticated", // Supabase uses "authenticated" as audience
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
 });
 
 // Configure HttpClient for Python OCR service
@@ -146,6 +174,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
