@@ -165,18 +165,37 @@ function Budgets() {
     }
 
     return (
-        <div className="dashboard-container">
-            <h1 className="dashboard-title">Budget Management</h1>
+        <div className="dashboard-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem', minHeight: '100vh' }}>
+            <div style={{ marginBottom: '2.5rem', paddingBottom: '1rem' }}>
+                <h1 className="dashboard-title" style={{ fontSize: '2.75rem', fontWeight: '700', marginBottom: '0.75rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.5px' }}>Budget Management</h1>
+                <p style={{ color: '#64748b', fontSize: '1.15rem', fontWeight: '400' }}>Set and monitor your household budget limits</p>
+            </div>
 
             {/* Household Selector */}
             {households.length > 0 && (
-                <div className="household-selector" style={{ marginBottom: '2rem' }}>
-                    <label htmlFor="household-select"><strong>Select Family:</strong></label>
+                <div className="household-selector" style={{
+                    marginBottom: '2rem',
+                    padding: '1.75rem',
+                    background: 'white',
+                    borderRadius: '16px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+                    border: '1px solid rgba(0,0,0,0.05)'
+                }}>
+                    <label htmlFor="household-select" style={{ fontWeight: '600', fontSize: '1rem', marginRight: '1rem' }}>Select Family:</label>
                     <select
                         id="household-select"
                         value={selectedHouseholdId ?? ''}
                         onChange={e => setSelectedHouseholdId(e.target.value)}
-                        style={{ marginLeft: '0.5rem', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ddd' }}
+                        style={{
+                            padding: '0.75rem 1rem',
+                            borderRadius: '10px',
+                            border: '2px solid #e2e8f0',
+                            fontSize: '1rem',
+                            minWidth: '250px',
+                            transition: 'all 0.2s ease',
+                            cursor: 'pointer',
+                            background: 'white'
+                        }}
                     >
                         {households.map(h => (
                             <option key={h.id} value={h.id}>{h.name}</option>
@@ -194,9 +213,16 @@ function Budgets() {
             ) : (
                 <div className="budgets-content">
                     {/* Add Category Section */}
-                    <div style={{ marginBottom: '2rem' }}>
+                    <div style={{
+                        marginBottom: '2rem',
+                        padding: '1.5rem',
+                        background: 'white',
+                        borderRadius: '16px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+                        border: '1px solid rgba(0,0,0,0.05)'
+                    }}>
                         {showAddCategory ? (
-                            <form onSubmit={handleAddCategory} className="add-category-form" style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                            <form onSubmit={handleAddCategory} className="add-category-form" style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
                                 <input
                                     type="text"
                                     value={newCategoryName}
@@ -204,27 +230,49 @@ function Budgets() {
                                     placeholder="Category name"
                                     required
                                     className="input"
-                                    style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ddd' }}
+                                    style={{
+                                        padding: '0.75rem 1rem',
+                                        borderRadius: '10px',
+                                        border: '2px solid #e2e8f0',
+                                        fontSize: '1rem',
+                                        flex: '1',
+                                        minWidth: '250px',
+                                        transition: 'border-color 0.2s ease'
+                                    }}
                                 />
-                                <button type="submit" className="primary-btn" disabled={addingCategory}>
+                                <button type="submit" className="primary-btn" disabled={addingCategory} style={{
+                                    padding: '0.75rem 1.5rem',
+                                    borderRadius: '10px',
+                                    transition: 'all 0.2s ease',
+                                    boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)'
+                                }}>
                                     {addingCategory ? 'Adding...' : 'Add Category'}
                                 </button>
-                                <button type="button" className="secondary-btn" onClick={() => setShowAddCategory(false)}>
+                                <button type="button" className="secondary-btn" onClick={() => setShowAddCategory(false)} style={{
+                                    padding: '0.75rem 1.5rem',
+                                    borderRadius: '10px',
+                                    transition: 'all 0.2s ease'
+                                }}>
                                     Cancel
                                 </button>
-                                {categoryError && <div className="error-msg">{categoryError}</div>}
+                                {categoryError && <div className="error-msg" style={{ width: '100%', marginTop: '0.5rem' }}>{categoryError}</div>}
                             </form>
                         ) : (
-                            <button type="button" className="primary-btn" onClick={() => setShowAddCategory(true)}>
-                                Add New Category
+                            <button type="button" className="primary-btn" onClick={() => setShowAddCategory(true)} style={{
+                                padding: '0.75rem 1.5rem',
+                                borderRadius: '10px',
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)'
+                            }}>
+                                + Add New Category
                             </button>
                         )}
                     </div>
 
                     {/* Budget Categories List */}
-                    <div className="categories-section">
-                        <h2>Budget Categories</h2>
-                        <div className="categories-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+                    <div className="categories-section" style={{ marginBottom: '2.5rem' }}>
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1e293b' }}>Budget Categories</h2>
+                        <div className="categories-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.25rem', marginTop: '1rem' }}>
                             {categories.length === 0 ? (
                                 <div>No categories yet. Add one to get started!</div>
                             ) : (
@@ -232,18 +280,30 @@ function Budgets() {
                                     const budget = budgets.find(b => b.categoryId === cat.id);
                                     return (
                                         <div key={cat.id} className="category-box" style={{
-                                            border: '1px solid #ddd',
-                                            borderRadius: '8px',
-                                            padding: '1.5rem',
-                                            background: '#fafbfc',
-                                            boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
-                                            transition: 'box-shadow 0.2s'
+                                            border: '1px solid rgba(0,0,0,0.08)',
+                                            borderRadius: '16px',
+                                            padding: '1.75rem',
+                                            background: 'white',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+                                            transition: 'all 0.2s ease',
+                                            cursor: 'default'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.06)';
+                                            e.currentTarget.style.transform = 'translateY(-2px)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)';
+                                            e.currentTarget.style.transform = 'translateY(0)';
                                         }}>
-                                            <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem' }}>{cat.name}</h3>
-                                            <div style={{ marginBottom: '1rem', color: '#555' }}>
-                                                Current Limit: {budget ? <strong>${budget.limit.toFixed(2)}</strong> : <span style={{ color: '#888' }}>Not set</span>}
+                                            <h3 style={{ margin: '0 0 1.25rem 0', fontSize: '1.2rem', fontWeight: '600', color: '#1e293b' }}>{cat.name}</h3>
+                                            <div style={{ marginBottom: '1.25rem', padding: '1rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '10px', color: 'white' }}>
+                                                <div style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '0.25rem' }}>Current Limit</div>
+                                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                                                    {budget ? `$${budget.limit.toFixed(2)}` : 'Not set'}
+                                                </div>
                                             </div>
-                                            <form onSubmit={e => { e.preventDefault(); handleSetBudget(cat.id); }} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                            <form onSubmit={e => { e.preventDefault(); handleSetBudget(cat.id); }} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -252,13 +312,26 @@ function Budgets() {
                                                     onChange={e => setBudgetInputs(prev => ({ ...prev, [cat.id]: e.target.value }))}
                                                     placeholder="Enter budget limit"
                                                     className="input"
-                                                    style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ddd' }}
+                                                    style={{
+                                                        padding: '0.75rem 1rem',
+                                                        borderRadius: '10px',
+                                                        border: '2px solid #e2e8f0',
+                                                        fontSize: '1rem',
+                                                        transition: 'border-color 0.2s ease'
+                                                    }}
                                                 />
                                                 <button
                                                     type="submit"
                                                     className="primary-btn"
                                                     disabled={budgetLoading[cat.id] || !budgetInputs[cat.id] || isNaN(Number(budgetInputs[cat.id]))}
-                                                    style={{ width: '100%' }}
+                                                    style={{
+                                                        width: '100%',
+                                                        padding: '0.75rem',
+                                                        borderRadius: '10px',
+                                                        transition: 'all 0.2s ease',
+                                                        boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)',
+                                                        fontWeight: '500'
+                                                    }}
                                                 >
                                                     {budgetLoading[cat.id] ? 'Saving...' : (budget ? 'Update Limit' : 'Set Limit')}
                                                 </button>
@@ -273,47 +346,71 @@ function Budgets() {
 
                     {/* Categories Summary Table */}
                     {dashboard && dashboard.categories.length > 0 && (
-                        <div style={{ marginTop: '3rem' }}>
-                            <h2>Budget Overview</h2>
-                            <table className="dashboard-categories-table" style={{ width: '100%', marginTop: '1rem', borderCollapse: 'collapse' }}>
+                        <div style={{
+                            marginTop: '3rem',
+                            padding: '2rem',
+                            background: 'white',
+                            borderRadius: '16px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+                            border: '1px solid rgba(0,0,0,0.05)'
+                        }}>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1e293b' }}>Budget Overview</h2>
+                            <div style={{ overflowX: 'auto' }}>
+                                <table className="dashboard-categories-table" style={{ width: '100%', marginTop: '1rem', borderCollapse: 'collapse' }}>
                                 <thead>
-                                    <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #ddd' }}>
-                                        <th style={{ padding: '1rem', textAlign: 'left' }}>Category</th>
-                                        <th style={{ padding: '1rem', textAlign: 'right' }}>Budget Limit</th>
-                                        <th style={{ padding: '1rem', textAlign: 'right' }}>Spent</th>
-                                        <th style={{ padding: '1rem', textAlign: 'right' }}>Remaining</th>
-                                        <th style={{ padding: '1rem', textAlign: 'center' }}>Progress</th>
+                                    <tr style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+                                        <th style={{ padding: '1rem 1.25rem', textAlign: 'left', fontWeight: '600', fontSize: '0.95rem' }}>Category</th>
+                                        <th style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: '600', fontSize: '0.95rem' }}>Budget Limit</th>
+                                        <th style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: '600', fontSize: '0.95rem' }}>Spent</th>
+                                        <th style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: '600', fontSize: '0.95rem' }}>Remaining</th>
+                                        <th style={{ padding: '1rem 1.25rem', textAlign: 'center', fontWeight: '600', fontSize: '0.95rem' }}>Progress</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {dashboard.categories.map(cat => (
-                                        <tr key={cat.categoryId} style={{ borderBottom: '1px solid #eee' }}>
-                                            <td style={{ padding: '1rem' }}>{cat.categoryName}</td>
-                                            <td style={{ padding: '1rem', textAlign: 'right' }}>${cat.budgetLimit.toFixed(2)}</td>
-                                            <td style={{ padding: '1rem', textAlign: 'right', color: cat.spent > cat.budgetLimit ? '#e53e3e' : '#333' }}>
+                                    {dashboard.categories.map((cat, idx) => (
+                                        <tr key={cat.categoryId} style={{
+                                            borderBottom: '1px solid #e2e8f0',
+                                            background: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
+                                            transition: 'background 0.2s ease'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.background = '#f1f5f9';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.background = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                                        }}>
+                                            <td style={{ padding: '1.25rem', fontWeight: '500' }}>{cat.categoryName}</td>
+                                            <td style={{ padding: '1.25rem', textAlign: 'right', fontWeight: '500' }}>${cat.budgetLimit.toFixed(2)}</td>
+                                            <td style={{ padding: '1.25rem', textAlign: 'right', color: cat.spent > cat.budgetLimit ? '#e53e3e' : '#333', fontWeight: '500' }}>
                                                 ${cat.spent.toFixed(2)}
                                             </td>
-                                            <td style={{ padding: '1rem', textAlign: 'right', color: cat.remaining < 0 ? '#e53e3e' : '#38a169' }}>
+                                            <td style={{ padding: '1.25rem', textAlign: 'right', color: cat.remaining < 0 ? '#e53e3e' : '#38a169', fontWeight: '600' }}>
                                                 ${cat.remaining.toFixed(2)}
                                             </td>
-                                            <td style={{ padding: '1rem', textAlign: 'center' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
-                                                    <progress
-                                                        value={cat.progress}
-                                                        max={1}
-                                                        style={{
-                                                            width: '100px',
-                                                            height: '8px',
-                                                            accentColor: cat.progress > 0.9 ? '#e53e3e' : cat.progress > 0.7 ? '#f59e0b' : '#38a169'
-                                                        }}
-                                                    />
-                                                    <span>{(cat.progress * 100).toFixed(0)}%</span>
+                                            <td style={{ padding: '1.25rem', textAlign: 'center' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: 'center' }}>
+                                                    <div style={{
+                                                        width: '120px',
+                                                        height: '10px',
+                                                        background: '#e2e8f0',
+                                                        borderRadius: '5px',
+                                                        overflow: 'hidden'
+                                                    }}>
+                                                        <div style={{
+                                                            width: `${Math.min(cat.progress * 100, 100)}%`,
+                                                            height: '100%',
+                                                            background: cat.progress > 0.9 ? '#e53e3e' : cat.progress > 0.7 ? '#f59e0b' : '#38a169',
+                                                            transition: 'width 0.3s ease'
+                                                        }} />
+                                                    </div>
+                                                    <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{(cat.progress * 100).toFixed(0)}%</span>
                                                 </div>
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
+                            </div>
                         </div>
                     )}
                 </div>
