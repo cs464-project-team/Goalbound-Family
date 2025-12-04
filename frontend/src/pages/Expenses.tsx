@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useAuthContext } from '../context/AuthProvider';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { Download, Receipt as ReceiptIcon, FileText, Calendar, Tag } from 'lucide-react';
 import '../styles/Dashboard.css';
 import { getApiUrl } from '../config/api';
@@ -256,6 +256,36 @@ function Expenses() {
                             <option key={h.id} value={h.id}>{h.name}</option>
                         ))}
                     </select>
+                </div>
+            )}
+
+            {/* No household message for Receipts view */}
+            {viewMode === 'receipts' && households.length === 0 && (
+                <div style={{
+                    marginBottom: '1.5rem',
+                    padding: 'clamp(1.5rem, 3vw, 2.5rem)',
+                    background: 'white',
+                    borderRadius: '12px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                    border: '1px solid rgba(0,0,0,0.05)',
+                    textAlign: 'center'
+                }}>
+                    <p style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#64748b' }}>
+                        You need to be part of a household to view receipts.
+                    </p>
+                    <Link to="/dashboard" style={{
+                        display: 'inline-block',
+                        padding: '0.75rem 1.5rem',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        color: 'white',
+                        borderRadius: '10px',
+                        textDecoration: 'none',
+                        fontWeight: '600',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)'
+                    }}>
+                        Go to Dashboard to Create a Household
+                    </Link>
                 </div>
             )}
 

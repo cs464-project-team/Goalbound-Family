@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuthContext } from '../context/AuthProvider';
 import { getApiUrl } from '../config/api';
 import { authenticatedFetch } from '../services/authService';
+import { Link } from 'react-router-dom';
 
 // Types
 interface Household {
@@ -690,6 +691,56 @@ export default function ReceiptUploadWithAssignment() {
       <div className="max-w-6xl mx-auto p-6">
         <div className="bg-white rounded-lg shadow p-6">
           <p className="text-gray-600">Loading user information...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if no households
+  if (households.length === 0) {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <div style={{
+          padding: '3rem 2rem',
+          background: 'white',
+          borderRadius: '16px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+          border: '1px solid rgba(0,0,0,0.05)',
+          textAlign: 'center'
+        }}>
+          <h2 style={{
+            fontSize: '1.75rem',
+            fontWeight: '700',
+            marginBottom: '1rem',
+            color: '#1e293b'
+          }}>
+            No Household Found
+          </h2>
+          <p style={{
+            fontSize: '1.1rem',
+            marginBottom: '1.5rem',
+            color: '#64748b',
+            lineHeight: '1.6'
+          }}>
+            You need to be part of a household to upload receipts and manage expenses.
+          </p>
+          <Link
+            to="/dashboard"
+            style={{
+              display: 'inline-block',
+              padding: '0.875rem 2rem',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              borderRadius: '10px',
+              textDecoration: 'none',
+              fontWeight: '600',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)',
+              fontSize: '1rem'
+            }}
+          >
+            Go to Dashboard to Create a Household
+          </Link>
         </div>
       </div>
     );

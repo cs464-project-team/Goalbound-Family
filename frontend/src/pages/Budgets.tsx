@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuthContext } from '../context/AuthProvider';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { getApiUrl } from '../config/api';
 import { authenticatedFetch } from '../services/authService';
 import '../styles/Dashboard.css';
@@ -212,8 +212,31 @@ function Budgets() {
             )}
 
             {households.length === 0 ? (
-                <div className="no-household-section">
-                    <p>You are not part of any household. Please create one from the Dashboard.</p>
+                <div style={{
+                    padding: 'clamp(2rem, 4vw, 3rem)',
+                    background: 'white',
+                    borderRadius: '16px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                    border: '1px solid rgba(0,0,0,0.05)',
+                    textAlign: 'center'
+                }}>
+                    <p style={{ fontSize: '1.1rem', marginBottom: '1.5rem', color: '#64748b' }}>
+                        You need to be part of a household to manage budgets.
+                    </p>
+                    <Link to="/dashboard" style={{
+                        display: 'inline-block',
+                        padding: '0.75rem 2rem',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        color: 'white',
+                        borderRadius: '10px',
+                        textDecoration: 'none',
+                        fontWeight: '600',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)',
+                        fontSize: '1rem'
+                    }}>
+                        Go to Dashboard to Create a Household
+                    </Link>
                 </div>
             ) : loading ? (
                 <p>Loading...</p>
