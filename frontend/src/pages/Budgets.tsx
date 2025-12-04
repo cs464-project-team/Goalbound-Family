@@ -363,51 +363,61 @@ function Budgets() {
                                         <th style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: '600', fontSize: '0.95rem' }}>Budget Limit</th>
                                         <th style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: '600', fontSize: '0.95rem' }}>Spent</th>
                                         <th style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: '600', fontSize: '0.95rem' }}>Remaining</th>
-                                        <th style={{ padding: '1rem 1.25rem', textAlign: 'center', fontWeight: '600', fontSize: '0.95rem' }}>Progress</th>
+                                        <th style={{ padding: '1rem 1.25rem', textAlign: 'center', fontWeight: '600', fontSize: '0.95rem' }}>Budget Used</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {dashboard.categories.map((cat, idx) => (
-                                        <tr key={cat.categoryId} style={{
-                                            borderBottom: '1px solid #e2e8f0',
-                                            background: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
-                                            transition: 'background 0.2s ease'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.background = '#f1f5f9';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.background = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
-                                        }}>
-                                            <td style={{ padding: '1.25rem', fontWeight: '500' }}>{cat.categoryName}</td>
-                                            <td style={{ padding: '1.25rem', textAlign: 'right', fontWeight: '500' }}>${cat.budgetLimit.toFixed(2)}</td>
-                                            <td style={{ padding: '1.25rem', textAlign: 'right', color: cat.spent > cat.budgetLimit ? '#e53e3e' : '#333', fontWeight: '500' }}>
-                                                ${cat.spent.toFixed(2)}
-                                            </td>
-                                            <td style={{ padding: '1.25rem', textAlign: 'right', color: cat.remaining < 0 ? '#e53e3e' : '#38a169', fontWeight: '600' }}>
-                                                ${cat.remaining.toFixed(2)}
-                                            </td>
-                                            <td style={{ padding: '1.25rem', textAlign: 'center' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: 'center' }}>
-                                                    <div style={{
-                                                        width: '120px',
-                                                        height: '10px',
-                                                        background: '#e2e8f0',
-                                                        borderRadius: '5px',
-                                                        overflow: 'hidden'
-                                                    }}>
+                                    {dashboard.categories.map((cat, idx) => {
+                                        // Calculate display percentage: if no budget set but has spending, show 100%
+                                        const displayProgress = cat.budgetLimit === 0 || cat.budgetLimit === null || cat.budgetLimit === undefined
+                                            ? (cat.spent > 0 ? 100 : 0)
+                                            : Math.min((cat.spent / cat.budgetLimit) * 100, 100);
+
+                                        const progressRatio = displayProgress / 100;
+                                        const progressColor = progressRatio > 0.9 ? '#e53e3e' : progressRatio > 0.7 ? '#f59e0b' : '#38a169';
+
+                                        return (
+                                            <tr key={cat.categoryId} style={{
+                                                borderBottom: '1px solid #e2e8f0',
+                                                background: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
+                                                transition: 'background 0.2s ease'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.background = '#f1f5f9';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.background = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                                            }}>
+                                                <td style={{ padding: '1.25rem', fontWeight: '500' }}>{cat.categoryName}</td>
+                                                <td style={{ padding: '1.25rem', textAlign: 'right', fontWeight: '500' }}>${cat.budgetLimit.toFixed(2)}</td>
+                                                <td style={{ padding: '1.25rem', textAlign: 'right', color: cat.spent > cat.budgetLimit ? '#e53e3e' : '#333', fontWeight: '500' }}>
+                                                    ${cat.spent.toFixed(2)}
+                                                </td>
+                                                <td style={{ padding: '1.25rem', textAlign: 'right', color: cat.remaining < 0 ? '#e53e3e' : '#38a169', fontWeight: '600' }}>
+                                                    ${cat.remaining.toFixed(2)}
+                                                </td>
+                                                <td style={{ padding: '1.25rem', textAlign: 'center' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: 'center' }}>
                                                         <div style={{
-                                                            width: `${Math.min(cat.progress * 100, 100)}%`,
-                                                            height: '100%',
-                                                            background: cat.progress > 0.9 ? '#e53e3e' : cat.progress > 0.7 ? '#f59e0b' : '#38a169',
-                                                            transition: 'width 0.3s ease'
-                                                        }} />
+                                                            width: '120px',
+                                                            height: '10px',
+                                                            background: '#e2e8f0',
+                                                            borderRadius: '5px',
+                                                            overflow: 'hidden'
+                                                        }}>
+                                                            <div style={{
+                                                                width: `${displayProgress}%`,
+                                                                height: '100%',
+                                                                background: progressColor,
+                                                                transition: 'width 0.3s ease'
+                                                            }} />
+                                                        </div>
+                                                        <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{displayProgress.toFixed(0)}%</span>
                                                     </div>
-                                                    <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{(cat.progress * 100).toFixed(0)}%</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                             </div>
