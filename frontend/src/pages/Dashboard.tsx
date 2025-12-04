@@ -147,10 +147,10 @@ function Dashboard() {
     const monthName = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
     return (
-        <div className="dashboard-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
-            <div style={{ marginBottom: '2rem' }}>
-                <h1 className="dashboard-title" style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Dashboard</h1>
-                <p style={{ color: '#666', fontSize: '1.1rem' }}>Welcome back! Here's your financial overview for {monthName}</p>
+        <div className="dashboard-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem', minHeight: '100vh' }}>
+            <div style={{ marginBottom: '2.5rem', paddingBottom: '1rem' }}>
+                <h1 className="dashboard-title" style={{ fontSize: '2.75rem', fontWeight: '700', marginBottom: '0.75rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.5px' }}>Dashboard</h1>
+                <p style={{ color: '#64748b', fontSize: '1.15rem', fontWeight: '400' }}>Welcome back! Here's your financial overview for {monthName}</p>
             </div>
 
             {showCreateForm && (
@@ -158,8 +158,10 @@ function Dashboard() {
                     marginBottom: '2rem',
                     padding: '2rem',
                     background: 'white',
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                    borderRadius: '16px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)',
+                    border: '1px solid rgba(0,0,0,0.05)',
+                    transition: 'all 0.3s ease'
                 }}>
                     <h2 style={{ marginBottom: '1rem' }}>Create New Household</h2>
                     <form className="create-household-form" onSubmit={handleCreateHousehold}>
@@ -175,10 +177,10 @@ function Dashboard() {
                             />
                         </label>
                         <div className="form-actions" style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                            <button type="submit" className="primary-btn" disabled={creating} style={{ padding: '0.75rem 1.5rem', borderRadius: '8px' }}>
+                            <button type="submit" className="primary-btn" disabled={creating} style={{ padding: '0.75rem 1.5rem', borderRadius: '10px', transition: 'all 0.2s ease', boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)' }}>
                                 {creating ? 'Creating...' : 'Create'}
                             </button>
-                            <button type="button" className="secondary-btn" onClick={() => setShowCreateForm(false)} style={{ padding: '0.75rem 1.5rem', borderRadius: '8px' }}>
+                            <button type="button" className="secondary-btn" onClick={() => setShowCreateForm(false)} style={{ padding: '0.75rem 1.5rem', borderRadius: '10px', transition: 'all 0.2s ease' }}>
                                 Cancel
                             </button>
                         </div>
@@ -190,15 +192,17 @@ function Dashboard() {
             {!showCreateForm && households.length > 0 && (
                 <div className="household-selector" style={{
                     marginBottom: '2rem',
-                    padding: '1.5rem',
+                    padding: '1.75rem',
                     background: 'white',
-                    borderRadius: '12px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
+                    borderRadius: '16px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+                    border: '1px solid rgba(0,0,0,0.05)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     flexWrap: 'wrap',
-                    gap: '1rem'
+                    gap: '1rem',
+                    transition: 'box-shadow 0.3s ease'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <label htmlFor="household-select" style={{ fontWeight: '600', fontSize: '1rem' }}>Select Family:</label>
@@ -208,10 +212,13 @@ function Dashboard() {
                             onChange={e => setSelectedHouseholdId(e.target.value)}
                             style={{
                                 padding: '0.75rem 1rem',
-                                borderRadius: '8px',
-                                border: '1px solid #ddd',
+                                borderRadius: '10px',
+                                border: '2px solid #e2e8f0',
                                 fontSize: '1rem',
-                                minWidth: '200px'
+                                minWidth: '200px',
+                                transition: 'all 0.2s ease',
+                                cursor: 'pointer',
+                                background: 'white'
                             }}
                         >
                             {households.map(h => (
@@ -223,7 +230,7 @@ function Dashboard() {
                         type="button"
                         className="primary-btn"
                         onClick={() => setShowCreateForm(true)}
-                        style={{ padding: '0.75rem 1.5rem', borderRadius: '8px', whiteSpace: 'nowrap' }}
+                        style={{ padding: '0.75rem 1.5rem', borderRadius: '10px', whiteSpace: 'nowrap', transition: 'all 0.2s ease', boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)' }}
                     >
                         Create New Household
                     </button>
@@ -263,9 +270,19 @@ function Dashboard() {
                                 <div style={{
                                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                     padding: '2rem',
-                                    borderRadius: '12px',
+                                    borderRadius: '16px',
                                     color: 'white',
-                                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                    boxShadow: '0 8px 16px rgba(102, 126, 234, 0.25), 0 2px 4px rgba(0,0,0,0.08)',
+                                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                    cursor: 'default'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-4px)';
+                                    e.currentTarget.style.boxShadow = '0 12px 24px rgba(102, 126, 234, 0.3), 0 4px 8px rgba(0,0,0,0.1)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 8px 16px rgba(102, 126, 234, 0.25), 0 2px 4px rgba(0,0,0,0.08)';
                                 }}>
                                     <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '0.5rem' }}>Total Budget</div>
                                     <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>${dashboard.totalBudget.toFixed(2)}</div>
@@ -275,9 +292,19 @@ function Dashboard() {
                                 <div style={{
                                     background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
                                     padding: '2rem',
-                                    borderRadius: '12px',
+                                    borderRadius: '16px',
                                     color: 'white',
-                                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                    boxShadow: '0 8px 16px rgba(245, 87, 108, 0.25), 0 2px 4px rgba(0,0,0,0.08)',
+                                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                    cursor: 'default'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-4px)';
+                                    e.currentTarget.style.boxShadow = '0 12px 24px rgba(245, 87, 108, 0.3), 0 4px 8px rgba(0,0,0,0.1)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 8px 16px rgba(245, 87, 108, 0.25), 0 2px 4px rgba(0,0,0,0.08)';
                                 }}>
                                     <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '0.5rem' }}>Total Spent</div>
                                     <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>${dashboard.totalSpent.toFixed(2)}</div>
@@ -289,9 +316,19 @@ function Dashboard() {
                                 <div style={{
                                     background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
                                     padding: '2rem',
-                                    borderRadius: '12px',
+                                    borderRadius: '16px',
                                     color: 'white',
-                                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                    boxShadow: '0 8px 16px rgba(79, 172, 254, 0.25), 0 2px 4px rgba(0,0,0,0.08)',
+                                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                    cursor: 'default'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-4px)';
+                                    e.currentTarget.style.boxShadow = '0 12px 24px rgba(79, 172, 254, 0.3), 0 4px 8px rgba(0,0,0,0.1)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 8px 16px rgba(79, 172, 254, 0.25), 0 2px 4px rgba(0,0,0,0.08)';
                                 }}>
                                     <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '0.5rem' }}>Remaining</div>
                                     <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
@@ -307,9 +344,11 @@ function Dashboard() {
                             <div style={{
                                 background: 'white',
                                 padding: '2rem',
-                                borderRadius: '12px',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
-                                marginBottom: '2rem'
+                                borderRadius: '16px',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+                                border: '1px solid rgba(0,0,0,0.05)',
+                                marginBottom: '2rem',
+                                transition: 'box-shadow 0.3s ease'
                             }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                                     <h2 style={{ fontSize: '1.5rem', fontWeight: '600', margin: 0 }}>Budget Breakdown by Category</h2>
@@ -317,10 +356,12 @@ function Dashboard() {
                                         padding: '0.5rem 1rem',
                                         background: '#667eea',
                                         color: 'white',
-                                        borderRadius: '8px',
+                                        borderRadius: '10px',
                                         textDecoration: 'none',
                                         fontSize: '0.9rem',
-                                        transition: 'background 0.2s'
+                                        transition: 'all 0.2s ease',
+                                        boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)',
+                                        fontWeight: '500'
                                     }}>
                                         Manage Budgets
                                     </Link>
@@ -385,9 +426,11 @@ function Dashboard() {
                         <div style={{
                             background: 'white',
                             padding: '2rem',
-                            borderRadius: '12px',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
-                            marginBottom: '2rem'
+                            borderRadius: '16px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+                            border: '1px solid rgba(0,0,0,0.05)',
+                            marginBottom: '2rem',
+                            transition: 'box-shadow 0.3s ease'
                         }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                                 <h2 style={{ fontSize: '1.5rem', fontWeight: '600', margin: 0 }}>Recent Expenses</h2>
@@ -395,10 +438,12 @@ function Dashboard() {
                                     padding: '0.5rem 1rem',
                                     background: '#667eea',
                                     color: 'white',
-                                    borderRadius: '8px',
+                                    borderRadius: '10px',
                                     textDecoration: 'none',
                                     fontSize: '0.9rem',
-                                    transition: 'background 0.2s'
+                                    transition: 'all 0.2s ease',
+                                    boxShadow: '0 2px 6px rgba(102, 126, 234, 0.3)',
+                                    fontWeight: '500'
                                 }}>
                                     View All
                                 </Link>
@@ -437,8 +482,10 @@ function Dashboard() {
                         <div style={{
                             background: 'white',
                             padding: '2rem',
-                            borderRadius: '12px',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.08)'
+                            borderRadius: '16px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+                            border: '1px solid rgba(0,0,0,0.05)',
+                            transition: 'box-shadow 0.3s ease'
                         }}>
                             <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem' }}>Invite Family Members</h2>
                             <p style={{ color: '#666', marginBottom: '1.5rem' }}>Share an invite link to add members to this household.</p>
