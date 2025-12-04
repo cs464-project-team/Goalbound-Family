@@ -20,26 +20,88 @@ public class ExpensesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ExpenseDto>> Create(CreateExpenseRequest request)
     {
-        var result = await _service.CreateAsync(request);
-        return Ok(result);
+        var requestingUserId = GetAuthenticatedUserId();
+        if (requestingUserId == null)
+        {
+            return Unauthorized("Invalid user token");
+        }
+
+        try
+        {
+            var result = await _service.CreateAsync(request, requestingUserId.Value);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
     }
 
     [HttpPost("bulk")]
     public async Task<ActionResult<IEnumerable<ExpenseDto>>> CreateBulk(CreateBulkExpensesRequest request)
     {
-        var result = await _service.CreateBulkAsync(request);
-        return Ok(result);
+        var requestingUserId = GetAuthenticatedUserId();
+        if (requestingUserId == null)
+        {
+            return Unauthorized("Invalid user token");
+        }
+
+        try
+        {
+            var result = await _service.CreateBulkAsync(request, requestingUserId.Value);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
     }
 
     [HttpGet("{householdId:guid}/{year:int}/{month:int}")]
     public async Task<ActionResult<IEnumerable<ExpenseDto>>> Get(Guid householdId, int year, int month)
     {
-        return Ok(await _service.GetByHouseholdMonthAsync(householdId, year, month));
+        var requestingUserId = GetAuthenticatedUserId();
+        if (requestingUserId == null)
+        {
+            return Unauthorized("Invalid user token");
+        }
+
+        try
+        {
+            return Ok(await _service.GetByHouseholdMonthAsync(householdId, year, month, requestingUserId.Value));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
     }
 
     [HttpGet("user/{userId:guid}/{year:int}/{month:int}")]
     public async Task<ActionResult<IEnumerable<ExpenseDto>>> GetByUser(Guid userId, int year, int month)
     {
-        return Ok(await _service.GetByUserMonthAsync(userId, year, month));
+        var requestingUserId = GetAuthenticatedUserId();
+        if (requestingUserId == null)
+        {
+            return Unauthorized("Invalid user token");
+        }
+
+        try
+        {
+            return Ok(await _service.GetByUserMonthAsync(userId, year, month, requestingUserId.Value));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
+    }
+
+    private Guid? GetAuthenticatedUserId()
+    {
+        var userIdClaim = User.FindFirst("sub")?.Value;
+        if (userIdClaim != null && Guid.TryParse(userIdClaim, out var userId))
+        {
+            return userId;
+        }
+        return null;
     }
 }

@@ -17,6 +17,7 @@ public class ReceiptService : IReceiptService
     private readonly IReceiptParserService _parserService;
     private readonly ISupabaseStorageService _storageService;
     private readonly ApplicationDbContext _dbContext;
+    private readonly IHouseholdAuthorizationService _authService;
     private readonly ILogger<ReceiptService> _logger;
 
     public ReceiptService(
@@ -25,6 +26,7 @@ public class ReceiptService : IReceiptService
         IReceiptParserService parserService,
         ISupabaseStorageService storageService,
         ApplicationDbContext dbContext,
+        IHouseholdAuthorizationService authService,
         ILogger<ReceiptService> logger)
     {
         _receiptRepository = receiptRepository;
@@ -32,11 +34,24 @@ public class ReceiptService : IReceiptService
         _parserService = parserService;
         _storageService = storageService;
         _dbContext = dbContext;
+        _authService = authService;
         _logger = logger;
     }
 
-    public async Task<ReceiptResponseDto> UploadReceiptAsync(ReceiptUploadDto uploadDto)
+    public async Task<ReceiptResponseDto> UploadReceiptAsync(ReceiptUploadDto uploadDto, Guid requestingUserId)
     {
+        // Verify the requesting user matches the user in the upload DTO
+        if (uploadDto.UserId != requestingUserId)
+        {
+            throw new UnauthorizedAccessException("Cannot upload receipt for another user");
+        }
+
+        // If household ID is provided, verify user is in the household
+        if (uploadDto.HouseholdId.HasValue)
+        {
+            await _authService.ValidateHouseholdAccessAsync(requestingUserId, uploadDto.HouseholdId.Value);
+        }
+
         _logger.LogInformation("Processing receipt upload for user {UserId}", uploadDto.UserId);
 
         // Step 1: Upload the image to Supabase Storage
@@ -139,8 +154,20 @@ public class ReceiptService : IReceiptService
         }
     }
 
-    public async Task<ProcessReceiptOcrResponseDto> ProcessReceiptOcrOnlyAsync(ReceiptUploadDto uploadDto)
+    public async Task<ProcessReceiptOcrResponseDto> ProcessReceiptOcrOnlyAsync(ReceiptUploadDto uploadDto, Guid requestingUserId)
     {
+        // Verify the requesting user matches the user in the upload DTO
+        if (uploadDto.UserId != requestingUserId)
+        {
+            throw new UnauthorizedAccessException("Cannot process receipt for another user");
+        }
+
+        // If household ID is provided, verify user is in the household
+        if (uploadDto.HouseholdId.HasValue)
+        {
+            await _authService.ValidateHouseholdAccessAsync(requestingUserId, uploadDto.HouseholdId.Value);
+        }
+
         _logger.LogInformation("Processing receipt OCR without saving for user {UserId}", uploadDto.UserId);
 
         var response = new ProcessReceiptOcrResponseDto
@@ -225,8 +252,11 @@ public class ReceiptService : IReceiptService
         }
     }
 
-    public async Task<ReceiptResponseDto?> GetReceiptAsync(Guid receiptId)
+    public async Task<ReceiptResponseDto?> GetReceiptAsync(Guid receiptId, Guid requestingUserId)
     {
+        // Verify user has access to this receipt
+        await _authService.ValidateReceiptAccessAsync(requestingUserId, receiptId);
+
         // Load receipt with all needed relationships
         var receipt = await _dbContext.Receipts
             .Include(r => r.Items)
@@ -241,14 +271,24 @@ public class ReceiptService : IReceiptService
         return receipt != null ? MapToDto(receipt) : null;
     }
 
-    public async Task<IEnumerable<ReceiptResponseDto>> GetUserReceiptsAsync(Guid userId)
+    public async Task<IEnumerable<ReceiptResponseDto>> GetUserReceiptsAsync(Guid userId, Guid requestingUserId)
     {
+        // Users can only query their own receipts
+        if (userId != requestingUserId)
+        {
+            throw new UnauthorizedAccessException("Cannot access another user's receipts");
+        }
+
         var receipts = await _receiptRepository.GetByUserIdAsync(userId);
         return receipts.Select(MapToDto);
     }
 
-    public async Task<IEnumerable<ReceiptResponseDto>> GetHouseholdReceiptsAsync(Guid householdId)
+    public async Task<IEnumerable<ReceiptResponseDto>> GetHouseholdReceiptsAsync(Guid householdId, Guid requestingUserId)
     {
+        // Verify user is in the household
+        await _authService.ValidateHouseholdAccessAsync(requestingUserId, householdId);
+
+
         var receipts = await _dbContext.Receipts
             .Include(r => r.Items)
                 .ThenInclude(i => i.Assignments)
@@ -264,8 +304,11 @@ public class ReceiptService : IReceiptService
         return receipts.Select(MapToDto);
     }
 
-    public async Task<ReceiptItemDto> AddItemToReceiptAsync(AddReceiptItemDto addItemDto)
+    public async Task<ReceiptItemDto> AddItemToReceiptAsync(AddReceiptItemDto addItemDto, Guid requestingUserId)
     {
+        // Verify user has access to this receipt
+        await _authService.ValidateReceiptAccessAsync(requestingUserId, addItemDto.ReceiptId);
+
         var receipt = await _receiptRepository.GetByIdWithItemsAsync(addItemDto.ReceiptId);
         if (receipt == null)
         {
@@ -294,8 +337,11 @@ public class ReceiptService : IReceiptService
         return MapItemToDto(item);
     }
 
-    public async Task<ReceiptResponseDto> ConfirmReceiptAsync(ConfirmReceiptDto confirmDto)
+    public async Task<ReceiptResponseDto> ConfirmReceiptAsync(ConfirmReceiptDto confirmDto, Guid requestingUserId)
     {
+        // Verify user has access to this receipt
+        await _authService.ValidateReceiptAccessAsync(requestingUserId, confirmDto.ReceiptId);
+
         var receipt = await _receiptRepository.GetByIdWithItemsAsync(confirmDto.ReceiptId);
         if (receipt == null)
         {
@@ -349,13 +395,19 @@ public class ReceiptService : IReceiptService
         return imageUrl;
     }
 
-    public async Task<ReceiptResponseDto> AssignItemsToMembersAsync(AssignReceiptItemsDto assignDto)
+    public async Task<ReceiptResponseDto> AssignItemsToMembersAsync(AssignReceiptItemsDto assignDto, Guid requestingUserId)
     {
+        // Verify user is in the household
+        await _authService.ValidateHouseholdAccessAsync(requestingUserId, assignDto.HouseholdId);
+
         Receipt receipt;
 
         // Check if this is for an existing receipt or a new one
         if (assignDto.ReceiptId.HasValue)
         {
+            // Additional check: verify user has access to the existing receipt
+            await _authService.ValidateReceiptAccessAsync(requestingUserId, assignDto.ReceiptId.Value);
+
             // Load existing receipt
             receipt = await _dbContext.Receipts
                 .Include(r => r.Items)
