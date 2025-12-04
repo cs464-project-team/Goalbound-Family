@@ -42,6 +42,12 @@ public class ReceiptsController : ControllerBase
     {
         try
         {
+            var requestingUserId = GetAuthenticatedUserId();
+            if (requestingUserId == null)
+            {
+                return Unauthorized(new { message = "Invalid user token" });
+            }
+
             if (image == null || image.Length == 0)
             {
                 return BadRequest(new { message = "No image file provided" });
@@ -68,11 +74,15 @@ public class ReceiptsController : ControllerBase
                 Image = image
             };
 
-            var result = await _receiptService.UploadReceiptAsync(uploadDto);
+            var result = await _receiptService.UploadReceiptAsync(uploadDto, requestingUserId.Value);
 
             _logger.LogInformation("Receipt uploaded successfully: {ReceiptId}", result.Id);
 
             return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
         }
         catch (Exception ex)
         {
@@ -89,6 +99,16 @@ public class ReceiptsController : ControllerBase
 
             return StatusCode(500, errorResponse);
         }
+    }
+
+    private Guid? GetAuthenticatedUserId()
+    {
+        var userIdClaim = User.FindFirst("sub")?.Value;
+        if (userIdClaim != null && Guid.TryParse(userIdClaim, out var userId))
+        {
+            return userId;
+        }
+        return null;
     }
 
     /// <summary>
@@ -129,6 +149,12 @@ public class ReceiptsController : ControllerBase
                 return BadRequest(new { message = "File size exceeds 10MB limit" });
             }
 
+            var requestingUserId = GetAuthenticatedUserId();
+            if (requestingUserId == null)
+            {
+                return Unauthorized(new { message = "Invalid user token" });
+            }
+
             var uploadDto = new ReceiptUploadDto
             {
                 UserId = userId,
@@ -136,11 +162,15 @@ public class ReceiptsController : ControllerBase
                 Image = image
             };
 
-            var result = await _receiptService.ProcessReceiptOcrOnlyAsync(uploadDto);
+            var result = await _receiptService.ProcessReceiptOcrOnlyAsync(uploadDto, requestingUserId.Value);
 
             _logger.LogInformation("Receipt OCR processed successfully (not saved to DB)");
 
             return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
         }
         catch (Exception ex)
         {
@@ -171,7 +201,13 @@ public class ReceiptsController : ControllerBase
     {
         try
         {
-            var receipt = await _receiptService.GetReceiptAsync(receiptId);
+            var requestingUserId = GetAuthenticatedUserId();
+            if (requestingUserId == null)
+            {
+                return Unauthorized(new { message = "Invalid user token" });
+            }
+
+            var receipt = await _receiptService.GetReceiptAsync(receiptId, requestingUserId.Value);
 
             if (receipt == null)
             {
@@ -179,6 +215,10 @@ public class ReceiptsController : ControllerBase
             }
 
             return Ok(receipt);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
         }
         catch (Exception ex)
         {
@@ -198,8 +238,18 @@ public class ReceiptsController : ControllerBase
     {
         try
         {
-            var receipts = await _receiptService.GetUserReceiptsAsync(userId);
+            var requestingUserId = GetAuthenticatedUserId();
+            if (requestingUserId == null)
+            {
+                return Unauthorized(new { message = "Invalid user token" });
+            }
+
+            var receipts = await _receiptService.GetUserReceiptsAsync(userId, requestingUserId.Value);
             return Ok(receipts);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
         }
         catch (Exception ex)
         {
@@ -219,8 +269,18 @@ public class ReceiptsController : ControllerBase
     {
         try
         {
-            var receipts = await _receiptService.GetHouseholdReceiptsAsync(householdId);
+            var requestingUserId = GetAuthenticatedUserId();
+            if (requestingUserId == null)
+            {
+                return Unauthorized(new { message = "Invalid user token" });
+            }
+
+            var receipts = await _receiptService.GetHouseholdReceiptsAsync(householdId, requestingUserId.Value);
             return Ok(receipts);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
         }
         catch (Exception ex)
         {
@@ -241,8 +301,18 @@ public class ReceiptsController : ControllerBase
     {
         try
         {
-            var item = await _receiptService.AddItemToReceiptAsync(addItemDto);
+            var requestingUserId = GetAuthenticatedUserId();
+            if (requestingUserId == null)
+            {
+                return Unauthorized(new { message = "Invalid user token" });
+            }
+
+            var item = await _receiptService.AddItemToReceiptAsync(addItemDto, requestingUserId.Value);
             return CreatedAtAction(nameof(GetReceipt), new { receiptId = addItemDto.ReceiptId }, item);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
         }
         catch (InvalidOperationException ex)
         {
@@ -268,12 +338,22 @@ public class ReceiptsController : ControllerBase
     {
         try
         {
-            var receipt = await _receiptService.ConfirmReceiptAsync(confirmDto);
+            var requestingUserId = GetAuthenticatedUserId();
+            if (requestingUserId == null)
+            {
+                return Unauthorized(new { message = "Invalid user token" });
+            }
+
+            var receipt = await _receiptService.ConfirmReceiptAsync(confirmDto, requestingUserId.Value);
             return Ok(receipt);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(new { message = "Invalid Operation Exception" });
         }
         catch (Exception ex)
         {
@@ -294,8 +374,18 @@ public class ReceiptsController : ControllerBase
     {
         try
         {
-            var receipt = await _receiptService.AssignItemsToMembersAsync(assignDto);
+            var requestingUserId = GetAuthenticatedUserId();
+            if (requestingUserId == null)
+            {
+                return Unauthorized(new { message = "Invalid user token" });
+            }
+
+            var receipt = await _receiptService.AssignItemsToMembersAsync(assignDto, requestingUserId.Value);
             return Ok(receipt);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
         }
         catch (InvalidOperationException ex)
         {

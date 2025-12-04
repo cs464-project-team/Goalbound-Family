@@ -9,16 +9,30 @@ public class ExpenseService : IExpenseService
 {
     private readonly IExpenseRepository _repo;
     private readonly IBudgetCategoryRepository _categoryRepo;
+    private readonly IHouseholdAuthorizationService _authService;
 
-    public ExpenseService(IExpenseRepository repo, IBudgetCategoryRepository categoryRepo)
+    public ExpenseService(
+        IExpenseRepository repo,
+        IBudgetCategoryRepository categoryRepo,
+        IHouseholdAuthorizationService authService)
     {
         _repo = repo;
         _categoryRepo = categoryRepo;
+        _authService = authService;
     }
 
-    public async Task<ExpenseDto> CreateAsync(CreateExpenseRequest request)
+    public async Task<ExpenseDto> CreateAsync(CreateExpenseRequest request, Guid requestingUserId)
     {
         if (request.Amount <= 0) throw new ArgumentException("Amount must be > 0");
+
+        // Verify requesting user is in the household
+        await _authService.ValidateHouseholdAccessAsync(requestingUserId, request.HouseholdId);
+
+        // Verify the target user (if different) is also in the household
+        if (request.UserId != requestingUserId)
+        {
+            await _authService.ValidateHouseholdAccessAsync(request.UserId, request.HouseholdId);
+        }
 
         var expense = new Expense
         {
@@ -48,10 +62,13 @@ public class ExpenseService : IExpenseService
         };
     }
 
-    public async Task<IEnumerable<ExpenseDto>> CreateBulkAsync(CreateBulkExpensesRequest request)
+    public async Task<IEnumerable<ExpenseDto>> CreateBulkAsync(CreateBulkExpensesRequest request, Guid requestingUserId)
     {
         if (request.Items == null || request.Items.Count == 0)
             throw new ArgumentException("At least one expense item is required");
+
+        // Verify requesting user is in the household
+        await _authService.ValidateHouseholdAccessAsync(requestingUserId, request.HouseholdId);
 
         var expenses = new List<Expense>();
 
@@ -59,6 +76,9 @@ public class ExpenseService : IExpenseService
         {
             if (item.Amount <= 0)
                 throw new ArgumentException($"Amount must be > 0 for all items");
+
+            // Verify each target user is in the household
+            await _authService.ValidateHouseholdAccessAsync(item.UserId, request.HouseholdId);
 
             expenses.Add(new Expense
             {
@@ -94,8 +114,11 @@ public class ExpenseService : IExpenseService
         }).ToList();
     }
 
-    public async Task<IEnumerable<ExpenseDto>> GetByHouseholdMonthAsync(Guid householdId, int year, int month)
+    public async Task<IEnumerable<ExpenseDto>> GetByHouseholdMonthAsync(Guid householdId, int year, int month, Guid requestingUserId)
     {
+        // Verify requesting user is in the household
+        await _authService.ValidateHouseholdAccessAsync(requestingUserId, householdId);
+
         var expenses = await _repo.GetByHouseholdMonthAsync(householdId, year, month);
         return expenses.Select(e => new ExpenseDto
         {
@@ -112,9 +135,19 @@ public class ExpenseService : IExpenseService
         });
     }
 
-    public async Task<IEnumerable<ExpenseDto>> GetByUserMonthAsync(Guid userId, int year, int month)
+    public async Task<IEnumerable<ExpenseDto>> GetByUserMonthAsync(Guid userId, int year, int month, Guid requestingUserId)
     {
-        var expenses = await _repo.GetByUserMonthAsync(userId, year, month);
+        // Only allow users to query their own expenses OR require household membership validation
+        if (userId != requestingUserId)
+        {
+            throw new UnauthorizedAccessException("Users can only query their own expenses");
+        }
+
+        // Get user's current household IDs
+        var userHouseholdIds = await _authService.GetUserHouseholdIdsAsync(requestingUserId);
+
+        // Filter expenses to only include those from households the user is currently in
+        var expenses = await _repo.GetByUserMonthFilteredAsync(userId, year, month, userHouseholdIds);
         return expenses.Select(e => new ExpenseDto
         {
             Id = e.Id,

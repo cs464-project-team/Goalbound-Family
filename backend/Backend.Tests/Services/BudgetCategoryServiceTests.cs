@@ -7,6 +7,7 @@ using GoalboundFamily.Api.DTOs;
 using GoalboundFamily.Api.Models;
 using GoalboundFamily.Api.Repositories.Interfaces;
 using GoalboundFamily.Api.Services;
+using GoalboundFamily.Api.Services.Interfaces;
 using Moq;
 using Xunit;
 
@@ -15,38 +16,49 @@ namespace Backend.Tests.Services;
 public class BudgetCategoryServiceTests
 {
     private readonly Mock<IBudgetCategoryRepository> _repositoryMock;
+    private readonly Mock<IHouseholdAuthorizationService> _authServiceMock;
     private readonly BudgetCategoryService _service;
 
     public BudgetCategoryServiceTests()
     {
         _repositoryMock = new Mock<IBudgetCategoryRepository>();
-        _service = new BudgetCategoryService(_repositoryMock.Object);
+        _authServiceMock = new Mock<IHouseholdAuthorizationService>();
+
+        // Setup auth service to allow all validations by default
+        _authServiceMock
+            .Setup(a => a.ValidateHouseholdAccessAsync(It.IsAny<Guid>(), It.IsAny<Guid>()))
+            .Returns(Task.CompletedTask);
+
+        _service = new BudgetCategoryService(_repositoryMock.Object, _authServiceMock.Object);
     }
 
-    #region GetCategoriesAsync Tests
-
     [Fact]
-    public async Task GetCategoriesAsync_CategoriesExist_ReturnsListOfBudgetCategoryDtos()
+    public async Task GetCategoriesAsync_ValidHousehold_ReturnsCategories()
     {
         // Arrange
         var householdId = Guid.NewGuid();
+        var requestingUserId = Guid.NewGuid();
+
         var categories = new List<BudgetCategory>
         {
-            new BudgetCategory { Id = Guid.NewGuid(), HouseholdId = householdId, Name = "Groceries" },
-            new BudgetCategory { Id = Guid.NewGuid(), HouseholdId = householdId, Name = "Transportation" },
-            new BudgetCategory { Id = Guid.NewGuid(), HouseholdId = householdId, Name = "Entertainment" }
+            new() { Id = Guid.NewGuid(), HouseholdId = householdId, Name = "Groceries" },
+            new() { Id = Guid.NewGuid(), HouseholdId = householdId, Name = "Utilities" }
         };
 
-        _repositoryMock.Setup(x => x.GetByHouseholdAsync(householdId))
+        _repositoryMock
+            .Setup(r => r.GetByHouseholdAsync(householdId))
             .ReturnsAsync(categories);
 
         // Act
-        var result = await _service.GetCategoriesAsync(householdId);
+        var result = await _service.GetCategoriesAsync(householdId, requestingUserId);
 
         // Assert
-        result.Should().NotBeNull();
-        result.Should().HaveCount(3);
-        result.Select(c => c.Name).Should().Contain(new[] { "Groceries", "Transportation", "Entertainment" });
+        result.Should().HaveCount(2);
+        result.Should().Contain(c => c.Name == "Groceries");
+        result.Should().Contain(c => c.Name == "Utilities");
+
+        _authServiceMock.Verify(a => a.ValidateHouseholdAccessAsync(requestingUserId, householdId), Times.Once);
+        _repositoryMock.Verify(r => r.GetByHouseholdAsync(householdId), Times.Once);
     }
 
     [Fact]
@@ -54,86 +66,90 @@ public class BudgetCategoryServiceTests
     {
         // Arrange
         var householdId = Guid.NewGuid();
-        _repositoryMock.Setup(x => x.GetByHouseholdAsync(householdId))
+        var requestingUserId = Guid.NewGuid();
+
+        _repositoryMock
+            .Setup(r => r.GetByHouseholdAsync(householdId))
             .ReturnsAsync(new List<BudgetCategory>());
 
         // Act
-        var result = await _service.GetCategoriesAsync(householdId);
+        var result = await _service.GetCategoriesAsync(householdId, requestingUserId);
 
         // Assert
-        result.Should().NotBeNull();
         result.Should().BeEmpty();
+
+        _authServiceMock.Verify(a => a.ValidateHouseholdAccessAsync(requestingUserId, householdId), Times.Once);
     }
 
-    #endregion
-
-    #region CreateAsync Tests
-
     [Fact]
-    public async Task CreateAsync_ValidRequest_ReturnsBudgetCategoryDto()
+    public async Task CreateAsync_ValidCategory_ReturnsCreatedCategory()
     {
         // Arrange
         var householdId = Guid.NewGuid();
+        var requestingUserId = Guid.NewGuid();
+
         var request = new CreateBudgetCategoryRequest
         {
             HouseholdId = householdId,
-            Name = "New Category"
+            Name = "Entertainment"
         };
 
-        _repositoryMock.Setup(x => x.AddAsync(It.IsAny<BudgetCategory>()))
-            .ReturnsAsync(new BudgetCategory
-            {
-                Id = Guid.NewGuid(),
-                HouseholdId = request.HouseholdId,
-                Name = request.Name
-            });
+        _repositoryMock
+            .Setup(r => r.AddAsync(It.IsAny<BudgetCategory>()))
+            .ReturnsAsync((BudgetCategory c) => c);
 
-        _repositoryMock.Setup(x => x.SaveChangesAsync())
-            .Returns(Task.FromResult(1));
+        _repositoryMock
+            .Setup(r => r.SaveChangesAsync())
+            .ReturnsAsync(1);
 
         // Act
-        var result = await _service.CreateAsync(request);
+        var result = await _service.CreateAsync(request, requestingUserId);
 
         // Assert
         result.Should().NotBeNull();
-        result.Name.Should().Be("New Category");
+        result.Name.Should().Be("Entertainment");
 
-        _repositoryMock.Verify(x => x.AddAsync(It.IsAny<BudgetCategory>()), Times.Once);
-        _repositoryMock.Verify(x => x.SaveChangesAsync(), Times.Once);
+        _authServiceMock.Verify(a => a.ValidateHouseholdAccessAsync(requestingUserId, householdId), Times.Once);
+        _repositoryMock.Verify(r => r.AddAsync(It.IsAny<BudgetCategory>()), Times.Once);
+        _repositoryMock.Verify(r => r.SaveChangesAsync(), Times.Once);
     }
-
-    #endregion
-
-    #region DeleteAsync Tests
 
     [Fact]
     public async Task DeleteAsync_CategoryExists_ReturnsTrue()
     {
         // Arrange
         var categoryId = Guid.NewGuid();
+        var householdId = Guid.NewGuid();
+        var requestingUserId = Guid.NewGuid();
+
         var category = new BudgetCategory
         {
             Id = categoryId,
-            HouseholdId = Guid.NewGuid(),
-            Name = "To Delete"
+            HouseholdId = householdId,
+            Name = "Transport"
         };
 
-        _repositoryMock.Setup(x => x.GetByIdAsync(categoryId))
+        _repositoryMock
+            .Setup(r => r.GetByIdAsync(categoryId))
             .ReturnsAsync(category);
 
-        _repositoryMock.Setup(x => x.DeleteAsync(category))
-            .Returns(Task.FromResult(1));
+        _repositoryMock
+            .Setup(r => r.DeleteAsync(category))
+            .Returns(Task.CompletedTask);
 
-        _repositoryMock.Setup(x => x.SaveChangesAsync())
-            .Returns(Task.FromResult(1));
+        _repositoryMock
+            .Setup(r => r.SaveChangesAsync())
+            .ReturnsAsync(1);
 
         // Act
-        var result = await _service.DeleteAsync(categoryId);
+        var result = await _service.DeleteAsync(categoryId, requestingUserId);
 
         // Assert
         result.Should().BeTrue();
-        _repositoryMock.Verify(x => x.DeleteAsync(category), Times.Once);
-        _repositoryMock.Verify(x => x.SaveChangesAsync(), Times.Once);
+
+        _authServiceMock.Verify(a => a.ValidateHouseholdAccessAsync(requestingUserId, householdId), Times.Once);
+        _repositoryMock.Verify(r => r.DeleteAsync(category), Times.Once);
+        _repositoryMock.Verify(r => r.SaveChangesAsync(), Times.Once);
     }
 
     [Fact]
@@ -141,17 +157,19 @@ public class BudgetCategoryServiceTests
     {
         // Arrange
         var categoryId = Guid.NewGuid();
-        _repositoryMock.Setup(x => x.GetByIdAsync(categoryId))
+        var requestingUserId = Guid.NewGuid();
+
+        _repositoryMock
+            .Setup(r => r.GetByIdAsync(categoryId))
             .ReturnsAsync((BudgetCategory?)null);
 
         // Act
-        var result = await _service.DeleteAsync(categoryId);
+        var result = await _service.DeleteAsync(categoryId, requestingUserId);
 
         // Assert
         result.Should().BeFalse();
-        _repositoryMock.Verify(x => x.DeleteAsync(It.IsAny<BudgetCategory>()), Times.Never);
-        _repositoryMock.Verify(x => x.SaveChangesAsync(), Times.Never);
-    }
 
-    #endregion
+        _repositoryMock.Verify(r => r.DeleteAsync(It.IsAny<BudgetCategory>()), Times.Never);
+        _repositoryMock.Verify(r => r.SaveChangesAsync(), Times.Never);
+    }
 }
